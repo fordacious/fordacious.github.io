@@ -1,0 +1,122 @@
+#!/usr/bin/perl -w
+use CGI qw/:all/;
+use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
+use HTML::Template;
+
+sub action_new_account();
+sub action_login();
+sub action_save();
+sub action_cancel();
+sub action_close();
+sub calculate_ratings();
+sub create_user_id();
+sub valid_user_id($);
+sub get_html_template($);
+sub read_file($);
+sub write_file($$);
+
+print header();
+warningsToBrowser(1);
+my %template_variables = (
+	URL => url(),
+	COURSE => "COMP2041/COMP9041",
+	TITLE => "COMP2041/COMP9041 online survey",
+	CGI_PARAMS => join(",", map({"$_='".param($_)."'"} param())),
+	ERROR => "Unknown error"
+);
+$user_id_length = 6;
+$data_dir = "./data";
+mkdir $data_dir if !-d $data_dir;
+
+my $page = "home_page";
+my $action = param('action');
+# execute function corresponding to CGI param 'action'
+$page = &{"action_$action"}() if $action && defined &{"action_$action"};
+# load HTML template from file
+my $template = HTML::Template->new(filename => "$page.template", die_on_bad_params => 0);
+# fill in template variables
+$template->param(%template_variables);
+print $template->output;
+exit(0);
+
+sub action_new_account() {
+	$template_variables{USER_ID} = create_user_id();
+	return "survey_page";
+}
+
+sub action_login() {
+	$template_variables{USER_ID} = $user_id;
+	$template_variables{OPINION} = read_file("$data_dir/$user_id.opinion") || '';
+	return  "survey_page";
+}
+
+sub action_save() {
+	my $user_id = param('user_id');
+	write_file("$data_dir/$user_id.opinion", param("opinion") || '');
+	write_file("$data_dir/$user_id.rating", param("rating") || 0 );
+	$template_variables{MESSAGE} = "Your data has been saved";
+	return  "goodbye_page";
+}
+
+sub action_cancel() {
+	$template_variables{MESSAGE} = "Cancelled, no change";
+	return  "goodbye_page";
+}
+
+sub action_close() {
+	return  "goodbye_page";
+}
+
+
+
+# create_user_id allocates a random 5-digit base and includes ISBN-style validation.
+# Excludes X check symbol (or the ID system would be obvious),
+# and any duplicates.
+
+sub create_user_id() {
+	my ($id, @id, $pos, $sum, $check);
+	my $id_len1 = $user_id_length - 1;
+	my $id_max = 10 ** $id_len1;
+	$id = int($id_max*(rand())+$$) % $id_max;   # $$ is process id
+	$id = sprintf("%0${id_len1}d", $id);        # leading zeroes
+	@id = split //, $id;
+	$sum = 0;
+	foreach $pos (1..$id_len1) {
+		$sum += $pos*$id[$pos-1];
+	}
+	$check = $sum % 11;
+	$check = 'X' if $check == 10;
+	$id .= $check;
+
+	return create_user_id()  if $check eq 'X' || -r "$data_dir/$id.opinion";   # collision (possible but unlikely)
+	return $id;
+}
+
+# valid_user_id returns true iff given a valid identifier, with numeric check symbol
+sub valid_user_id($) {
+	my ($id) = @_;
+	my (@id, $pos, $sum, $check);
+	my $id_len1 = $user_id_length - 1;
+
+	return 0 if $id !~ /^\d{$user_id_length}$/;
+	@id = split //, $id;
+	$sum = 0;
+	foreach $pos (1..$id_len1) {
+		$sum += $pos*$id[$pos-1];
+	}
+	$check = $id[$id_len1];
+	return $check == $sum % 11;
+}
+
+sub read_file($) {
+	my ($file) = @_;
+    open(my $f, '<', $file) or return undef;
+    return do {local $/; <$f>}
+}
+
+sub write_file($$) {
+	my ($file, $contents) = @_;
+    open my $f, '>', $file or die "Can not write '$file': $!";
+    print $f $contents if defined $f;
+}
+

@@ -1,0 +1,355 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<script src="js/ElementGraph.js">
+</script>
+<script src="js/Planet.js">
+</script>
+<script src="js/ScaledSlider.js">
+</script>
+<script src="js/Model.js">
+</script>
+<script src="js/ChartData.js">
+</script>
+<script src="js/ErrorFunction.js">
+</script>
+<script src="js/Explosion.js">
+</script>
+<!--
+	TODO: Make fonts easier
+	Gas overlay
+	Add CAPI
+-->
+<style>
+@font-face {
+	font-family: "TitilliumMaps26L"
+	src: "assets/TitilliumMaps26L.otf"
+}
+</style>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>Cheddar Test</title>
+</head>
+<body onload="init()">	
+<script>
+function init() {
+	Cheddar.init({
+		width :580,
+		height:545,
+		clear :false
+	});
+	
+	/*
+	Cheddar.parse (this,"
+		<Button id='testButton' x='100' y='200' click='test' arg1='assets/playButton'>
+			<DisplayImage id='tetImag' arg1='assets/universeBg.png' x='{mouse.x}'>
+			</DisplayImage>
+		</Button>
+	")
+	*/
+	
+	function test (e) {
+		testButton.x += 1
+	}
+	
+	var model = new Model();
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	var loading = true;
+	
+	var running = false;
+
+	var bgImage = stage.addChild (new DisplayImage ("assets/universeBg.png"));
+	bgImage.x = stage.stageWidth / 2;
+	bgImage.y = stage.stageHeight / 2;
+	
+	var planet = stage.addChild(new Planet());
+	planet.x = 350
+	planet.y = 250
+
+	var uiOverlay = stage.addChild (new DisplayImage ("assets/uiOverlay.png"));
+	uiOverlay.x = 290.7;
+	uiOverlay.y = 465.1;
+
+	var playButton = stage.addChild (new Button ("assets/playButton"));
+	playButton.x = 630-341.9 + 25;
+	playButton.y = 436.1-38.85 + 15;
+	playButton.scale = 0.6
+	
+	playButton.on ("click", function (e) {
+		elementGraph.onPlay();
+		running = true;
+		if (model.getTemperature() > 3000) {	
+			if (explodeFlag == false) {
+				explodeFlag = true;
+				explode();
+			}
+		}
+	});
+	
+	var pauseButton = stage.addChild (new Button ("assets/pauseButton"));
+	Cheddar.bind(playButton, "x", pauseButton, "x");
+	Cheddar.bind(playButton, "y", pauseButton, "y");
+	Cheddar.bind(playButton, "scaleX", pauseButton, "scaleX");
+	Cheddar.bind(playButton, "scaleY", pauseButton, "scaleY");
+	Cheddar.bind(this,"running",pauseButton,"visible")
+	
+	pauseButton.on("click", function (e) {
+		elementGraph.onPause();
+		running = false;
+	})
+
+	var resetButton = stage.addChild (new Button ("assets/resetButton"));
+	resetButton.x = 630-341.9 + 45 - 65;
+	resetButton.y = 436.1-38.85 + 15;
+	resetButton.scale = 0.6
+	
+	resetButton.on ("click", function (e) {
+		running = false;
+		elementGraph.reset();
+		explodeFlag = false;
+		
+		explodeFlag == false
+		explosion.clear();
+		planet.visible = true;
+	});
+
+	var orbitalRadiusSlider  = stage.addChild(new ScaledSlider("assets/slider"));
+	orbitalRadiusSlider.x = 0 + 100;
+	orbitalRadiusSlider.y = 530 - 8;
+	orbitalRadiusSlider.scaleX = 0.6;
+	orbitalRadiusSlider.scaleY = 0.9;
+	orbitalRadiusSlider.setScaleMap([[0,0.01],[100,50]]);
+	orbitalRadiusSlider.scaleValue = 1
+	orbitalRadiusSlider.snapInterval = 0.01;
+	var starMassSlider      = stage.addChild(new ScaledSlider("assets/slider"));
+	starMassSlider.x = 0 + 100;
+	starMassSlider.y = 483 - 8;
+	starMassSlider.scaleX = 0.6;
+	starMassSlider.scaleY = 0.9;
+	starMassSlider.setScaleMap([[0,0.08],[100,25]]);
+	starMassSlider.scaleValue = 1
+	starMassSlider.snapInterval = 0.01;
+	var planetMassMeSlider = stage.addChild(new ScaledSlider("assets/slider"));
+	planetMassMeSlider.x = 0 + 100;
+	planetMassMeSlider.y = 436 - 8;
+	planetMassMeSlider.scaleX = 0.6;
+	planetMassMeSlider.scaleY = 0.9;
+	planetMassMeSlider.setScaleMap([[0,0.001],[33.333,0.6],[66.666,1],[100,317.8]]);
+	planetMassMeSlider.scaleValue = 1
+	planetMassMeSlider.snapInterval = 0.001;
+
+	var sun = stage.addChild(new Sprite("assets/suns","sun", ".png", 3))
+	sun.stop();
+	sun.x = 0
+	sun.y = 0
+
+	var elementGraph = stage.addChild(new ElementGraph("assets/elementGraph.png", model));
+	elementGraph.x = 677.65 - 226;
+	elementGraph.y = 468
+	elementGraph.model = model
+	elementGraph.planet = planet
+
+	var t = stage.addChild(new Text("P. Mass                        Me                     Mj"));
+	t.fillStyle = "#CCCCCC"
+	t.font = '14px TitilliumMaps26L'
+	t.x = 30
+	t.y = 415
+	t = stage.addChild(new Text("S. Mass                         Ms"));
+	t.fillStyle = "#CCCCCC"
+	t.font = '14px TitilliumMaps26L'
+	t.x = 30
+	t.y = 415 + 47
+	t = stage.addChild(new Text("Distance                       Au"));
+	t.fillStyle = "#CCCCCC"
+	t.font = '14px TitilliumMaps26L'
+	t.x = 30
+	t.y = 415 + 47 + 47
+	t = stage.addChild(new Text("Luminosity:                    Ls"));
+	t.fillStyle = "#CCCCCC"
+	t.font = '14px TitilliumMaps26L'
+	t.x = 188
+	t.y = 436.15 - 38.85 + 18 + 47
+	t = stage.addChild(new Text("Temp:                               K"));
+	t.fillStyle = "#CCCCCC"
+	t.font = '14px TitilliumMaps26L'
+	t.x = 188
+	t.y = 436.15 - 38.85 + 18 + 47 + 47
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 220
+	b.y = 436.15 - 38.85 + 10 + 47
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 220
+	b.y = 436.15 - 38.85 + 10 + 47 + 47
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 341.9 + 33
+	b.y = 436.15 - 38.85 + 10
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 341.9 - 50
+	b.y = 436.15 - 38.85 + 10 + 47 + 47
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 341.9 - 50
+	b.y = 436.15 - 38.85 + 10 + 47
+	
+	b = stage.addChild(new DisplayImage("assets/textBg.png"));
+	b.x = 508.85 - 341.9 - 50
+	b.y = 436.15 - 38.85 + 10
+	
+	var temperatureText = stage.addChild(new Text(""));
+	temperatureText.fillStyle = "#FFFFFF"
+	temperatureText.font = '14px TitilliumMaps26L'
+	temperatureText.x = 265
+	temperatureText.y = 509.3
+	
+	var luminosityText = stage.addChild(new Text(""));
+	luminosityText.fillStyle = "#FFFFFF"
+	luminosityText.font = '14px TitilliumMaps26L'
+	luminosityText.x = 265
+	luminosityText.y = 509.3 - 47
+	
+	var mjTextBox = stage.addChild(new Text(""));
+	mjTextBox.fillStyle = "#FFFFFF"
+	mjTextBox.font = '14px TitilliumMaps26L'
+	mjTextBox.x = 175
+	mjTextBox.y = 509.3 - 47 - 47
+	
+	var starMassText = stage.addChild(new Text(""));
+	starMassText.fillStyle = "#FFFFFF"
+	starMassText.font = '14px TitilliumMaps26L'
+	starMassText.x = 92
+	starMassText.y = 509.3 - 47
+	
+	var planetMassMeText = stage.addChild(new Text(""));
+	planetMassMeText.fillStyle = "#FFFFFF"
+	planetMassMeText.font = '14px TitilliumMaps26L'
+	planetMassMeText.x = 92
+	planetMassMeText.y = 509.3 - 47 - 47
+	
+	var orbitalRadiusText = stage.addChild(new Text(""));
+	orbitalRadiusText.fillStyle = "#FFFFFF"
+	orbitalRadiusText.font = '14px TitilliumMaps26L'
+	orbitalRadiusText.x = 92
+	orbitalRadiusText.y = 509.3
+	
+	var pMinMin = 10;
+	var pMin = 40;
+	var pMax = 410;
+	
+	var planetMinX = 562;
+	var planetMinY = 161;
+	
+	var planetMaxX = 732;
+	var planetMaxY = 331;
+	
+	var planetXRange = planetMaxX - planetMinX;
+	var planetYRange = planetMaxY - planetMinY;
+	
+	var distanceRange = 50 - .01;
+	
+	var sunScaleMin = 310;
+	var sunScaleMax = 1000;
+	var sunScaleRange = sunScaleMax - sunScaleMin;
+	var sunMassRange =  25 - 0.08;		
+	
+	var minHaloThickness = 4;
+	var maxHaloThickness = 64;
+	var haloThicknessRange = maxHaloThickness - minHaloThickness;
+	//var haloFilter = new BlurFilter(10,10,2);
+	var pAtmosFilterBank = new Array();
+	var maxHaloAlpha = 1;
+	
+	var maxCometAlpha = .5;
+	
+	var explosionTimer;
+	var _largeExplosion;
+	
+	var explodeFlag = false;
+	planet.radius = 10;
+	planet.cometTrail.alpha = 0;
+
+	var explosion = stage.addChild(new Explosion());
+	
+	function explode () {
+		explodeFlag == true
+		explosion.radius = planet.radius;
+		explosion.explode();
+		explosion.x = planet.x;
+		explosion.y = planet.y;
+		planet.visible = false;
+		elementGraph.chartData.hUnits = 0;
+		elementGraph.chartData.heUnits = 0;
+		elementGraph.chartData.ch4Units = 0;
+		elementGraph.chartData.nh3Units = 0;
+		elementGraph.chartData.h2oUnits = 0;
+		elementGraph.chartData.n2Units = 0;
+		elementGraph.chartData.o2Units = 0;
+		elementGraph.chartData.co2Units = 0;
+		elementGraph.chartData.xeUnits = 0;
+	}
+	
+	stage.on ("enterframe", function (e) {
+		model.setStarMass(starMassSlider.scaleValue)
+		model.planetMassMe = (planetMassMeSlider.scaleValue)
+		model.setOrbitalRadius(orbitalRadiusSlider.scaleValue);
+		
+		playButton.visible = !running;
+		pauseButton.visible = !playButton.visible;
+		
+		var _orbitalRadius = orbitalRadiusSlider.scaleValue
+		
+		if (planetMassMeSlider.value < 66.666) {
+			var smallIncrementor = ((planetMassMeSlider.scaleValue-0.001) / (1 - 0.001)) ; 
+			planet.radius = ((smallIncrementor * (pMin - pMinMin)) + pMinMin) / 3;
+		} else {
+			planet.radius = ((((planetMassMeSlider.scaleValue-0.001) / (317.8 - 0.001)) * (pMax - pMin)) + pMin) / 3;
+		}
+		
+		planet.x = (_orbitalRadius / distanceRange) * planetXRange + planetMinX - 290
+		planet.y = (_orbitalRadius / distanceRange) * planetYRange + planetMinY + 38.8;
+		if (sun.width && starMassSlider.scaleValue) {
+			sun.scaleX = sun.scaleY = (( starMassSlider.scaleValue / sunMassRange) * sunScaleRange) / sun.width + sunScaleMin / sun.width;
+		} else {
+			sun.scaleX = sun.scaleY = (( 1 / sunMassRange) * sunScaleRange) / 790 + sunScaleMin / 790;
+		}
+		sun.x = (sun.scaleX*1.5 - 0.5)*-120
+		sun.y = sun.x
+		
+		var color = (starMassSlider.scaleValue > 10) ? 2 : (starMassSlider.scaleValue > 0.5) ? 1 : (starMassSlider.scaleValue > 0.08) ? 3 : 3;
+		sun.gotoAndStop(color);
+		
+		temperatureText.text =  format(Math.round(model.getTemperature()));
+		luminosityText.text = format(model.getLuminosity())
+		
+		mjTextBox.text = format(model.getPlanetMassMj());
+		starMassText.text = format(model.getStarMass())
+		planetMassMeText.text = format(model.planetMassMe)
+		orbitalRadiusText.text = format(model.getOrbitalRadius())
+		
+		//TODO
+		//pAtmos.alpha = graphMC.chartData.reportGasContent();
+		
+		if (running && model.getTemperature() > 3000 && explodeFlag == false) {
+			explode();
+			explodeFlag = true;
+		}
+		
+	});
+	
+	function format (n) {
+		//TODO
+		return Math.floor(n*100)/100
+	}
+	
+	stage.on ("render", function () {
+		//TODO loading screen rendering here
+		//TODO disable loading screen when everything is loaded
+	})
+}
+</script>
+</body>
+</html>

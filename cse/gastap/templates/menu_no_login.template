@@ -1,0 +1,23 @@
+<ul>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type=hidden name="action" value="home">
+        <input type="submit" name="submit" value="Home"></form></li>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type=hidden name="action" value  ="blog">
+        <input type="submit" name="submit" value="Blog"></form></li>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type="submit" name="submit" value="Games">
+        <input type=hidden name="action" value="games"></form></li>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type="submit" name="submit" value="About">
+        <input type=hidden name="action" value="about"></form></li>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type=hidden name="action" value="login">
+        <input type="submit" name="submit" value="Login"></form></li>
+    <li><form method="GET" action="<TMPL_VAR NAME=URL>">
+        <input type=hidden name="action" value="legal">
+        <input type="submit" name="submit" value="Legal"></form></li>
+</ul>
+</div>
+<div id="text">
+<hr>

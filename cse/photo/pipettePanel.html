@@ -1,0 +1,67 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>filling pipette with </title>
+</head>
+<body style="padding:0px;margin:0;">
+<script>
+	Cheddar.init({
+		width :400,
+		height:200,
+		clear :true
+	});
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	
+	window.returnValue  = "cancelled"
+	var substance = window.dialogArguments.split(":")[0];
+	var n = stage.addChild(new Text(substance));
+	n.y = 50;
+	n.x = 20;
+	var slider = stage.addChild(new Slider("assets/slider"));
+	slider.x = 120;
+	slider.scaleX = 0.7
+	slider.y = 100;
+	min = parseFloat(window.dialogArguments.split(":")[1])
+	max = parseFloat(window.dialogArguments.split(":")[2])
+	var amount = stage.addChild(new Text(getval() + "ml"));
+	amount.x = 20;
+	amount.y = slider.y - 20;
+	
+	document.title = document.title + " " +  n.text;
+	
+	var anim = stage.addChild(new Sprite("assets/pipettePanel/anim", 70))
+	anim.stop();
+	anim.addFrameCallback (60, function(){window.close()});
+	anim.x = 305;
+	anim.y = 100;
+	
+	var yes = stage.addChild(new Button("assets/button"));
+	yes.on("click", function () {
+		window.returnValue = getval();
+		anim.play();
+		slider.visible = false;
+		yes.visible = false;
+	})
+	slider.on("change", function () {
+		var v = slider.value;
+		amount.text = ((getval()*100)|0)/100 + "ml"
+	})
+	
+	function getval () {
+		var v = slider.value;
+		trace(min + " " + max)
+		return min + (max - min) * (v / 100);
+	}
+	yes.x = 50;
+	yes.y = 150;
+	var t = yes.addChild(new Text("Confirm"))
+	t.x = -26
+	t.y = 7
+	
+</script>
+</body>
+</html>

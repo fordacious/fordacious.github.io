@@ -1,0 +1,827 @@
+<head>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <style>
+        img {
+            margin-left:0%;
+            background-color:#fff;
+            -webkit-transition-property: all;
+            -webkit-transition-duration: .1s;
+            -webkit-transform:scale(1);
+            
+            -moz-content:-transition-property: all;
+            -moz-transition-duration: .1s;
+            -moz-transform:scale(1);
+            
+            z-index:0;
+        }
+        img:hover {
+            background-color:#eeeeff;
+            -webkit-transform:scale(1.1);
+            
+            -moz-transform:scale(1.1);
+        }
+        
+        body {
+            font-family:sans-serif;
+            margin:0px;
+        }
+        
+        p {   
+            text-align:justify;
+            padding-left:15px;
+            padding-right:15px;
+            max-width:800px;
+            font-size:14px;
+            margin-left:15px;
+        }
+        
+        .subsection {
+            margin-left:45px;
+        }
+        
+        h2, h3, h4 {
+            text-align:left;
+            max-width:800px;
+            text-decoration:underline;
+            font-size:20px;
+            margin-left:15px;
+        }
+        
+        h3 {
+            text-decoration:none;
+            font-size:18px;
+        }
+        
+        h4 {
+            text-decoration:none;
+            font-size:16px;
+            margin-left:15px;
+        }
+        
+        .sidebar {
+            position:fixed;
+            height:100%;
+            top:0px;
+            overflow:hidden;
+            overflow-y:auto;
+            padding-top:10px;
+            left:-1000px;
+            background-color:#333;
+            box-shadow: 5px 5px 20px #222;
+            opacity:.95;
+            -webkit-transition-property: left;
+            -webkit-transition-duration: .3s;
+            
+            -moz-transition-property: left;
+            -moz-transition-duration: .3s;
+            
+            z-index:1000;
+            width:350px;
+        }
+        
+        .sideButtons {
+            position:fixed;
+        }
+        
+        #contentsButton,#referencesButton {
+            padding:5px;
+            padding-left:10px;
+            background-color:#333;
+            color:#aaa;
+            cursor:pointer;
+            position:relative;
+            text-align:left;
+            left:0px;
+            top:0px;
+            opacity:.95;
+            -webkit-transition-property: left;
+            -webkit-transition-duration: .3s;
+            
+            -moz-transition-property: left;
+            -moz-transition-duration: .3s;
+        }
+        
+        
+        .contentsDiv {
+            margin:10px; 
+            margin-top:0px;
+            margin-bottom:-10px;
+        }
+        
+        .contentsElement {
+            color:#aaa;
+            text-decoration:none;
+            margin-top:0px;
+            margin-bottom:2px;
+        }
+        .contentsElement:hover, #contentsButton:hover, #referencesButton:hover {
+            color:#eee;
+        }
+        
+        .refTag {
+            text-decoration:none;
+            
+            font-size:10px;
+            
+            -webkit-transition-property: all;
+            -webkit-transition-duration: .3s;
+            -webkit-transform:scale(1);
+            
+            -moz-transition-property: all;
+            -moz-transition-duration: .3s;
+        }
+        
+        iframe {
+            box-shadow: 0px 0px 20px #222;
+        }
+        
+        
+    </style>
+    
+</head>
+<body>
+    <div class="sideButtons">
+        <div id="contentsButton" onclick="toggleContents()">Contents</div>
+        <div id="referencesButton" onclick="toggleReferences()">References</div>
+    </div>
+    <contents id="contents" class="sidebar"></contents>
+    <contents id="references" class="sidebar">
+        <div class="contentsElement">Mouse over for full title</div>
+        
+        <reference name="Dror's 2009 paper on automated refinement suggestion" src="http://www.educationaldatamining.org/EDM2009/uploads/proceedings/benNaim.pdf"/>
+        
+        <reference name="Crowdgrader Paper" src="http://arxiv.org/pdf/1308.5273v1.pdf"></reference>
+        
+        <reference name="Developing a generalizable detector of when students
+game the system" src="http://idoroll.org/journal/files/Baker_UMUAI08.pdf"></reference>
+        
+        <reference name="Rule 110 in CSS3 + HTML" src="http://eli.fox-epste.in/rule110-full.html"></reference>
+            
+        <reference name="Infinite Minesweeper is turing complete" src="http://web.mat.bham.ac.uk/R.W.Kaye/minesw/infmsw.pdf"></reference>
+        
+        <reference name="Brainfuck" src="http://www.muppetlabs.com/~breadbox/bf/"></reference>
+        
+        <reference name="Learning the k in k-means" src="http://machinelearning.wustl.edu/mlpapers/paper_files/NIPS2003_AA36.pdf"></reference>
+        
+        <reference name="Expanding x-means" src="http://www.rd.dnc.ac.jp/~tunenori/doc/487-053.pdf"></reference>
+        
+        <reference name="Rule of Thumb" src="http://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set#Rule_of_thumb"></reference>
+        
+        <reference name="x-means: Extending k-means with efficient estimates of the number of clusters" src="http://www.cs.cmu.edu/~dpelleg/download/xmeans.pdf"></reference>
+        
+        <reference name="GPU Gems radiosity" src="https://developer.nvidia.com/content/gpu-gems-2-chapter-39-global-illumination-using-progressive-refinement-radiosity"></reference>
+        
+        <reference name="Radiosity Overview" src="http://freespace.virgin.net/hugo.elias/radiosity/radiosity.htm"></reference>
+        
+        <reference name="Radiosity Linear System Form" src="http://web.cs.wpi.edu/~matt/courses/cs563/talks/radiosity.html"></reference>
+        
+        <reference name="Broad-Phase Collision Detection on the GPU" src="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch32.html"></reference>
+        
+        <reference name="Photon Mapping" src="http://graphics.ucsd.edu/~henrik/papers/photon_map/global_illumination_using_photon_maps_egwr96.pdf"></reference>
+        
+        <reference name="Image Space Photon Mapping Using GPU" src="https://research.nvidia.com/publication/hardware-accelerated-global-illumination-image-space-photon-mapping"></reference>
+        
+        <reference name="Nvidia Interactive Indirect Illumination Using Voxel Cone Tracing" src="https://research.nvidia.com/publication/interactive-indirect-illumination-using-voxel-cone-tracing"></reference>
+        
+        <reference name="Brigade real-time Ray Tracing engine" src="http://www.youtube.com/watch?v=abqAanC2NZs"></reference>
+        
+        <reference name="Funkhouser's Funky Beam Tracing Algorithm for Acoustic Modelling" src="http://people.csail.mit.edu/addy/research/funk-beamtracing-jasa04.pdf"></reference>
+        
+        <reference name="Unreal Engine 4 Technology" src="http://www.unrealengine.com/files/misc/The_Technology_Behind_the_Elemental_Demo_16x9_(2).pdf"></reference>
+        
+        <reference name="RAVEN Auralization System" src="http://www.akustik.rwth-aachen.de/Forschung/Projekte/raven"></reference>
+        
+        <reference name="The Curse of Dimensionality" src="http://en.wikipedia.org/wiki/Curse_of_dimensionality"></reference>
+        
+        <reference name="Jeremykun k-means clustering" src="http://jeremykun.com/2013/02/04/k-means-clustering-and-birth-rates/"></reference>
+        
+        <reference name="Slower Speed of Light" src="http://gamelab.mit.edu/games/a-slower-speed-of-light/"></reference>
+        
+        <reference name="Expectation Maximisation" src="http://www.seanborman.com/publications/EM_algorithm.pdf"></reference>
+        
+        <reference name="String Metrics" src="http://en.wikipedia.org/wiki/String_metric"></reference>
+        
+        <reference name="Efficient k-means clustering algorithm" src="https://www.lri.fr/~antoine/Courses/Master-ISI/TD-TP/sujets_2009/pami02.pdf"></reference>
+        
+        <reference name="Tree Edit Distance" src="http://www.inf.unibz.it/dis/projects/tree-edit-distance/tree-edit-distance.php"></reference>
+        
+        <reference name="War and Peace" src="http://intersci.ss.uci.edu/wiki/eBooks/Russia/BOOKS/Tolstoy/War%20and%20Peace%20Tolstoy.pdf"></references>
+        
+    </contents>
+    <div id="mainBody">
+        
+    <a name="Top"></a>
+        
+    <center>
+        
+        <h1><u>COMP 4121</u></h1>Lachlan Ford (3365615) November 2013<br/>
+        
+        <a name="Introduction"></a>
+        
+        <h2>Introduction</h2>
+        <p>  
+            For this research project I have decided to analyse in-depth, 2  highly algorithmic and practical problems, the solutions to which will provide real, practical benefit. Unfortunately, due to time constraints I have been unable to produce implementations of any of my solutions to these problems, however I believe that I have built sufficient knowledge and understanding of the 2 topics that that future implementation should not pose too much of a challenge (I had originally planned to only tackle the first problem and provide a good implementation for it, instead I will be tackeling 2 problems). These 2 problems would definitely benefit from implementation and fiddling as their solutions are highly qualitative (clustering and classification, making something that sounds good while not being too computationally expensive). As such the best way to analyse their effectiveness would be to implement them, tune them and test with real data.
+        </p>
+        
+        <p>
+            The two problems I will be tackling are as follows:<br/>
+        </p>
+            <p class="subsection">
+                &#x2022; Automated lesson refinement suggestions for educators using the Smart Sparrow platform<br/>
+                &#x2022; Adapting state of the art global illumination algorithms for real-time sound simulation<br/>
+            </p>
+        
+        <a name="1. Smart Sparrow Lesson Refinement"></a>
+        
+        <h2>Smart Sparrow Lesson Refinement</h2>
+        
+        <a name="----The Smart Sparrow Platform"></a>
+        
+        <h3>The Smart Sparrow Platform</h3>
+        <p> 
+            The Smart Sparrow platform is an online tool for educators to create adaptive educational content, and alter it based on student data. In the platform, students answer questions, the system will read its current state, and based on conditions (student selected A) actions will take place (display feedback X and send student to question Y). The idea is that educators will provide questions with known student misconceptions, and in correct construction of conditions and actions, be able to resolve the misconceptions. Such states which catch misconceptions are referred to as <i>Trap States</i>.
+        </p>
+        
+        <a name="----Learning Analytics"></a>
+        
+        <h3>Learning Analytics</h3>
+        
+        <p>
+            Due to the nature of the Smart Sparrow tool as an online and data driven system, there is a huge potential to employ data mining and other algorithms to provide feedback to educators and aid in the education and reflection process. Such techniques include but are not limited to:<br/>
+        </p>
+        
+        <p class="subsection">
+            &#x2022; Detection and reporting of student misconceptions, common mistakes and misunderstandings<br/>
+            &#x2022; Detection and reporting of problems with lessons, e.g. students getting stuck, lost or reporting unreachable areas of the lesson<br/>
+            &#x2022; Detection of students gaming the system<ref id="3"></ref><br/>
+            &#x2022; Robust peer-marking; weighting student marks based on their own grade and trustworthiness as markers via itterative filtering.<ref id="2"></ref><br/>
+            &#x2022; Inferring the level of student engagement, frustration or boredom while using the system<br/>
+            &#x2022; Automated hints or recommendations<br/>
+            &#x2022; Student modelling to track and assist subject area mastery<br/>
+            &#x2022; Natural language processing for short response or string-based answers<br/>
+            &#x2022; Path tracing of students through the lesson (represented as a graph), and importance rankings of questions, ala page-rank<br/>
+            &#x2022; Path tracing of students through the lesson to aid student modelling or classification<br/>
+            &#x2022; Assosciation rule learning (e.g. a student will make mistake B if they already made mistake A)<br/>
+        </p>
+        
+        <a name="----Aside - The Platform Is Turing Complete"></a>
+        
+        <h3>Aside - The Platform Is Turing Complete</h3>
+        
+        <p>  
+            Since we are potentially performing computations with lessons and data as inputs to those lessons, I thought it would be a good exercise (if not a fun one), to determine whether or no the system itself is turing complete. If ever we wanted to run some kind of analytics to analyse a lesson to find possible ways a student could get themselves into a state where they are unable to complete the lesson, this should be a good indication of why it might be a good idea to begin looking for heuristics or alternatives. 
+        </p>
+        <p>
+            Upon researching I found many informal ways to determine turing completeness. Some involved the encoding other known turing complete systems such as Rule 110<ref id="4"></ref> and lambda calculus, and others found ways to generate and construct CMOS and or logic gates within the system<ref id="5"></ref>. Other ways are to construct an isomorphism to a known programming language<ref id="6"></ref>, or to simply find ways to arbitrarily store a potentially infinite amount of information, loop potentially infinitely, and branch based on state (also accept input and output, otherwise you've just created a wacky heater). Another way is to create a Quine (ala Kleene's recursion theorem), but that would be tremendously difficult in the Smart Sparrow platform <small>(as it happens there are quines in brainfuck that are only 800 bytes, which means if I could encode a brainfuck execution environment, I could encode a brainfuck quine)</small>.
+        </p>
+        <p>
+            When a student answers a question, the system analyses the current state of the lesson, and then sets values accordingly. Using numerical inputs and simple mathematical operations, I was able to construct NOT (\(-A + 1\)), AND (\(A \times B\)), OR (\(A + B\)), XOR (De Morgans Law) and NAND (NOT (A AND B)) gates. I was also able to implement a small brainfuck interpreter as well as Rule 110. However, it was significantly easier to check off the three rules. Question branching allows you to remain on the same question when the student completes it unless some condition is met. This covers both potentially infinite looping as well as branching. Information may be stored in numerical inputs which are hidden from the student to disable editing. This allows for potentially infinite memory (limited by the memory of the server system in reality).
+        </p>
+        
+        <a name="----The Problem"></a>
+        
+        <h3>The Problem</h3>
+        
+        <p>
+            I have chosen to focus on automated lesson refinement suggestions as I believe it would be an invaluable asset to educators using the Smart Sparrow platform and it plays to the strengths of the platform. I will also briefly cover the applications and details of assosciation rule learning as it is simple, interesting and useful.<br/>
+        </p>
+        
+        <p>
+        Ideally, all possible student misconceptions would be caught and resolved by the system, and each trap state would focus only on a single student misconception. However, it is a big task to be able to predict all possible student misconceptions (either this is an infeasible task, or as is often the case, the educator is TOO knowledgable of the subject area that they develop blind spots for student possible misconceptions). Thus the platform itself should be able to be used by the teacher to detect and report potential student misconceptions that the educator has not predicted. The system should also be able to potentially discover trap states that also cover many different misconceptions that probably should be broken up.
+        </p>
+        
+        <p>
+            Dror began looking into automated refinement suggestions in 2009<ref id="1"></ref> in which he constructed a rudimentary system for detecting student misconceptions that were not predicted by the educator and reporting them to the educator, as well as detecting and reporting over-general trap states. 
+        </p>
+        
+        <a name="----The Strategy"></a>
+        
+        <h3>The Strategy</h3>
+        <p>
+            The problem boils down to classifying incorrect student answers based on their similarity. To determine the state values we need to inspect, we simply look at the properties that the correct state, and all possible trap states will be inspecting. We then attempt to classify the values that these properties generate when students end up in the <i>Default Wrong</i> state of a question. If all mistconceptions are caught by the trap states of the question, then these properties should ideally be highly noisy, as there is no concensus among these values. Overgeneralised trap states should catch multiple values, and useless trap states should produce noise.
+        </p>
+        <p>
+            An example of a misconception may be as follows. Imagine a question on projectile motion. The educator may not have predicted that some people believe the y-axis should go upwards positive and some believe it should go downwards positive. As such, many students may submit "wrong" answers in which the values of \(g\), \(vel_{y}\) and \(pos_{y}\) are negative. If this is the case, many students will produce answers around the same number (plus or minus some variance due to rounding or calculation differences). The system should be able to catch this and report it, as it is very unfair to lose marks because of something like this, the educator will be able to change the question to provide feedback to students saying they are correct but need to treat the y-axis as positive upwards/downwards. If these answers are now caught by trap states, the resulting default wrong values should simply produce noise.
+        </p>
+        <p>
+            The classification should be done with the properties on its own axis. Once the classification is complete, the system should make judgements based on the number of students in each classification and the statistical properties (e.g. variance) of each classification, in order to decide which properties are relevant for the educator. The system may also be extended to attempt to report the type of error the students have likely made. e.g. in the previous example, the incorrect answers are related to the correct answer by a factor of -1. In string based answers, it may be possible to detect and report spelling mistakes. However, this is a problem for the future.
+        </p>
+        <p>
+            The Smart Sparrow platform exposes data of 5 types to the system:
+        </p>
+            <p class="subsection">
+                &#x2022; Boolean - True or False<br/>
+                &#x2022; String - Collection of characters<br/>
+                &#x2022; Enum - Finite number of string options<br/>
+                &#x2022; Number - Real number<br/>
+                &#x2022; Array - Collection of arbitrary types, including arrays<br/>
+            </p>
+        <p>
+            As such, we must find different metrics that properly suit these types in order to spacially compare these different types of values and combinations of different types of values.
+        </p>
+        <p>
+            Booleans are easy as there are only two values.
+        </p>
+        <p>
+            There are many many metrics that its possible to use to determine the distance between two strings<ref id="26"></ref>. I believe in this situation that simple edit distance will suffice, as the most common problems students will have with strings, is a mis-spelling of the correct answer, a wrong answer, or a mis-spelling of a wrong answer. Otherwise they are inputing garbage, possible out of frustration. 
+        </p>
+        <p>
+            Numbers are simple, they are continous and their metric is easily given by their euclidean distance. However, in clustering multi dimensional numeric data, one runs into 2 problems. 1 is the curse of dimensionality<ref id="22"></ref>, and the problem where the axis are on different ranges, which skews the distance metric, especially if one axis is highly noisy. The first will not be apparent here as it is rare to see more than 4 numerical values being checked on any one state of a question. The second may be solved by substituting all values with their Z-Score<ref id="23"></ref>, i.e. their standardised distance from their mean. This, in practice scales the axis appropriately for our needs. This also helps with classifying with a boolean/string/enum/array on one axis and a number on another. Outliers may be alienated by applying techniques used in itterative filtering algorithms we looked at, which push the data out from the mean by some parameter. Like any parameters in clustering algorithms on semi-arbitrary data, finding it would be difficult.
+        </p>
+        <p>
+            Enums are simply a finite number of discrete string options. As such they are very easy to classify. These are commonly used for multiple choice. Highly noisy results commonly indicate guessing and a lack of understanding, however, since there are such limited possibilities, all are usually covered by trap states.
+        </p>
+        <p>
+            Arrays are interesting as they can contain other arrays, which potentially makes them trees, in which an array of data is stored in the nodes. Although the edit distance of trees is an interesting problem<ref id="28"></ref>, arrays of arrays are very rare in practice, as an array is usually used to represent a list of selections made by the user or an ordered list of properties. Whether ordering matters can be inferred by the system and as such the edit distance of arrays may be adjusted to take order into account or not when it needs to or not.
+        </p>
+        
+        <a name="----Clustering and Classification"></a>
+        
+        <h3>Clustering/Classification</h3>
+        
+        <p>
+            Now that we have defined our metrics for the properties of students answers, we must construct an classification algorithm, which classifies our set of student answers (points in metric space) into disjoint subsets (there may exist a set reserved for outliers depending on our algorithm), or determines that the data is too noisy, and returns this fact. It may be a good idea to run <i>isNoisy</i> on the individual properties, and discounting them if they are too noisy, before classifying on the whole space. If this is the case, we will only run the classification on the properties that are not too noisy. The idea being that only the relevant properties (ones with structures and trends) will need to be considered.
+        </p>
+        <p>
+            The clustering problem may be formally defined as follows:
+        </p>
+        <p>
+            Definition: Let \((X,d)\) be a metric space with metric \(d\), and let \(S \subset (X,d)\) be a finite subset. The centroid clustering problem is the problem of finding for any positive integer \(k\) a partition \(\left \{ A_1 ,\dots A_k \right \}\) of \(S\) so that the following quantity is minimized:</p>
+            \(\displaystyle \sum_{i=1}^k\sum_{x \in A_i} d(x, c(A_i))\)
+        <p>
+            where \(c(A_i)\) denotes the center of a cluster, defined as the arithmetic mean of the points in \(A_i\):
+        </p>
+            \(\displaystyle c(A) = \frac{1}{|A|} \sum_{x \in A} x\)
+        <p>
+            The problem itself is NP-Hard, and as such, most solutions are heuristic and parametised. To make matters worse, the problem of choosing the correct parameters often turns out to be NP-Hard!
+        </p>
+        
+        <a name="--------Noisiness"></a>
+        
+        <h4>Noisiness</h4>
+        <p>
+            I'm not entirely certain how to go about detecting noies (more research is required), however I the goal is to detect noise and disregard properties if they are over some threshold of noisiness. 
+        </p>
+        <p>
+            Since the data is not ordered, we cannot simply smooth it (by means or medians or binning) and we cannot use regression to fit the data to a function.
+        </p>
+        <p>
+            Noisy data will have a high variance and ideally we should not be able to cluster it into any more than 1 cluster (Methods of seeing how clusterable data is are discussed below). These two properties could be used in order to determine how noisy the data is. Once the data is successfully clustered, if our algorithm does not produce a "noise" cluster, we may classify noise by detecting outliers (based on the variance and our metrics) and removing them from our clusters.
+        </p>
+        
+        <a name="--------Types"></a>
+        
+        <h4>Types</h4>
+        <p>
+            The main types of classification algorithms I considered are:<br/>
+        </p>
+        <p class="subsection">
+            &#x2022; Density based methods<br/>
+            &#x2022; k-means and extentions to k-means<br/>
+            &#x2022; Methods involving spacial partitioning<br/>
+        </p>
+        <p>
+            Many other approaches such as <i>Expectation Maximisation</i> and hierarchical approaches exist, however I was unable to explore them in any great depth. I also did not do any in-depth research into other forms of classification such as neural networks, decision trees and support vector machines.
+        </p>
+        
+        <a name="--------Density Based Clustering"></a>
+        
+        <h4>Denisty Based Clustering</h4>
+        <p>
+            The idea behind the density based approach is to cluster based on the reachability of points. A point \(p\) is <i>directly density reachable</i> from a point \(q\) if there the distance between the two points is smaller than some \(\epsilon\). A point \(p\) is <i>density reachable</i> from a point \(q\) if there is a sequence of points \(p_1 , ... , p_n\) in which \(p_k\) is directly density reachable from \(p_{k-1}\). Thus a cluster may be defined as all points which are mutually density connected. This approach has many advantages. For one, it has a \(O(nlogn)\) runtime, does not require the number of clusters as input, can both detect and eliminate noise and is fully deterministic, assuming points have their neighbourhoods queried in the same order. However, it still relies on the parameter \(\epsilon\), which must be estimated / provided somehow. 
+        </p>
+        
+        <a name="--------K-Means"></a>
+        
+        <h4>K-Means</h4>
+        <p>
+            K-Means (aka Lloyd's algorithm) is an itterative approach to finding k-partitions of the data by constructing Voronoi regions, which ideally correspond to patters in the data. It is a very easy to implement algorithm and often converges quickly in practice (despite potentially being exponential). In 1 dimension,it  will converge to a <i>centroidal Veronoi diagram</i>. 
+        </p>
+        <p>
+            There are two main problems with k-means. It is unable to detect irregularly shaped regions in the data. That is to say it cannot successfully classify density based clusters. e.g. (images plundered from wikipedia):
+        </p>
+        <div>
+            <img src="http://upload.wikimedia.org/wikipedia/commons/f/f2/SLINK-density-data.svg"></img><br/>
+            <small>Density-Based clustering</small>
+        </div>
+        <br/>
+        <br/>
+        <div>
+            <img src="http://upload.wikimedia.org/wikipedia/commons/d/d1/KMeans-density-data.svg"></img><br/><br/><br/>
+            <small>k-means with \(k = 2\)</small>
+        </div>
+        <br/>
+        <p>
+            It also suffers from the curse of the parameter, in that we do not know what k is supposed to be. The result is also dependant on the initail arbitrary choice of the centroid positions.
+        </p>
+        <p>
+            The algorithm itself proceeds as follows:<br/>
+        </p>
+            <p class="subsection">
+                1. k arbitrary positions are marked as the positions<br/>
+                2. Assign the points to centroids such that \( \sum_{i=1}^k\sum_{x \in A_i} d(x, c(A_i))'\) where \(d\) is our metric distance and \(c(A_i)\) is the distance of \(A_i\) to its assigned centroid, is minimized<br/>
+                3. Re-calculate the new centroid locations as the means of the most recently calculated clusters (the centroid position now becomes the arithmetic mean of all points assigned to it. We can intuitively think of the point pulling the centroid point towards them)<br/>
+                4. Repeat until convergence or boredom
+            </p>
+        <p>
+            There exist ways of working out or estimating a suitable k.
+        </p>
+        <p>
+            One rule of thumb is to say \(k = \sqrt{\frac{n}{2}}\)<ref id="9"></ref>. However I do not trust my, nor other peoples' thumbs, and would like to be much more precise.
+        </p>
+        <p>
+            Other ways of course involve guessing k by inspection of the data, or prior knowledge about what you believe k should be. Both of these are unsuitable for the purposes of this problem, as the distribution of data is unpredictable and we cannot inspect it before hand.
+        </p>
+        <p> 
+            We ideally want to get to a point where incrementing k does not give us a better modeling of the data.
+        </p>
+        <p>
+            Other ways involve using an information criteria, such as the <i>Akaike Information Criterion</i>, the <i>Bayesian Information Criterion</i> or the <i>Deviance Information Criterion</i>. Each of these relies on it being possible to construct a likelihood model for the data. Since student answers are likely to be approximately gaussian, this is a fair assumption.
+        </p>
+        <p>
+            There are practical implementations of these approaches. The x-means algorithm<ref id="10"></ref> uses BIC to split clusters that could potentially be classified better. The g-means<ref id="7"></ref> algorithm, does the same, however uses the <i>Anderson-Darling test</i> to determine how "Gaussian" a candidate cluster is and splits a cluster if in doing so, the two subclusters would be more gaussian. It is claimed to work better than using information criteria like x-means. There are even more algorithms which expand on both of these<ref id="8"></ref> however I wont go into those here.
+        </p>
+        
+        <a name="--------Clustering Using Spacial Partitioning"></a>
+        
+        <h4>Clustering Using Spacial Partitioning</h4>
+        <p>
+            I came up with an interesting classification algorithm involving spacial partitioning using k-trees (binary, quad, oct etc...). My algorithm proceeded by dividing the space into \(2^k\) subspaces recursively until all nodes hold at most 1 item and constructing a tree with \(2^k\) children at each node to represent this (binary tree/quadtree/octree etc...). Each node in our tree stores its "saturation", which is the percentage of total points it holds in its children. To generate clusters at some depth \(d\) we may simply connect all adjacent nodes which have a saturation above some defined threshold. The advantages of this approach is its speed and the we do not need to estimate the number of clusters we will need as the algorithm will be able to generate this. It will also successfully classify density based clusters. The downside of this algorithm is that we must tune two parameters. The first is the depth, it is the resolution of our clustering, a depth of 1 will result in a single cluster that contains every data point, the maximum depth will yield individual clusters for all data points. The second is the saturation cutoff for generating the clusters. A higher threshold will result in more data being considered noise, a lower will result in larger clusters as well as less overall. This algorithm has properties similar to hierarchical clustering (recursive spatial partitioning generates a cluster hierarchy) and density-based clustering (the clusters are linked based on a parameter similar to the one used in density-based clustering approaches). There is definitely much room for improvement though.
+        </p>
+    
+        <a name="----Some Quick and Dirty Implementations"></a>
+        
+        <h3>Some Quick and Dirty Implementations</h3>
+        <p>
+            I very hastily implemented k-means for arbitrary dimensions and my own algorithm for 2 dimensions only. I have included a very basic implementation of k-means for 2 and 3 dimensions as well as an implementation of my own. Use the mouse to navigate, and click to place data points. The algorithms will run whenever anything changes. One can very quickly see the limitations of both systems using these. The centroids centres are represented by red squares, their encompasing area is a circle/sphere and in 3D, the points are placed at a random depth.
+        </p>
+        
+        2D k-means<br/>
+        <iframe frameborder="no" src="http://www.cse.unsw.edu.au/~ljef079/documentViewer/2%20dimensional%20cluster.swf" width="550" height="400"></iframe><br/>
+    
+        3D k-means<br/>
+        <iframe frameborder="no" src="http://www.cse.unsw.edu.au/~ljef079/documentViewer/3%20dimensional%20cluster.swf" width="550" height="400"></iframe><br/>
+    
+        Quadtree<br/>
+        <iframe frameborder="no" src="http://www.cse.unsw.edu.au/~ljef079/documentViewer/quadtreeimpl.swf" width="550" height="400"></iframe><br/>
+            
+        <a name="----Conclusion"></a>
+        
+        <h3>Conclusion</h3>
+        <p>
+            Ideally I would test and tune a whole bunch of these and see which generated the best results in practice. Unfortunately due to time constraints this is not possible for now. Since this is the case, my current thoughts are that k-means with some kind of k estimation like g-means would be a good candidate for solving this problem as it is tried and true with practical examples and the literature to back it up. 
+    </p>
+    <p> 
+        Having crudely implemented both, it seems that my spatial partitioning approach is far more suited to cases where the data is highly compact and works well to eliminate noise, however it seems to be far less flexible and much harder / more complex to implement and is far less robust (point position on the grid matters too much). I also suspect that density based approaches would provide all its benefits, without many of its disadvantages (i.e. there is no need to discretise space in density based approaches and depth parameter is almost the same, but less controlable, as the \(\epsilon\) parameter). Any modifications I can think to improve it would essentially turn it into density based clustering. Results like this are important, as I expected my algorithm to perform far better than it did.
+        </p>
+        
+        <a name="2. Real-Time Global Audio Simulation"></a>
+        
+        <h2>Adapting Traditional Global Illumination Techniques To Simulate Audio Globally In Real-Time</h2>
+    
+        <a name="----The Problem"></a>
+        
+        <h3>The Problem</h3>
+        <p>
+            In recent years, much attention has been given to developing and improving techniques and systems to generate realistically illuminated and shaded scenes, rendered at interactive speeds. However, relatively little attention has been given to the similar problem of calculating and rendering the audio of an interactive 3D scene realitically and in real time. That is to say, modeling and presenting what an agent would hear, in a dynamic 3D environment, based on the properties and materials of that environment as well as the position and velocity of both the agent and the source.
+        </p>
+        <p>
+            The audio simulation problem is similar in many ways to the problem of realistically rendering a 3D scene, whilst factoring in indirect lighting and the properties (roughness, specularity) of the materials of the objects in the scene. There are many key differences between light and sound that we must consider however, including:
+        </p>
+        <p class="subsection">
+            &#x2022; Wavelength and Mechanical properties - Due to the wavelength size of sound compared to light, and the fact that sounds waves are mechanical, they interract with many materials in different ways<br/>
+            &#x2022; Diffraction - Diffraction effects for sound are far more noticable than for light.<br/>
+            &#x2022; Object interaction - The mechanical waves of sound travel differently (especailly far more easily) through objects and are affected by the material properties of the object in a noticable way. Lights journey through objects is usually only completely transparent objects. Translucency is a special case. <br/>
+            &#x2022; Propagation - Light is (for all intents and purposes) immediately propogated to all points in space. Sound is much slower however and its propogation delay should ideally be taken into account.<br/>
+            &#x2022; Doppler - The doppler effect of sound is noticable even at relatively low speeds. It is only apparent in light at relitivistic speeds. As such it is not modelled for light. (There is one game in which the speed of light is gradually reduced, in which doppler and relitivistic effects is modelled<ref id="24"></ref>. However this is not a general thing.)<br/>
+            &#x2022; Receiver properties - The receiver of light in a 3D rendered scene is often modelled as a point camera. This is possible for sound renderering as well, however we will not be able to achieve any 3D audio effects and as such, the result may not be as realistic as we would like.<br/>
+            &#x2022; Area source - Many sources of sound are also area sources. This is actually far more noticable with light than it is with sound, unless you are really close to the source. Area lights are often not modelled in rendering, or are hacked in by placing multiple lights next to each other.<br/>
+        </p>
+        <p>
+            There has been previous work, particularly by Funkhouser<ref id="19"></ref> in adapting traditional light tracing techniques in order to achieve real time audio simulation. I will look at how the state of the art techniques currently being researched at Nvidia may be adapted in a similar way to solve the same problem in a more efficient, accurate and scalable way. 
+        </p>
+    
+        <a name="----Global Illumination"></a>
+        
+        <h3>Global Illumination</h3>
+    
+        <a name="--------The Rendering Equation"></a>
+        
+        <h4>The Rendering Equation</h4>
+        <p>
+            The rendering equation describes the illumination of a surface as the integral of all energy incoming from the surrounding hemisphere (based on the angle of incidence of all photons) of the point combined with its material  properties (reflectivity, specularity, emissivity), all caculated based on the current viewing angle. The goal of many rendering systems and algorithms is to solve this equation for all visible points.
+        </p>
+        <p>
+            The equation (from wikipedia) is as follows.
+        </p>
+        <p>
+            $$L_{\text{o}}(\mathbf x,\, \omega_{\text{o}},\, \lambda,\, t) \,=\, L_e(\mathbf x,\, \omega_{\text{o}},\, \lambda,\, t) \ +\, \int_\Omega f_r(\mathbf x,\, \omega_{\text{i}},\, \omega_{\text{o}},\, \lambda,\, t)\, L_{\text{i}}(\mathbf x,\, \omega_{\text{i}},\, \lambda,\, t)\, (\omega_{\text{i}}\,\cdot\,\mathbf n)\, \operatorname d \omega_{\text{i}}$$
+        </p>
+        <p>
+            where:<br/>
+            <p class="subsection">
+                &#x2022; \(\lambda\) is a particular wavelength of light<br/>
+                &#x2022; \(t\) is time<br/>
+                &#x2022; \(\mathbf x\) is the location in space<br/>
+                &#x2022; \(\omega_{\text{o}}\) is the direction of the outgoing light<br/>
+                &#x2022; \(\omega_{\text{i}}\) is the negative direction of the incoming light<br/>
+                &#x2022; \(L_{\text{o}}(\mathbf x,\, \omega_{\text{o}},\, \lambda,\, t)\) is the<br/> total spectral radiance of wavelength \(\lambda\,\!\) directed outward along direction \(\omega_{\text{o}}\) at time \(t\), from a particular position \(\mathbf x\,\!\)<br/>
+                &#x2022; \(L_e(\mathbf x,\, \omega_{\text{o}},\, \lambda,\, t)\) is emissivity emitted spectral radiance<br/>
+                &#x2022; \(\Omega\) is the unit hemisphere containing all possible values for \(\omega_{\text{i}}\)<br/>
+                &#x2022; \(\int_\Omega \dots\, \operatorname d\omega_{\text{i}}\) is an integral over \(\Omega\)<br/>
+                &#x2022; \(f_r(\mathbf x,\, \omega_{\text{i}},\, \omega_{\text{o}},\, \lambda,\, t)\) is the bidirectional reflectance distribution function, the proportion of light reflected from \(\omega_{\text{i}}\) to \(\omega_{\text{o}}\) at position \(\mathbf x\,\!\), time \(t\,\!\), and at wavelength \(\lambda\,\!\)<br/>
+                &#x2022; \(L_{\text{i}}(\mathbf x,\, \omega_{\text{i}},\, \lambda,\, t)\) is spectral radiance of wavelength \(\lambda\,\!\) coming inward toward \(\mathbf x\,\!\) from direction \(\omega_{\text{i}}\) at time \(t\,\!\)<br/>
+                &#x2022; \(\omega_{\text{i}} \cdot \mathbf n\) is the weakening factor of inward irradiance due to incident angle, as the light flux is smeared across a surface whose area is larger than the projected area perpendicular to the ray<br/>
+            </p>
+        </p>
+        <p>
+            Solving the equation perfectly for all points is an extremely intensive computation, however, highly paralellisable. Modern animation studies employ thousands of computers in a distributed fashion and even then it takes hours upon hours to render their animations. Games and interactive applications must perform these calculations in real-time (real time being > 20 times per second). As such, since it is not feasible to optimally solve the rendering equation, many techniques and algorithms have been developed which provide visually appealing results. Each of these techniques have advantages and disadvantages and different domains of application. I will examine a many of them below.
+        </p>
+    
+        <a name="--------The Rendering Equation"></a>
+    
+        <h4>Aside - Important Parts</h4>
+    
+        <p>
+            Many of the lighting and rendering techniques I studied are not applicable to audio simulation. I merely find them very interesting. Many of the ideas they use are VERY applicable to audio simulation, as the problem of calculating what happens when you send waves around a 3D space is a very difficult and computationally expensive problem with many creative solutions, all with their own advantages and disadvantages, many of which may be appropriated to audio.
+        </p>
+        
+        <a name="--------Techniques and Approaches"></a>
+        
+        <h4>Techniques and Approaches</h4>
+        
+        <a name="------------Ray Tracing"></a>
+        
+        <p><b>Ray Tracing</b></p>
+        <p>
+            If we imagine the camera as the focal point of a pyramid in our 3D scene, the cross section of that pyramid (<i>called the viewing frustrum</i>) may be considered our screen. We divide this up into small squares called pixels. For each pixel, we would like to determine its colour. To do this, we fire a ray from the camera, through the pixel. This ray is then "traced" (reflected off surfaces and refracted through glass etc...) through the scene to a certain limit, at which point the ray is traced to all light sources, in order to determine the amount of light currently hitting its current location.
+        </p>
+        <p>
+            Ray tracing produces highly photorealistic imagery, however is extremely slow and suffers from aliasing, as the rays are projected into an area smaller than a pixel. For real time applications, it must be approximated with monte-carlo techniques (produces highly noisy results<ref id="18"></ref>) and since all (millions potentially) of rays must be collision tested with all polygons it may hit in the scene, some form of spacial partitioning is required (to make sure we only test objects that are along the path of the ray. This is called <i>broad-phase</i> collision testing and there are a bunch of techniques and optimisations for it.<ref id="14"></ref>). 
+        </p>
+    
+        <a name="------------Itterative Refinement Radiosity"></a>
+        
+        <p><b>Itterative Refinement Radiosity</b></p>
+        <p>
+            The radiosity algorithm<ref id="11"></ref> uses itterative refinement to calculate the amount of light hitting each surface area, based on the amount of light emitted by other surfaces (which is in turn based on how much they receive etc...). The radiosity equation consists of a visibility term and a geometric term, which represents the amount of energy the point transfers based on its orientation to incoming light from its light hemisphere. The radiosity equation forms a system of linear equations<ref id="13"></ref> for all points in the scene. The resulting matrix is diagonally dominant and thus garaunteed to converge when using <i>Gauss Seidel itteration</i>. Thus we solve the system itteratively. To make it computationally feasible, all surfaces are discretised into "patches" and the light hemisphere is approximated with a light cube<ref id="12"></ref>. The algorithm proceeds as follows:
+        </p>
+        <p>
+            Each patch retains accumulated and unshot energy. The scene is rendered (very basically) from the perspective of each patch for all patches. The energy incoming from all other visible light sources and other patches is calculated. Energy is "emitted" and sent to all visible receivers from the patch.
+        </p> 
+        <p>When using radiosity, it is unfortunately computationally expensive to get good results (due to repeated rendering), without sacrificing quality (through over-discretisation or not enough itterations).
+        </p>
+    
+        <a name="------------Photon Mapping"></a>
+        
+        <p><b>Photon Mapping</b></p>
+        <p>
+            In photon mapping, photons from light sources are emitted from light sources. Whenever a photon intersects an object in the scene, the intersection point, direction and energy are stored in a <i>map</i>. After intersection, the photon is either transmitted or absorbed based on surface properties and random chance. The photon map should be stored in such a way that arbitrary points in space can be queried easily. This is usually done with a kd-tree.
+        </p>
+        <p>
+            Ray tracing is then done, however, once a ray hits a surface, the nearest photon intersections in the photon map are queried and used to 
+        </p>
+        <p>
+            Photon mapping is used primarily to render caustics, refraction and subsurface scattering <ref id="15"></ref>. It is primarily used for ray tracing. There are some real time implementations but I haven't studied them in any depth. There are ways to achieve photon mapping in real time using the GPU<ref id="15"></ref>.
+        </p>
+    
+        <a name="------------Beam and Cone Tracing"></a>
+        
+        <p><b>Beam and Cone Tracing</b></p>
+        <p>
+            Beam tracing alters ray tracing by sending out a single "beam" (triangular pyramid) along the viewing frustrum into the scene. Upon intersection, the intersection shape is clipped from the beam, and new beams are created and reflected into the scene based on the properties of intersected surface. Cone tracing proceeds similarly, however does not clip. Instead it creates new cones which approximate the shape the intersected object occludes. Both these methods model the energy transfer of light far better than traditional ray tracing and suffer less from the aliasing problems that ray tracing suffers from.
+        </p>
+    
+        <a name="------------Pre-Baked Light/Radiosity Maps"></a>
+        
+        <p><b>Pre-Baked Light/Radiosity Maps</b></p>
+        <p>
+            A strategy of game engines in the 90s and early 2000s was to pre-bake global lighting, occlusion and radiosity information into 3D scenes in a compilation stage. The idea being to use offline preprocessing to reduce the algorithm to simply looking up a texture. This time-space tradeoff tradeoff works incredibly well for static geometry and has negligable impact on rendering time. It does not however, work at all for dynamic objects, often creating a disparity between the static world and dynamic objects moving within the world. Pre-baking is a very useful technique however and if we can get away with it, it is probably a good idea to do it as the gains it provides are tremendous. The Nvidia algorithm uses pre-baking where possible to cache its voxel representation of static geometry, and Funkhouser's caching and storage of all possible reflections generated by static audio sources and storage of impulse responses is what enables his algorithm to work in real time.
+        </p>
+    
+        <a name="--------Nvidia's Algorithm"></a>
+        
+        <h4>Nvidia's Algorithm</h4>
+        <p>
+            The current state of the art in real time rendering technology is Nvidia's sparse voxel octree cone tracing approach.<ref id="16"></ref>
+        </p>
+            <iframe width="420" height="315" src="http://www.youtube.com/embed/fAsg_xNzhcQ" frameborder="0" allowfullscreen></iframe>
+
+        <p>
+            Nvidia's breakthrough utilises the fact that sparse voxel octrees area compressable, linearly storable (important for gpu memory as current gpu cores (this is rapidly changing in modern APUs) have access to only a contiguous subset of total gpu memory), and can be queried logarithmically. The 3D scene is discretised by generating a voxel (3D pixels, essentially cubes in space) octree based on the scene geometry. As the scene is mostly empty space, the octree is highly sparse, and larger scenes only increase the ratio of sparsity. As an optimisation, only the visible voxels need to be considered and stored, i.e. voxels enclosed by 4 other voxels may be disregarded completely if all 4 are completely opaque. The result is a very sparse octree representation of the scene which may be stored linearly in gpu memory and traversed/queried in logarithmic time. Voxels corresponding to static geometry may be cached or pre-baked as it will not change, and only voxels corresponding to dynamic objects need be discarded and refreshed each frame.
+        </p>
+        <p>
+            The algorith proceeds as follows:
+        </p>
+        <p>
+            The scene is voxelised and then from each light source, the scene is rendered. Incoming radiance is stored in all visible voxels of the octree (note all voxels exist only in the leaves). The incoming lighting distribution is stored as <i>compact gaussian lobes</i>. The scene is then rendered from the camera's perspective and cone tracing is used to simulate the light transport between voxels. Many cones are traced from each voxel face in order to approximate the hemisphere of each face.
+        </p>
+        <p>
+            Cone tracing was chosen because, due to the hierarchical nature of voxels, a voxel at depth \(d\) of the tree will contain the (at most) 8 voxels at depth \(d + 1\). As the cone's volume increases with distance, the depth by which you need to traverse the octree decreases<ref id="20"></ref>. The information is then propogated to the 8 children. This gives you a tremendous speedup, as well as automated level of detail in lighting rendering. The result is less precise as somethings like ray tracing, but achieves real time performance and is good enough for all intents and purposes.
+        </p>
+    
+        <a name="----Auralization and Audio Simulation"></a>
+        
+        <h3>Auralization and Audio Simulation</h3>
+        <p>
+            The analog of global illumination for sound, is simulating in real-time what a receiver should hear based on sound waves which have travelled from sources, to the receiver. 
+        </p>
+    
+        <a name="--------Funkhauser Beam Tracing"></a>
+        
+        <h4>Funkhouser Beam Tracing</h4>
+        <p>
+            Funkhouser<ref id="19"></ref> solves the problem of global audio simulation in a way very similar to bream tracing based global illumination algorithms.
+        </p>
+        <a name="------------Offline Phase"></a>
+        <p><b>Offline Phase</b></p>
+        <p>
+            First the space is partitioned using BSP, and a cell adjacency graph is constructed. A "beam tree" is recursively calculated, using beam tracing, for each audio source, to all "visible" surfaces (surfaces its sound can immediately hit without being occluded). The space partitioning information and beam tree is cached to be later used to efficiently compute source to receiver paths in real time. The beams are used to model transmission, specular reflectivity, and diffraction of sound.
+        </p>
+        <a name="------------Online Phase"></a>
+        <p><b>Online Phase</b></p>
+        <p>
+            As the receiver moves, the cached trees are used to efficiently enumerate through potential propogation sequences that will reach the receiver. The paths are then combined in a process known as <i>auralization</i> which I will briefly discuss below.
+        </p>
+        <p>
+            Funkhouser provides an elegant and efficient solution for applications involving static geometry and sound sources. However, ideally we would be able to support applications also involving dynamic geometry and moving audio sources. There are also many aspects of sound it does not model, such as doppler, propogation and 3D perception of the sound.
+        </p>
+
+        <a name="--------Auralization"></a>
+        
+        <h4>Auralization</h4>
+        <p>
+            Auralization is the process of convolving raw sound signals with a <i>binaural room impulse response</i> in order to produce sound which appears to belong in the virtual space you are in. There are many ways to calculate the BRIR of a space, each having assosciated advantages and disadvantages. The RAVEN auralization system<ref id="21"></ref> uses stochastic ray tracing from sound sources to simulate the space's reverberant sound field. Other techniques exist such as <i>Finite Element Models</i> and <i>Boundary Element Models</i> in which space is discretised and sound it propogated in a cellular autonama type fashion. Fulkhouser criticises both of these methods, claiming that they are too expensive time and memory wise and thus not suited to interactivity. I did not research this area heavily, however it is one of the most important aspects of audio simulation because it gives the sound its richness and matches it to the virtual space from which it is eminating.
+        </p>
+        
+        The RAVEN Auralization System<br/><br/>
+        <iframe src="http://player.vimeo.com/video/41919345" width="420" height="315" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+    
+        <a name="----Adaption of State of the Art Techniques"></a>
+        
+        <h3>Adaption of State of the Art Techniques</h3>
+        <p>
+            In the near future, real time global illumination will be a standard feature in top of the line game engines<ref id="20"></ref>, yet true 3D global audio is relegated to the world of experimental simulation. The most advanced engines I've seen analyse the local scene geometry in order to construct appropriate DSP settings to apply to raw sound effects, but none that I've seen attempt to simulate audio to the extent they do light.
+        </p>
+        <p> 
+            I believe that current methods of audio simulation may be extended with recent developments in accelerated hardware and breakthroughs in global illumination algorithms and techniques. I would certainly like to continue researching this topic in the future.
+        </p><br/>
+    
+        Lachlan Ford (3365615) November 2013<br/><br/><br/>
+        
+    </center>
+        
+    </div>
+    <script>
+        
+        function elipsis (src) {
+            return (src.length > 40 ? src.substr(0,40) + "..." : src)   
+        }
+        
+        var opened = false;
+        var showingContents = false;
+        var showingReferences = false;
+        function updateContents () {
+            if (showingContents) {
+                document.getElementById("contents").style.left = "0%";
+                document.getElementById("contentsButton").style.left = $("#contents").width() + "px";
+                document.getElementById("referencesButton").style.left = $("#contents").width() + "px";
+                
+                $("#contentsButton").css({"background-color" : "#444"});
+            } else{
+                document.getElementById("contents").style.left = -$("#contents").width() + "px";
+                document.getElementById("contentsButton").style.left = "0px";
+                document.getElementById("referencesButton").style.left = "0px";
+                
+                $("#contentsButton").css({"background-color" : "#333"});
+            }
+        }
+        
+        function updateReferences () {
+            if (showingReferences) {
+                document.getElementById("references").style.left = "0%";
+                document.getElementById("contentsButton").style.left = $("#references").width() + "px";
+                document.getElementById("referencesButton").style.left = $("#references").width() + "px";
+                
+                $("#referencesButton").css({"background-color" : "#444"});
+                for (var i=0;i<referenceTags.length;i++) {
+                    referenceTags[i].style.backgroundColor = "#faa";
+                    referenceTags[i].style.fontSize = "14px";
+                }
+            } else {
+                document.getElementById("references").style.left = -$("#references").width() + "px";
+                document.getElementById("contentsButton").style.left = "0px";
+                document.getElementById("referencesButton").style.left = "0px";
+                
+                $("#referencesButton").css({"background-color" : "#333"});
+                for (var i=0;i<referenceTags.length;i++) {
+                    referenceTags[i].style.backgroundColor = "#fff";
+                    referenceTags[i].style.fontSize = "10px";
+                }
+            }
+        }
+        
+        function closeAll () {
+            document.getElementById("contents").style.left = -$("#contents").width() + "px";
+            
+            document.getElementById("contentsButton").style.left = "0px";
+            document.getElementById("referencesButton").style.left = "0px";
+            
+            document.getElementById("references").style.left = -$("#references").width() + "px";
+        }
+        
+        function toggleContents () {
+            opened = true;
+            showingContents = !showingContents;
+            showingReferences = false;
+            updateReferences();
+            updateContents();
+        }
+        
+        function toggleReferences () {
+            opened = true;
+            showingReferences = !showingReferences;
+            showingContents = false;
+            updateContents();
+            updateReferences();
+        }
+        
+        var loadfunc = function () {
+            if (opened) {return;}
+            document.getElementById("contents").style.left = -$("#contents").width() + "px";
+            document.getElementById("references").style.left = -$("#references").width() + "px";
+            //toggleContents();
+        }
+        
+        document.body.onload = loadfunc;
+        setTimeout(loadfunc, 100);
+        
+	    var old = document.getElementsByTagName("latex");
+
+        while (old.length) {
+    
+            for (var i= 0; i<old.length; i++){
+                var img = document.createElement("img");
+                img.innerHTML = old[i].innerHTML;
+                for (j in old[i].style) {
+                    img.style[j] = old[i].style[j];
+                }
+                img.src = "http://latex.codecogs.com/png.latex?" + old[i].innerHTML
+                old[i].parentNode.replaceChild(img, old[i]);
+            }
+            old = document.getElementsByTagName("latex");
+        }
+        
+        var contents = document.getElementById("contents");
+        var segments = document.querySelectorAll("a");
+        var l = segments.length;
+        for (var i=0;i<l;i+= 1) {
+            if (segments[i].name) {
+                var d = document.createElement("div");
+                var p = document.createElement("a");
+                p.className = "contentsElement";
+                d.className = "contentsDiv";
+                p.href = "#" + segments[i].name;
+                p.innerHTML = elipsis(segments[i].name);
+                d.appendChild(p);
+                contents.appendChild(d);
+                contents.appendChild(document.createElement("br"));
+            }
+        }
+        
+        var referencesSidebar = document.getElementById("references");
+        var references = document.querySelectorAll("reference");
+        var referenceLinks = [];
+        var l = references.length;
+        for (var i=0;i<l;i+= 1) {
+            var d = document.createElement("div");
+            var p = document.createElement("a");
+            p.className = "contentsElement";
+            d.className = "contentsDiv";
+            var src = references[i].getAttribute("name");
+            p.href = references[i].getAttribute("src");
+            referenceLinks.push(p.href);
+            p.target = "_blank";
+            p.innerHTML = elipsis((i+1) + ". " + src);
+            p.title = src;
+            d.appendChild(p);
+            referencesSidebar.appendChild(d);
+            referencesSidebar.appendChild(document.createElement("br"));
+        }
+        
+        var refs = document.querySelectorAll("ref");
+        var referenceTags = [];
+        var l = refs.length;
+        for (var i=0;i<l;i+= 1) {
+            var a = document.createElement("a");
+            a.href = referenceLinks[refs[i].getAttribute("id") - 1];
+            a.target = "_blank";
+            a.innerHTML = "[" + refs[i].getAttribute("id") + "]"
+            a.className = "refTag";
+            referenceTags.push(a);
+            refs[i].parentNode.replaceChild(a,refs[i]);
+        }
+    </script>
+<body>

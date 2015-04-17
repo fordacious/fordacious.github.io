@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>three.js test</title>
+		<style>
+			#container {
+				background: #000;
+				width: 400px;
+				height: 300px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container">
+
+
+		</div>
+
+	</body>
+	<script src="js/jquery.js"></script>
+	<script src="js/Three.js"></script>
+
+	<script type="text/javascript">
+	window.requestAnimFrame = (function(callback){
+	return window.requestAnimationFrame ||
+	window.webkitRequestAnimationFrame ||
+	window.mozRequestAnimationFrame ||
+	window.oRequestAnimationFrame ||
+	window.msRequestAnimationFrame ||
+	function(callback){
+		window.setTimeout(callback, 1000 / 60);
+	};
+	})();
+
+	// set the scene size
+	var WIDTH = 400,
+	    HEIGHT = 300;
+
+	// set some camera attributes
+	var VIEW_ANGLE = 60,
+	    ASPECT = WIDTH / HEIGHT,
+	    NEAR = 0.1,
+	    FAR = 10000;
+
+	// get the DOM element to attach to
+	// - assume we've got jQuery to hand
+	var $container = $('#container');
+
+	// create a WebGL renderer, camera
+	// and a scene
+	var renderer = new THREE.WebGLRenderer();
+	var camera = new THREE.PerspectiveCamera(  VIEW_ANGLE,
+	                                ASPECT,
+	                                NEAR,
+	                                FAR  );
+	var scene = new THREE.Scene();
+
+	// the camera starts at 0,0,0 so pull it back
+	camera.position.z = 300;
+
+	// start the renderer
+	renderer.setSize(WIDTH, HEIGHT);
+
+	// attach the render-supplied DOM element
+	$container.append(renderer.domElement);
+
+	// create the sphere's material
+
+	// create a new mesh with sphere geometry -
+	// we will cover the sphereMaterial next!
+	
+	var spheres = new Array();
+	for (var i = 0; i < 1000; i ++) {
+		var sphereMaterial = new THREE.MeshLambertMaterial(
+		{
+			color: Math.random()*(Math.pow(2,32)-1)
+		});
+
+		// set up the sphere vars
+		var radius = Math.random()*5 + 2, segments = 16, rings = 16;
+		var sphere = new THREE.Mesh(
+		   new THREE.SphereGeometry(radius, segments, rings),
+		   sphereMaterial);
+
+		// add the sphere to the scene
+		scene.add(sphere);
+		sphere.position.x = Math.random()* WIDTH - WIDTH / 2
+		sphere.position.y = Math.random()* HEIGHT - HEIGHT / 2
+		sphere.position.z = Math.random()* WIDTH - WIDTH / 2
+		sphere.vy = Math.random()*10 - 5;
+		spheres.push(sphere)
+	}
+
+	// and the camera
+	scene.add(camera);
+
+	var ambiance = new THREE.AmbientLight( 0x111111 );
+	//scene.add( ambiance );
+	
+	// create a point light
+	var pointLight = new THREE.SpotLight( 0xFFFFFF );
+
+	// set its position
+	pointLight.position.x = 10;
+	pointLight.position.y = 50;
+	pointLight.position.z = 130;
+
+	var mouse = {x:0,y:0};
+	window.onmousemove = function (e) {
+		mouse.x = e.pageX
+		mouse.y = e.pageY
+	}
+	var rightdown = false
+	var leftdown = false
+	window.onmousedown = function (e) {
+		if (e.button == 2) {
+			rightdown = true
+		} else {
+			leftdown = true
+		}
+		e.preventDefault();
+	}
+	window.onmouseup = function (e) {
+		rightdown = false
+		leftdown = false;
+	}
+	window.oncontextmenu = function (e) {e.preventDefault()}
+	var left  = false;
+	var right = false;
+	
+	window.onkeydown = function (e) {
+		if (e.keyCode == 65) {
+			left = true
+		} else if (e.keyCode == 68) {
+			right = true
+		}
+	}
+	window.onkeyup = function (e) {
+		left = false
+		right = false
+	}
+	
+	// add to the scene
+	scene.add(pointLight);
+	main()
+	function main () {
+		pointLight.position.x = mouse.x - WIDTH / 2;
+		pointLight.position.y = -mouse.y + HEIGHT / 2;
+		camera.position.x = pointLight.position.x;
+		camera.position.y = pointLight.position.y;
+		//camera.position.z = pointLight.position.z;
+		for (var i = 0; i < spheres.length; i++) {
+			var s = spheres[i];
+			s.position.y -= s.vy;
+			s.vy += 0.3
+			var limit = -40
+			if (s.position.y < limit) {
+				s.position.y = limit
+				s.vy *= -0.95
+			}
+		}
+		
+		if (leftdown) {
+			pointLight.position.z += 10
+		} 
+		if (rightdown) {
+			pointLight.position.z -= 10
+		}
+		if (left) {
+			camera.rotation.y += 0.1
+		}
+		if (right) {
+			camera.rotation.y -= 0.1
+		}
+		
+		renderer.render(scene, camera);
+		requestAnimFrame(function(){
+			main();
+		});
+	};
+	</script>
+</html>

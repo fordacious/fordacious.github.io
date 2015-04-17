@@ -1,0 +1,116 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<script src="js/testButton.js">
+</script>
+<script src="js/CAPIObject.js">
+</script>
+<script src="js/Stats.js">
+</script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>Cheddar Test</title>
+	<!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+</head>
+<style>
+canvas{
+	margin:-8px;
+	padding:0px;
+}
+</style>
+<div class="i"></div>
+<body>	
+<script>
+function init() {
+	
+	Cheddar.init({
+		width :window.innerWidth,
+		height:window.innerHeight,
+		clear :true
+	});
+
+// prevent elastic scrolling
+document.body.addEventListener('touchmove',function(event){
+  event.preventDefault();
+},false);
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	var root = this;
+	
+	var camera = {x:0,y:0,zoom:0.1}
+	
+	var diff = 78
+	var tiles = []
+	var tileLayer = stage.addChild(new DisplayObject())
+	tileLayer.enabled = false;
+	for (var y=0; y < 22; y++) {
+		var temptiles = [];
+		for (var x = 0; x < 8; x ++) {
+			if ((y != 11 && y != 12) || (x < 1 || x > 5)) {
+				var tile = tileLayer.addChild(new DisplayImage("assets/isofloor.png"));
+			} else {
+				tile = tileLayer.addChild(new DisplayImage("assets/isofloor2.png"))
+			}
+			tile.x = (x*diff +(diff / 2) * (y%2)) * camera.zoom / 0.1 - camera.x
+			tile.y = y*diff/4 * camera.zoom / 0.1 - camera.y
+			tile.scaleX = (800 / tile.width)  * camera.zoom
+			tile.scaleY = (393 / tile.height) * camera.zoom
+			temptiles.push(tile);
+			tile.enabled = false;
+		}
+		tiles.push(temptiles)
+	}
+	
+	var sprite = tileLayer.addChild(new Sprite("assets/walkCycle", "walk000", ".png", 7))
+	sprite.scaleX = 0.1
+	sprite.scaleY = 0.1
+	sprite.addFrameCallback (7, function () {
+		sprite.gotoAndPlay(2)
+	})
+	sprite.frameRate = 10
+	sprite.y = 330
+	sprite.speed = 1.5
+	sprite.enabled = false;
+	
+	var zoomSlider = stage.addChild(new Slider("assets/slider"))
+	zoomSlider.x = 150
+	zoomSlider.y = 30
+	
+	stage.on ("enterframe", function (e) {
+		sprite.speed = (mouse.x - sprite.x) / 30
+		
+		if (sprite.speed > 3) {
+			sprite.speed = 3
+		} else if (sprite.speed < -3) {
+			sprite.speed = -3
+		}
+		sprite.frameRate = Math.abs(sprite.speed * 3)
+		
+		camera.zoom = zoomSlider.value / 20 + 0.1
+		
+			tileLayer.scaleX = (800 / tile.width)  * camera.zoom
+			tileLayer.scaleY = (393 / tile.height) * camera.zoom
+		if (sprite.x < mouse.x) {
+			sprite.scaleX = 0.3
+			sprite.scaleY = sprite.scaleX
+		} else {
+			sprite.scaleX = -0.3
+			sprite.scaleY = -sprite.scaleX
+		}
+		if (Math.abs(sprite.speed) < 0.1) {
+			sprite.gotoAndStop(0)
+		} else {
+			sprite.play();
+		}
+		sprite.x += sprite.speed;
+		camera.x = -mouse.x + 275*camera.zoom
+		camera.y = -mouse.y + 200*camera.zoom
+		tileLayer.x = -camera.x
+		tileLayer.y = -camera.y
+	})
+}
+window.onload = init;
+</script>
+</body>
+</html>

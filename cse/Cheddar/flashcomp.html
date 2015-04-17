@@ -1,0 +1,184 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>Cheddar Test</title>
+	<!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+</head>
+<body background="background.jpg">
+<script>
+function init() {
+
+	Cheddar.init({
+		width :550,
+		height:400,
+		clear :true,
+		renderCanvas:true
+	});
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	
+	var bg = stage.addChild(new DisplayObject());
+	bg.on("render", function (context) {
+		context.fillStyle = "#fff"
+		context.fillRect(0,0,stage.stageWidth,stage.stageHeight)
+	})
+	var s = stage.addChild(new Slider("assets/slider"));
+	s.x = 250;
+	s.y = 100;
+	
+	var balls = []
+	for (var i=0;i<0;i++) {
+		balls.push(stage.addChild(new DisplayObject()))
+		var b = balls[i];
+		b.render = function (context) {
+			context.fillStyle = "#a00";
+			context.beginPath();
+			context.arc(0, 0, 3, 0, Math.PI*2, true); 
+			context.closePath();
+			context.fill();
+		}
+		b.x = Math.random()*stage.stageWidth
+		b.y = Math.random()*stage.stageHeight
+		b.vx = Math.random()*10 -5;
+		b.vy = Math.random()*4 -2;
+	}
+	
+	function randomColour () {
+		var s = "#";
+		for (var i=0;i<3;i++) {
+			var r = Math.floor(Math.random()*16);
+			if (r == 10) {
+				s += "a"
+			} else if (r == 11) { s+="b" } else if (r == 12) { s+="c" } else if (r == 13) { s+="d" } else if (r == 14) { s+="e" } else if (r == 15) { s+="f" }
+			else {s += r}
+		}
+		return s;
+	}
+	
+	function makeBall() {
+		balls.push(stage.addChild(new DisplayObject()))
+		var b = balls[balls.length - 1];
+		b.fill = fill
+		//b.fill = 0
+		b.on ("render", function (context) {
+			context.fillStyle = b.fill;
+			context.beginPath();
+			context.arc(0, 0, 3, 0, Math.PI*2, true); 
+			context.closePath();
+			context.fill();
+		});
+		b.x = mouse.x
+		b.y = mouse.y
+		b.vx = Math.random()*10 -5;
+		b.vy = Math.random()*4 - 10;
+		b.vz = Math.random()*4 - 2;
+		b.ax = 0;
+		b.ay = 0;
+		b.alpha = Math.random()*1;
+		return b;
+	}
+	
+	//stage.on ("mousemove", fire);
+	//stage.on ("mousedrag", fire);
+
+	function fire (e) {
+		fill = randomColour();
+	
+		if (e.button == 2) {
+			fill = "#0a0"
+		} else if (e.button == 1) {
+			fill = "#00a"
+		}
+		
+		for (var i=0; i< 1; i++) {
+			makeBall();
+		}
+		e.preventDefault();
+	}
+	
+	//var t1 = stage.addChild(new Text("mouse"))
+	//t1.x = 400;
+	//t1.y = 100;
+	
+	stage.on("mousemove", function () {
+		//stage.stageWidth = window.innerWidth;
+		//stage.stageHeight = window.innerHeight;
+		//t1.text = mouse.x + ", " + mouse.y
+	});
+	
+	stage.on ("enterframe", function (e) {
+		for (var i = 0; i < balls.length; i++) {
+			var b = balls[i];
+			b.radius = (3/2)*b.scaleX
+			b.visible = b.y > 0;
+			b.x += b.vx * e.delta / 16.667;
+			b.y += b.vy * e.delta / 16.667;			
+			//b.ax = (mouse.x - b.x)/1000
+			//b.ay = (mouse.y - b.y)/1000 + 0.2
+			//b.vx += b.ax;
+			//b.vy += b.ay;
+			//b.x += b.vx;
+			//b.y += b.vy;
+			b.vy += 0.5;
+			b.scaleX += b.vz / 30;
+			b.scaleY = b.scaleX;
+			if (b.y > Cheddar.stage.stageHeight) {
+				stage.removeChild(b)
+				var ar = new Array();
+				for (var j = 0; j < balls.length; j++) {
+					if (b != balls[j]) {
+						ar.push(balls[j]);
+					}
+				}
+				balls = ar;
+				i -= 1
+				continue
+			}
+			if (b.x > Cheddar.stage.stageWidth) {
+				b.vx *= -1
+				b.x = Cheddar.stage.stageWidth;
+			}
+			if (b.x < 0) {
+				b.vx *= -1
+				b.x = 0;
+			}
+		}
+	});
+}
+window.onload = init;
+</script>
+<!--
+	<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" 
+
+	codebase="http://download.macromedia.com/pub/shockwave/
+	cabs/flash/swflash.cab#version=6,0,40,0" 
+	 
+	width="550" height="400" 
+	 id="flashcomparison"> 
+
+	<param name="flashcomparison.swf"  
+
+	value="flashcomparison.swf" /> 
+	 
+	<param name="quality" value="high" /> 
+
+	<param name="bgcolor" value="#ffffff" /> 
+
+	<embed src="flashcomparison.swf" quality="high" bgcolor="#ffffff"
+
+	width="550" height="400" 
+
+	name="flashcomparison.swf" align="" type="application/x-shockwave-flash" 
+
+	pluginspage="http://www.macromedia.com/go/getflashplayer"> 
+	
+	</embed> 
+
+	</object>
+-->
+</body>
+
+</html>

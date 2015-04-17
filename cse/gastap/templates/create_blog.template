@@ -1,0 +1,12 @@
+<h2>Create Blog</h2>
+<hr>
+<form method="GET" action="<TMPL_VAR NAME=URL>">
+<p>
+Title: <input type="text" name="blog_title">
+<p>
+Content: <textarea type="textarea" name="blog_content"></textarea>
+<p>
+<input type="submit" name="submit" value="Create Blog">
+<input type=hidden name="action" value="create_blog">
+</form>
+

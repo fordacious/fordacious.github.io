@@ -1,0 +1,276 @@
+<head>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <style>
+        img {
+            margin-left:0%;
+            background-color:#fff;
+            -webkit-transition-property: all;
+            -webkit-transition-duration: .1s;
+            -webkit-transform:scale(1);
+        }
+        img:hover {
+            background-color:#eeeeff;
+            -webkit-transform:scale(1.1);
+        }
+        
+        body {
+            font-family:sans-serif;
+            margin:0px;
+        }
+        
+        p {   
+            text-align:justify;
+            padding-left:15px;
+            padding-right:15px;
+            max-width:800px;
+        }
+        
+        .sidebar {
+            position:fixed;
+            height:100%;
+            top:0px;
+            overflow:hidden;
+            padding-top:10px;
+            left:-1000px;
+            background-color:#333;
+            -webkit-transition-property: left;
+            -webkit-transition-duration: .3s;
+            box-shadow: 5px 5px 20px #222;
+            opacity:.95;
+        }
+        
+        .sideButtons {
+            position:fixed;
+        }
+        
+        #contentsButton,#referencesButton {
+            padding:5px;
+            background-color:#333;
+            color:#aaa;
+            cursor:pointer;
+            position:relative;
+            text-align:left;
+            left:0px;
+            top:0px;
+            -webkit-transition-property: left;
+            -webkit-transition-duration: .3s;
+            opacity:.95;
+        }
+        
+        
+        .contentsDiv {
+            margin:10px; 
+            margin-top:0px;
+            margin-bottom:-10px;
+        }
+        
+        .contentsElement {
+            color:#aaa;
+            text-decoration:none;
+            margin-top:0px;
+            margin-bottom:2px;
+        }
+        .contentsElement:hover, #contentsButton:hover, #referencesButton:hover {
+            color:#eee;   
+        }
+        
+        .refTag {
+            -webkit-transition-property: background-color;
+            -webkit-transition-duration: .3s;
+            text-decoration:none;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="sideButtons">
+        <div id="contentsButton" onclick="toggleContents()">Contents</div>
+        <div id="referencesButton" onclick="toggleReferences()">References</div>
+    </div>
+    <contents id="contents" class="sidebar"></contents>
+    <contents id="references" class="sidebar">
+        <reference name="Example" src="example.com"/>
+        <reference name="Google" src="http://google.com"/>
+        <reference name="really really long name that is really really long so long in fact that asdf" src="http://reallyreallyreallyreallyreallyreallyreallyreallylong.com"/>
+    </contents>
+    <div id="mainBody">
+        
+    <a name="Top"></a>
+        
+    <center>
+        
+        <h1><u>Assignment</u></h1><br/>
+        
+        <a name="Introduction"></a>
+        
+            <h2>Intro</h2>
+            <p>
+            Lorem ipsum dolor sit amet<ref id="1"></ref>, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim vniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore<ref id="1"></ref> eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis elei
+            </p>
+        
+    <a name="Formulas"></a>
+        
+        <h2>Formulas</h2>
+        <latex>PVA(r,t)=\frac{1-\left(1+r\right)^{-t}}{r}</latex>
+        <br/>
+        <latex>PVA(r,t)=\Sigma^{2}_{\frac{1-\left(1+r\right)^{-t}}{r}}</latex>
+        <br/>
+        <p>$$x = {-b \pm \sqrt{b^2-4ac} \over 2a}$$</p>
+    
+    <a name="Part 1: The filler"></a>
+        
+        <h2>Filler</h2>
+        <p>
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam<ref id="2"></ref> liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum claritatem. Investigationes demonstraverunt lectores legere me lius quod ii 
+        <latex>PVA(r,t)=\frac{1-\left(1+r\right)^{-t}}{r}</latex> legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum. Mirum est notare quam littera gothica, quam nunc putamus parum claram, anteposuerit litterarum formas humanitatis per seacula quarta decima et quinta decima. Eodem modo typi, qui nunc nobis videntur parum clari, fiant sollemnes in futurum.  
+        </p>
+        
+    <a name="Part 2: The filler returns"></a>
+        
+        <h2>End</h2>
+        <p>
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem<ref id="3"></ref> insitam; est usus legentis in iis qui facit eorum claritatem. Investigationes demonstraverunt lectores legere me lius quod ii legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum. Mirum est notare quam littera gothica, quam nunc putamus parum claram, anteposuerit litterarum formas humanitatis per seacula quarta decima et quinta decima. Eodem modo typi, qui nunc nobis videntur parum clari, fiant sollemnes in futurum.  
+        </p>
+        
+    </center>
+    </div>
+    <script>
+        
+        var showingContents = false;
+        var showingReferences = false;
+        function updateContents () {
+            if (showingContents) {
+                document.getElementById("contents").style.left = "0%";
+                document.getElementById("contentsButton").style.left = $("#contents").width() + "px";
+                document.getElementById("referencesButton").style.left = $("#contents").width() + "px";
+                
+                $("#contentsButton").css({"background-color" : "#444"});
+            } else{
+                document.getElementById("contents").style.left = -$("#contents").width() + "px";
+                document.getElementById("contentsButton").style.left = "0px";
+                document.getElementById("referencesButton").style.left = "0px";
+                
+                $("#contentsButton").css({"background-color" : "#333"});
+            }
+        }
+        
+        function updateReferences () {
+            if (showingReferences) {
+                document.getElementById("references").style.left = "0%";
+                document.getElementById("contentsButton").style.left = $("#references").width() + "px";
+                document.getElementById("referencesButton").style.left = $("#references").width() + "px";
+                
+                $("#referencesButton").css({"background-color" : "#444"});
+                for (var i=0;i<referenceTags.length;i++) {
+                    referenceTags[i].style.backgroundColor = "#faa";
+                }
+            } else {
+                document.getElementById("references").style.left = -$("#references").width() + "px";
+                document.getElementById("contentsButton").style.left = "0px";
+                document.getElementById("referencesButton").style.left = "0px";
+                
+                $("#referencesButton").css({"background-color" : "#333"});
+                for (var i=0;i<referenceTags.length;i++) {
+                    referenceTags[i].style.backgroundColor = "#fff";
+                }
+            }
+        }
+        
+        function closeAll () {
+            document.getElementById("contents").style.left = -$("#contents").width() + "px";
+            
+            document.getElementById("contentsButton").style.left = "0px";
+            document.getElementById("referencesButton").style.left = "0px";
+            
+            document.getElementById("references").style.left = -$("#references").width() + "px";
+        }
+        
+        function toggleContents () {
+            showingContents = !showingContents;
+            showingReferences = false;
+            updateReferences();
+            updateContents();
+        }
+        
+        function toggleReferences () {
+            showingReferences = !showingReferences;
+            showingContents = false;
+            updateContents();
+            updateReferences();
+        }
+        
+        document.body.onload = function (){
+            document.getElementById("contents").style.left = -$("#contents").width() + "px";
+            document.getElementById("references").style.left = -$("#references").width() + "px";
+            //toggleContents();
+        };
+        
+	    var old = document.getElementsByTagName("latex");
+
+        while (old.length) {
+    
+            for (var i= 0; i<old.length; i++){
+                var img = document.createElement("img");
+                img.innerHTML = old[i].innerHTML;
+                for (j in old[i].style) {
+                    img.style[j] = old[i].style[j];
+                }
+                img.src = "http://latex.codecogs.com/png.latex?" + old[i].innerHTML
+                old[i].parentNode.replaceChild(img, old[i]);
+            }
+            old = document.getElementsByTagName("latex");
+        }
+        
+        var contents = document.getElementById("contents");
+        var segments = document.querySelectorAll("a");
+        var l = segments.length;
+        for (var i=0;i<l;i+= 1) {
+            if (segments[i].name) {
+                var d = document.createElement("div");
+                var p = document.createElement("a");
+                p.className = "contentsElement";
+                d.className = "contentsDiv";
+                p.href = "#" + segments[i].name;
+                p.innerHTML = segments[i].name;
+                d.appendChild(p);
+                contents.appendChild(d);
+                contents.appendChild(document.createElement("br"));
+            }
+        }
+        
+        var referencesSidebar = document.getElementById("references");
+        var references = document.querySelectorAll("reference");
+        var referenceLinks = [];
+        var l = references.length;
+        for (var i=0;i<l;i+= 1) {
+            var d = document.createElement("div");
+            var p = document.createElement("a");
+            p.className = "contentsElement";
+            d.className = "contentsDiv";
+            var src = references[i].getAttribute("name");
+            p.href = references[i].getAttribute("src");
+            referenceLinks.push(p.href);
+            p.target = "_blank";
+            p.innerHTML = (i+1) + ". " + (src.length > 40 ? src.substr(0,40) + "..." : src);
+            d.appendChild(p);
+            referencesSidebar.appendChild(d);
+            referencesSidebar.appendChild(document.createElement("br"));
+        }
+        
+        var refs = document.querySelectorAll("ref");
+        var referenceTags = [];
+        var l = refs.length;
+        for (var i=0;i<l;i+= 1) {
+            var a = document.createElement("a");
+            a.href = referenceLinks[refs[i].getAttribute("id") - 1];
+            a.target = "_blank";
+            a.innerHTML = "[" + refs[i].getAttribute("id") + "]"
+            a.style.fontSize = "12px";
+            a.className = "refTag";
+            referenceTags.push(a);
+            refs[i].parentNode.replaceChild(a,refs[i]);
+        }
+    </script>
+<body>

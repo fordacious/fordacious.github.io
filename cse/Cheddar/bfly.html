@@ -1,0 +1,182 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>bfly</title>
+</head>
+<body style="margin:0px;" background="assets/bg.png">	
+<script>
+function init() {
+	
+	var WIDTH = 864;
+	var HEIGHT = 648;
+	
+	var SPEED = 2.5
+	var ACC = 1;
+	var FRICTION = 0.97
+
+	Cheddar.init({
+		width :WIDTH,
+		height:HEIGHT,
+		clear :true,
+		renderCanvas:true
+	});
+	
+	Cheddar.updateRate = 30;
+	Cheddar.frameRate = 30;
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	
+	function addImage (s) {
+		var i = stage.addChild(new DisplayImage(s));
+		i.image.onload = function () {
+			i.x = i.width / 2;
+			i.y = i.height / 2;
+		}
+		return i
+	}
+	
+	//var ol = addImage("assets/overlay.png");
+	var newCanvas = document.createElement('canvas');
+	newCanvas.height="" + WIDTH;
+	newCanvas.width="" + HEIGHT;
+	document.body.appendChild(newCanvas);
+	var v = new Image();
+	v.src = "assets/vinette.png"
+	newCanvas.getContext('2d').drawImage(v,0,0);
+	newCanvas.style.position = 'absolute'
+
+	var vinette = addImage("assets/vinette.png");
+	
+	var player = stage.addChild(new Sprite("assets/playeranim/player", 3));
+	player.frameRate = 3
+	player.scaleX = player.scaleY = 0.2
+	
+	var bubbles = []
+	var bubbleImage = new DisplayImage("assets/bubble.png");
+	for (var i = 0 ; i < 300; i ++) {
+		var b = new DisplayObject();
+		b.x = Math.random()*2000 - 1000
+		b.y = Math.random()*2000 - 1000
+		b.z = Math.random()*2
+		bubbles.push(b)
+	}
+	
+	function renderBubbles (context) {
+		for (var i = 0 ; i < bubbles.length; i ++) {
+			var b = bubbles[i];
+			bubbleImage.x = b.x | 0;
+			bubbleImage.y = b.y | 0;
+			if (bubbleImage.x + WIDTH/2 > 0 && bubbleImage.x + WIDTH/2 < WIDTH && bubbleImage.y  + HEIGHT/2> 0 && bubbleImage.y+ HEIGHT/2 < HEIGHT) {
+				bubbleImage.draw(context)
+			}
+		}
+	}
+	
+	var fade = stage.addChild(new DisplayObject ());
+	function updateFade () {
+		if (fade.alpha > 0.01) {
+			fade.alpha -= 0.01
+		} else {
+			stage.off("enterframe", updateFade)
+			stage.removeChild(fade);
+		}
+	}
+	fade.on("enterframe", updateFade)
+	
+	fade.on("render", function (context) {
+		context.fillStyle = "#000";
+		context.fillRect(0,0,WIDTH,HEIGHT)
+	})
+	
+	vinette.on("render", renderBubbles)
+	
+	var W = false
+	var A = false
+	var S = false
+	var D = false;
+	document.onkeydown = function (e) {
+		var c = e.keyCode;
+		if (c == 87) {
+			W = true;
+		}
+		if (c == 65) {
+			A = true;
+		}
+		if (c == 83) {
+			S = true;
+		}
+		if (c == 68) {
+			D = true;
+		}
+	}
+	document.onkeyup = function (e) {
+		var c = e.keyCode;
+		if (c == 87) {
+			W = false;
+		}
+		if (c == 65) {
+			A = false;
+		}
+		if (c == 83) {
+			S = false;
+		}
+		if (c == 68) {
+			D = false;
+		}
+	}
+	
+	var thrust = 0
+	
+	var mdown = false;
+	stage.on("mousedown", function () {
+		mdown = true;
+	})
+	stage.on("mouseup", function () {
+		mdown = false;
+	})
+	
+	stage.on("enterframe", function () {
+		if (VX > SPEED) {
+			VX = SPEED
+		}
+		if (VX < -SPEED) {
+			VX = -SPEED
+		}
+		if (VY > SPEED) {
+			VY = SPEED
+		}
+		if (VY < -SPEED) {
+			VY = -SPEED
+		}
+		player.x = WIDTH/2
+		player.y = HEIGHT/2
+		if (mdown) {
+			player.rotation = Math.atan2(mouse.y - player.y, mouse.x - player.x) * 180 / Math.PI + 90
+			thrust += ACC
+		}
+		var r = (player.rotation) / 180 * Math.PI
+		var VX = (Math.sin(r) * - ACC) * thrust;
+		var VY = (Math.cos(r) * ACC) * thrust;
+		for (var i = 0 ; i < bubbles.length; i++) {
+			bubbles[i].x += bubbles[i].z * VX;
+			bubbles[i].y += bubbles[i].z * VY;
+		}
+		thrust *= FRICTION
+		if (W) {
+			thrust += ACC;
+		}
+		if (A) {
+			player.rotation -= 0.2 * 25;
+		}
+		if (D) {
+			player.rotation += 0.2 * 25;
+		}
+	})
+}
+window.onload = init;
+</script>
+</body>
+</html>

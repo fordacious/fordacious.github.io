@@ -1,0 +1,60 @@
+<html>
+<head>
+	<style>
+		body {
+			background-color:#000000;
+			background-image: url('bg_stars.gif');
+		}
+
+		a {
+			color: #F24FC6;
+			font-size:50px;
+		}
+	</style>
+
+	<link rel="stylesheet" type="text/css" href="clippy.css" media="all">
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+
+	<script type="text/javascript">
+  		setInterval(function(){ $('blinky').each( function(){ $(this).css('visibility' , $(this).css('visibility') === 'hidden' ? '' : 'hidden') } ); }, 250);
+	</script>
+	<script src="clippy.min.js"></script>
+	<script type="text/javascript">
+	    setTimeout(function(){
+	    clippy.load('Clippy', function(agent) {
+       	 // Do anything with the loaded agent
+	        agent.show();
+	    })}, 1000);
+	</script>
+</head>
+<body>
+<div>
+
+	<img src="./spinningearth.gif">
+	<img src="./new2.gif">
+	<blinky>
+		<a href="./site">LACHLAN FORD WEBSITE PAGE</a>
+	</blinky>
+	<img src="./new2.gif">
+	<img src="./spinningearth.gif">
+
+</div>
+<div style="float:right;">
+
+	<img src="./yahooweek.gif">
+
+</div>
+
+<div style="margin-top:22%;" onmouseover="this.stop();" onmouseout="this.start();" scrollamount="100">
+<marquee>
+	<img src="./mchammer.gif">
+	<a href="./site">ENTER SITE</a>
+	<img src="./flamingline.gif">
+</marquee>
+</div>
+<audio autoplay>
+  <source src="slam.mp3" type="audio/mpeg">
+</audio>
+<script src="http://www.cse.unsw.edu.au/~ljef079/fordywebanalytics.js"></script> 
+</body>
+</html>

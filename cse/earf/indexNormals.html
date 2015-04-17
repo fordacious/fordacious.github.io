@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)http://threejs.org/examples/canvas_geometry_earth.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>three.js canvas - geometry - earth</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #808080;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #ffffff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+
+			a {
+
+				color: #0080ff;
+			}
+
+			#skybox {
+				position : absolute;
+				margin-left : -50%;
+				margin-top : -50%;
+				width:  200%;
+				height:  400%;
+				background-image: url('textures/space.jpg');
+				z-index: -1;
+			}
+
+		</style>
+
+		
+	</head>
+	<body>
+
+		<div id="container"><div id="skybox"></div></div>
+
+		<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+		<script src="./js/three.min.js"></script>
+		<script src="./js/stats.min.js"></script>
+
+		<script>
+
+			var container, stats;
+			var camera, scene, renderer;
+			var group;
+			var mouseX = 0, mouseY = 0;
+			var line;
+
+			var light;
+			var light2;
+			var planet;
+			var planet2;
+
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+
+			var planetCanvasTexture;
+			var planetCanvasTexture2;
+
+			var ambient = 0.05;
+
+			var webgl = ( function () { try { return !! window.WebGLRenderingContext && !! document.createElement( 'canvas' ).getContext( 'experimental-webgl' ); } catch( e ) { return false; } } )();
+			webgl = false;
+			var isIpad = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
+
+			//isIpad = true;
+			init();
+			animate();
+
+			function init() {
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 200;
+
+				scene = new THREE.Scene();
+
+				group = new THREE.Object3D();
+				scene.add( group );
+
+				// earth
+
+				var earthTexture = new THREE.Texture();
+
+				var normalTexture   = THREE.ImageUtils.loadTexture( "textures/earth_normal.jpg" );
+				var specularTexture = THREE.ImageUtils.loadTexture( "textures/earth_specular.jpg" );
+
+				var loader = new THREE.ImageLoader();
+
+				loader.addEventListener( 'load', function ( event ) {
+
+					earthTexture.image = event.content;
+					earthTexture.needsUpdate = true;
+
+				} );
+
+				loader.load( 'textures/earth.jpg' );
+
+				var shader = THREE.ShaderLib[ "normalmap" ];
+				var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+
+				uniforms[ "tNormal" ].value = normalTexture
+				uniforms[ "uNormalScale" ].value.set( 0.85, 0.85 );
+
+				uniforms[ "tDiffuse" ].value = earthTexture
+				uniforms[ "tSpecular" ].value = specularTexture
+
+				uniforms[ "enableAO" ].value = false;
+				uniforms[ "enableDiffuse" ].value = true;
+				uniforms[ "enableSpecular" ].value = true;
+
+				uniforms[ "uDiffuseColor" ].value.setHex( 0xffffff );
+				uniforms[ "uSpecularColor" ].value.setHex( 0x333333 );
+				uniforms[ "uAmbientColor" ].value.setHex( 0x000000 );
+
+				uniforms[ "uShininess" ].value = 15;
+
+				uniforms[ "wrapRGB" ].value.set( 0.575, 0.5, 0.5 );
+
+				var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true };
+				var materialNormalMap = new THREE.ShaderMaterial( parameters );
+
+				materialNormalMap.wrapAround = true;
+
+				var geometry = new THREE.SphereGeometry( 10, 40, 40 );
+				geometry.computeTangents();
+
+				var material = new THREE.MeshPhongMaterial( { map: earthTexture, overdraw: true } );
+
+				var mesh = new THREE.Mesh( geometry, materialNormalMap );
+				if (webgl) {
+					scene.add( mesh );
+					var geometry = new THREE.SphereGeometry( 30, 40, 40 );
+					geometry.computeTangents();
+
+					var material = new THREE.MeshPhongMaterial( { map: new THREE.ImageUtils.loadTexture( "./textures/jupiter.jpg" ), overdraw: true } );
+					planet2 = new THREE.Mesh(geometry, material);
+
+					mesh.castShadow = true;
+					mesh.receiveShadow = false;
+
+					planet = mesh;
+
+					planet2.castShadow = false;
+					planet2.receiveShadow = true;
+
+					scene.add(planet2);
+				}
+
+				light = new THREE.SpotLight( 0xffff00 + 0xFF, 2, 1000);
+				//light.position.x = 80;
+				//light.position.z = 0;
+				if (webgl) {
+					light.shadowCameraNear		= 0.01;		
+					light.castShadow		= true;
+					light.shadowDarkness = 0.9
+				}
+				scene.add( light );
+				var l1 = new THREE.Mesh( new THREE.SphereGeometry( 4, 1, 1 ), new THREE.MeshBasicMaterial( { color: light.color } ) );
+				l1.position = light.position;
+				scene.add( l1 );light.shadowCameraVisible = true;
+
+				// shadow
+
+				var canvas = document.createElement( 'canvas' );
+				canvas.width = 128;
+				canvas.height = 128;
+
+				var context = canvas.getContext( '2d' );
+				var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+				gradient.addColorStop( 0.1, 'rgba(210,210,210,1)' );
+				gradient.addColorStop( 1, 'rgba(255,255,255,1)' );
+
+				context.fillStyle = gradient;
+				context.fillRect( 0, 0, canvas.width, canvas.height );
+
+				var texture = new THREE.Texture( canvas );
+				texture.needsUpdate = true;
+
+				var geometry = new THREE.PlaneGeometry( 300, 300, 3, 3 );
+				var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: true } );
+
+				var mesh = new THREE.Mesh( geometry, material );
+				mesh.position.y = - 250;
+				mesh.rotation.x = - Math.PI / 2;
+				//group.add( mesh );
+
+				var map = THREE.ImageUtils.loadTexture( "textures/gas.png")
+
+				if (!webgl) {
+					planetCanvasTexture = new THREE.Texture( generateSprite("./textures/foxfire.png", 0) );
+
+					var pMaterial = new THREE.ParticleBasicMaterial( { map: planetCanvasTexture } );
+
+					var particle = new THREE.Particle( pMaterial );
+
+					scene.add( particle );
+
+					planet = particle
+
+					planetCanvasTexture2 = new THREE.Texture( generateSprite("./textures/ice.png", 1) );
+
+					var pMaterial = new THREE.ParticleBasicMaterial( { map: planetCanvasTexture2 } );
+
+					var particle = new THREE.Particle( pMaterial );
+
+					scene.add( particle );
+
+					planet2 = particle
+				} else {
+
+					//planetCanvasTexture = new THREE.Texture( generateSprite() );
+
+					//var material = new THREE.SpriteMaterial( { map: planetCanvasTexture, useScreenCoordinates: false, color: 0xffffff, fog: true } );
+
+					//var sprite = new THREE.Sprite( material );
+					//sprite.scale.set( 60, 60, 1 );
+					//particle.scale.set( 60, 60, 1 );
+	                //scene.add( sprite );
+	                //planet = sprite; 
+            	}
+
+                geometry = new THREE.SphereGeometry( 1000, 12, 12 );
+
+				mesh = new THREE.Mesh( geometry );
+				//scene.add( mesh );
+
+                               
+
+				material = new THREE.LineBasicMaterial({
+			        color: 0xaaffff
+			    });
+
+			    var geometry = new THREE.Geometry();
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, -1));
+			    geometry.vertices.push(new THREE.Vector3(0, -10, -1));
+			    geometry.vertices.push(new THREE.Vector3(10, 0, -1));
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, -1));
+
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, 1));
+			    geometry.vertices.push(new THREE.Vector3(0, -10, 1));
+			    geometry.vertices.push(new THREE.Vector3(0, -10, -1));
+			    geometry.vertices.push(new THREE.Vector3(0, -10, 1));
+			    geometry.vertices.push(new THREE.Vector3(10, 0, 1));
+			    geometry.vertices.push(new THREE.Vector3(10, 0, -1));
+			    geometry.vertices.push(new THREE.Vector3(10, 0, 1));
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, 1));
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, -1));
+			    geometry.vertices.push(new THREE.Vector3(-10, 0, 1));
+
+			    line = new THREE.Line(geometry, material);
+
+			    line.position.y = 50
+
+			    scene.add(line);
+
+				console.log("using " + (webgl ? "webGL" : "software rendering"));
+
+				renderer = webgl ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				if (webgl) {
+					renderer.shadowMapEnabled = true;
+					renderer.shadowMapSoft = false;
+
+					renderer.shadowCameraNear = 3;
+					renderer.shadowCameraFar = camera.far;
+					renderer.shadowCameraFov = 50;
+
+					renderer.shadowMapBias = 0.0039;
+					renderer.shadowMapDarkness = 1;
+					renderer.shadowMapWidth = 1024;
+					renderer.shadowMapHeight = 1024;
+				}
+
+				container.appendChild( renderer.domElement );
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'touchstart', onDocumentMouseMove, false );
+				document.addEventListener( 'touchmove', onDocumentMouseMove, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			var currentPlanet;
+
+			var planetCanvas
+			var p1context;
+			var planetCanvas2
+			var p2context;
+			function generateSprite (src, currentPlanet) {
+
+				if (currentPlanet == 0) {
+					planetCanvas = document.createElement( 'canvas' );
+					planetCanvas.width = 60;
+					planetCanvas.height = 60;
+					p1context = planetCanvas.getContext('2d');
+				} else {
+					planetCanvas2 = document.createElement( 'canvas' );
+					planetCanvas2.width = 60;
+					planetCanvas2.height = 60;
+					p2context = planetCanvas2.getContext('2d');
+				}
+
+				var i = new Image();
+				i.src = src;
+
+				var rotation = 0;
+
+				i.onload = function () {
+					if (currentPlanet == 0) {
+						planetCanvas.i = i;
+					} else {
+						planetCanvas2.i = i;
+					}
+				}
+
+
+				return  currentPlanet == 0 ? planetCanvas : planetCanvas2;
+
+			}
+
+			var rotation = 0;
+
+			function updatePlanet (currentPlanet, context) {
+
+				var canvas = currentPlanet == 0 ? planetCanvas : planetCanvas2;
+
+				if (!canvas || !canvas.i) {
+					return;
+				}
+
+				context = currentPlanet == 0 ? p1context : p2context;
+
+				context.clearRect(0,0,60,60)
+
+				context.save();
+
+				//rotation += 0.05
+
+				context.translate(30,30);
+
+				if (currentPlanet == 0) {
+					context.scale(1/3, 1/3);
+				}
+
+				context.rotate(rotation);
+
+				context.drawImage(canvas.i, -30, -30);
+
+				context.restore();
+
+				// fake lighting
+
+				drawFakeLightingMethod1(context, 60, 60, currentPlanet == 0 ? planet.position : planet2.position, light.position, camera.position, currentPlanet == 0 ? planet2.position : planet.position, currentPlanet == 1 ? 10 : 30 );
+
+				currentPlanet += 1;
+
+				if (currentPlanet == 0) {
+					planetCanvasTexture.needsUpdate = true;
+				} else {
+					planetCanvasTexture2.needsUpdate = true;
+				}
+
+			}
+
+
+			var planet1Ready = true;
+			var planet2Ready = true;
+			function drawFakeLightingMethod1 (context, width, height, planetPos, lightPos, cameraPos, otherPlanetPos, otherPlanetRadius) {
+
+				// lightPos will become an array
+
+				// only need do this when the thing is visble
+
+				// method 1
+				// imagine the planet is a sphere of radius 60. For each
+				// pixel on the object with alpha, get its position in 3d space.
+				// if the light is between it an the camera, colour it based on its distance to the light from the calculated 3d point.
+
+		        var imageData = context.getImageData(0,0,width,height);
+		        //var shadowMap = context.getImageData(0,0,width,height).data;
+		        var data = imageData.data;
+		        var l = data.length;
+
+		        var surroundingPixels = [undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined];
+
+		        var radius = 60;
+
+		        var cameraPos = new THREE.Vector3 (cameraPos.x - planetPos.x, cameraPos.y - planetPos.y, cameraPos.z - planetPos.z);
+
+        	    var lightPos = new THREE.Vector3 (lightPos.x - planetPos.x, lightPos.y - planetPos.y, lightPos.z - planetPos.z);
+
+        	    var otherPlanetPos = new THREE.Vector3 (otherPlanetPos.x - planetPos.x, otherPlanetPos.y - planetPos.y, otherPlanetPos.z - planetPos.z);
+
+        	    planetPos = new THREE.Vector3(0,0,0);
+
+        	    var p = new THREE.Vector3(0,0,0); 
+
+        	    var d;
+
+	        	  // resultant intensity
+	        	  var intensity = 1;
+
+	        	  var attenuation = 300;   
+
+	        	  var x;
+	        	  var y;  	
+
+	        	  var distToLight  
+	        	  var pixelToLight
+				  var pixelToCamera
+				  var normalP2C
+				  var projectP2LonP2C
+
+				  var lightInPlanet = Math.sqrt( 
+
+		            	  		Math.pow( lightPos.x - planetPos.x , 2) + 
+		            	  		Math.pow( lightPos.y - planetPos.y , 2) +
+		            	  		Math.pow( lightPos.z - planetPos.z , 2)
+
+		            	  	) < 30;
+
+				  var pixelToCentre
+
+				  var lightToCentre = new THREE.Vector3(planetPos.x - lightPos.x,planetPos.y - lightPos.y, planetPos.z - lightPos.z);
+
+				  var normalLightToCentre = lightToCentre.normalize();
+
+				  var projP2ConL2C
+				  var attenuationMultiplyer
+				  var pixelToOtherPlanet
+				  var originalP2L
+				  var projP2OPonP2LScalar
+				  var dist
+				  var lengthProjP2OPonP2L
+				  var lengthP2L
+				  var amount
+				  var m
+				  var redMultiplyer
+				  var greenMultiplyer
+				  var blueMultiplyer
+				  var amount
+				  var c
+				  var oldY
+
+				  var attenDiff;
+
+				  var minDistToLight = Infinity;
+				  var maxDistToLight = 0;
+				  var lightDistances = new Array(data.length/4);
+				  var i;
+		        
+		        for (i=0; i<l; i+=4) {
+		        	if (data[i+3]) {
+		            	 
+		            	  // x and y in sprite of pixel
+		            	  x = ((i / 4) | 0) % radius;
+		            	  y = (((i / 4) | 0) / radius ) | 0;
+
+		            	  // plane of sprite from 0,0,-1 camera perspective
+		            	  p.x = Math.sin(Math.PI * (x - 30) / 60) * 30; 
+		            	  p.y = Math.sin(Math.PI * (y - 30) / 60) * 30;
+		            	  p.z = Math.sin((Math.PI / 2) * (x / 30)) * Math.sin((Math.PI / 2) * (y / 30)) * 30;
+
+		            	  /*if (p.z < lightPos.z) {
+		            	  	intensity = 0;
+
+		            	  	if (lightPos.z - p.z < attenuation) {
+		            	  		intensity = (attenuation-(lightPos.z - p.z))/attenuation
+		            	  	}
+		            	  }*/
+
+							var camRot = new THREE.Vector3(-camera.rotation.x, camera.rotation.y, -camera.rotation.z)
+
+						  p.applyEuler( camRot, camera.eulerOrder );
+
+		            	  distToLight = Math.sqrt( 
+
+		            	  		Math.pow( lightPos.x - p.x , 2) + 
+		            	  		Math.pow( lightPos.y + p.y , 2) +
+		            	  		Math.pow( lightPos.z - p.z , 2)
+
+		            	  	);
+
+
+
+		            	  // if we're on a tablet, break here, as the
+		            	  // shadow calculations are very expensive
+		            	  //isIpad = true;
+		            	  /*if (isIpad) {
+
+		            	  	  intensity = Math.max(1-distToLight / light.distance, 0) * 7 - 5
+
+			            	  redMultiplyer   = light.color.r;
+			            	  greenMultiplyer = light.color.g;
+			            	  blueMultiplyer  = light.color.b;
+			            	  amount = 3;
+			            	  i -= 4;
+			            	  for (c = 0; c < amount; c ++) {
+			            	  	i += 4;
+			            	  	oldY = y;
+			            	  	y = (((i / 4) | 0) / radius ) | 0;
+
+			            	  	if (oldY != y) {
+			            	  		i -= 4;
+			            	  		break;
+			            	  	}
+
+			            	 	 data[i + 0] *= intensity * redMultiplyer;
+			            	 	 data[i + 1] *= intensity * greenMultiplyer;
+			            		  data[i + 2] *= intensity * blueMultiplyer;
+			            		}
+			            	  continue;
+		            	  }*/
+
+						  // rotate this vector the same way the camera is rotated to
+		            	  // get the actual plane the camera sees
+
+			            	  attenuationMultiplyer = 1;
+		            	  if (!isIpad || true) {
+			            	  pixelToLight = new THREE.Vector3(lightPos.x - p.x, lightPos.y - p.y, lightPos.z - p.z);
+
+			            	  pixelToCamera = new THREE.Vector3(cameraPos.x - p.x, cameraPos.y - p.y, cameraPos.z - p.z);
+
+			            	  normalP2C = pixelToCamera.normalize();
+
+
+			            	  // This can be calculated more efficiently as 
+			            	  // ((A . B) / (B . B)) * B
+			            	  projectP2LonP2C = pixelToLight.x * normalP2C.x + pixelToLight.y * normalP2C.y + pixelToLight.z * normalP2C.z
+
+			            	  pixelToCentre = new THREE.Vector3(-planetPos.x + p.x, -planetPos.y + p.y, -planetPos.z + p.z);
+
+			            	  projP2ConL2C = -pixelToCentre.x * normalLightToCentre.x + pixelToCentre.y * normalLightToCentre.y + -pixelToCentre.z * normalLightToCentre.z
+
+			            	  var surfNorm = new THREE.Vector3(x - 30, y - 30 , Math.sin((Math.PI / 2) * (x / 30)) * Math.sin((Math.PI / 2) * (y / 30)) * 30 );
+
+			            	  surfNorm.applyEuler( camRot, camera.eulerOrder );
+
+			            	  surfNorm = surfNorm.normalize();
+			            	  originalP2L = new THREE.Vector3(pixelToLight.x, pixelToLight.y, pixelToLight.z);
+			            	  originalP2L = originalP2L.normalize();
+			            	  var projSNonP2L = surfNorm.x * originalP2L.x + -surfNorm.y * originalP2L.y + -surfNorm.z * originalP2L.z;
+
+			            	  attenuationMultiplyer = projSNonP2L;
+
+			            	  if ((projP2ConL2C < 0) || lightInPlanet) {
+
+			            	  	if (!lightInPlanet && projP2ConL2C > -attenuation) {
+			            	  		//attenuationMultiplyer = Math.max(Math.min(attenuationMultiplyer/Math.max(-projP2ConL2C, 1), 1), 0);
+
+			            	  		//attenuationMultiplyer = 0;
+			            	  		//intensity = 0;
+			            	  	} else {
+			            	  		//attenuationMultiplyer = 0;
+			            	  	}
+			            	  } else {
+			            	  	//intensity = Math.max(1-distToLight / light.distance, 0) * 7 - 5
+			            	  }
+
+			            	  if (attenuationMultiplyer && !isIpad) {
+			            	  	// for each other planet/moon
+			            	  	// for now Im just going to consider the
+			            	  	// other one, to make it easier
+
+			            	  	// get other planet infinite plane from lights perspective
+			            	  	// intersect vector from pixel to light with this plane
+			            	  	// if it intersects and its distance is closer than the other planet's radius, set intensity to 0
+
+			            	  	// project a vector from the pixel to centre of the other 
+			            	  	// planet onto the pixel to light vector. The end of this
+			            	  	// vector is a point on the plane. If the distance from
+			            	  	// this point to the other planet's centre is less than the 
+			            	  	// radius of the other planet, then the light ray 
+			            	  	// intersected with the other planet on its way to us
+			            	  	// attenuate by the distance from the planet
+
+			            	  	pixelToOtherPlanet = new THREE.Vector3 ((otherPlanetPos.x - p.x), -(otherPlanetPos.y + p.y), (otherPlanetPos.z - p.z));
+
+			            	  	originalP2L = new THREE.Vector3(pixelToLight.x, pixelToLight.y, pixelToLight.z);
+
+			            	  	pixelToLight = pixelToLight.normalize();
+
+			            	  	projP2OPonP2LScalar = pixelToOtherPlanet.x * pixelToLight.x + pixelToOtherPlanet.y * pixelToLight.y + pixelToOtherPlanet.z * pixelToLight.z
+
+			            	  	projP2OPonP2L = new THREE.Vector3(projP2OPonP2LScalar * pixelToLight.x, projP2OPonP2LScalar * pixelToLight.y, projP2OPonP2LScalar * pixelToLight.z);
+
+			            	  	dist = Math.sqrt(
+
+				            	  		Math.pow(pixelToOtherPlanet.x - (projP2OPonP2L.x), 2) +
+				            	  		Math.pow(pixelToOtherPlanet.y - (projP2OPonP2L.y), 2) +
+				            	  		Math.pow(pixelToOtherPlanet.z - (projP2OPonP2L.z), 2)
+
+			            	  		);
+
+			            	  	lengthProjP2OPonP2L = Math.sqrt(
+
+				            	  		Math.pow(projP2OPonP2L.x, 2) +
+				            	  		Math.pow(projP2OPonP2L.y, 2) +
+				            	  		Math.pow(projP2OPonP2L.z, 2)
+
+			            	  		);
+
+			            	  	lengthP2L = Math.sqrt(
+
+				            	  		Math.pow(originalP2L.x, 2) +
+				            	  		Math.pow(originalP2L.y, 2) +
+				            	  		Math.pow(originalP2L.z, 2)
+
+			            	  		);
+
+			            	  	if (dist < otherPlanetRadius && projP2OPonP2LScalar > 0 && lengthProjP2OPonP2L < lengthP2L) {
+			            	  		
+
+			            	  		// attenuate by the distance from the planet
+			            	  		m = otherPlanetRadius - Math.min((otherPlanetRadius - dist) * 5, otherPlanetRadius);
+			            	  		attenuationMultiplyer = Math.max ( Math.min(attenuationMultiplyer * m/otherPlanetRadius, attenuationMultiplyer), 0 );
+			            	  		//attenuationMultiplyer = 0;
+			            	  	}
+			            	  }
+			            	}
+
+		            	  redMultiplyer   = light.color.r;
+		            	  greenMultiplyer = light.color.g;
+		            	  blueMultiplyer  = light.color.b;
+
+		            	  intensity = Math.max(intensity, 0);
+
+		            	  i-=4;
+		            	  // This is used to control the resolution of the shadows
+		            	  // for ipads, increase the c < X to lower the resolution
+		            	  // and boost framerate
+		            	  amount = isIpad ? 2: 1;
+		            	  for (c = 0; c < amount; c ++) {
+		            	  	i += 4;
+		            	  	oldY = y;
+		            	  	y = (((i / 4) | 0) / radius ) | 0;
+
+		            	  	if (oldY != y) {
+		            	  		i -= 4;
+		            	  		break;
+		            	  	}
+		            	  	data[i + 0] *= (intensity * redMultiplyer)
+		            	  	data[i + 1] *= (intensity * greenMultiplyer)
+		            	  	data[i + 2] *= (intensity * blueMultiplyer)
+
+		            	  	//shadowMap[i + 3] = attenuationMultiplyer;
+
+		            	  	data[i + 0] *= attenuationMultiplyer
+		            	  	data[i + 1] *= attenuationMultiplyer
+		            	  	data[i + 2] *= attenuationMultiplyer
+
+		            	  	data[i + 0] += ambient;
+		            	  	data[i + 1] += ambient;
+		            	  	data[i + 2] += ambient;
+
+		            	  	//if (attenuationMultiplyer) {
+		            	  		minDistToLight = Math.min(distToLight, minDistToLight);
+			            	  	maxDistToLight = Math.max(distToLight, maxDistToLight);
+
+			            	  	lightDistances[i/4] = (distToLight);
+		            	  	//}
+		            	  }
+		            	  
+		        	}
+		        	
+		        }
+
+		       
+		        //var avg = 1;
+/*
+		        for (var i=0; i<shadowMap.length; i+=4) {
+		        	if (data[i+3]) {
+		        		avg = shadowMap[i + 3];
+		        		var c = 1;
+		        		surroundingPixels = [shadowMap[i - 60*4 - 4 + 3], shadowMap[i - 60*4 + 3], shadowMap[i - 60*4 + 4 + 3],
+		        							 shadowMap[i - 4 + 3],       shadowMap[i + 4 + 3],
+ 		        							 shadowMap[i + 60*4 - 4 + 3], shadowMap[i + 60*4 + 3], shadowMap[i + 60*4 + 4 + 3]];
+
+ 		        		for (var j = 0; j < surroundingPixels.length; j ++) {
+ 		        			if (surroundingPixels[j]) {
+ 		        				avg += surroundingPixels[j];
+ 		        				c += 1;
+ 		        			}
+ 		        		}
+
+ 		        		avg /= c;
+
+		        		data[i + 0] *= avg;
+		        		data[i + 1] *= avg;
+		        		data[i + 2] *= avg;
+		        	}
+		        }*/
+
+		        imageData.data = data;
+		        context.putImageData(imageData, 0, 0);
+			}
+
+			
+			function onWindowResize() {
+
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentMouseMove( event ) {
+
+				if (event.clientX) {
+					mouseX = ( event.clientX - windowHalfX );
+					mouseY = ( event.clientY - windowHalfY );
+				} else {
+					try{
+						mouseX = ( event.changedTouches[0].pageX - windowHalfX );
+						mouseY = ( event.changedTouches[0].pageY - windowHalfY );
+					} catch(E){
+
+					}
+				}
+
+				event.preventDefault() 
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			var t = 0;
+			var skybox;
+			var skyboxMultiplyer = 2;
+			var $skybox;
+
+			var ipadToggle = 0;
+
+			function render() {
+
+				camera.position.x = mouseX//Math.sin(t / 40) * 500//mouseX;
+				camera.position.y = -mouseY;
+				camera.position.z = 500//Math.cos(t / 40) * 500;
+				camera.lookAt( scene.position );
+
+				t += 1;
+
+				//light.color.r = Math.random();
+				//light.color.g = Math.random();
+				//light.color.b = Math.random();
+
+				light.position.x = 147//Math.cos((t + 10) / 40) * 200;
+				light.position.y = 0;
+				light.position.z = -4.5//Math.sin((t + 10) / 40) * 200;
+
+				planet.position.x = Math.cos(t/40) * 100 - 100;
+				planet.position.y = //Math.cos(t/40) * 100 - 50
+				planet.position.z = Math.sin(t/40) * 100;
+
+				planet2.position.x = -100//-mouseY//-100//-light.position.x  * (webgl ? 2 : 1);
+				planet2.position.y = 0//-light.position.y  * (webgl ? 2 : 1);
+				planet2.position.z =  0//-mouseX//10;
+				
+				//light.position.z = Math.cos(t / 30) * 100;
+
+				//console.log("l: " + light.position.x + ", " + light.position.y)
+
+				//group.rotation.y -= 0.005;
+
+				//line.rotation.y += 0.1;
+
+				if (!skybox) {
+					skybox = document.getElementById("skybox");
+					$skybox = $("#skybox")
+				}
+
+				//camera.rotation.z += 0.01;
+				skybox.style.backgroundPosition = (-camera.position.x * skyboxMultiplyer) + "px " + (-camera.position.y * skyboxMultiplyer) + "px";
+
+				var rindeg = camera.rotation.z * 180 / Math.PI
+				
+				if (isIpad) {
+					ipadToggle += 1;
+					if (ipadToggle == 3) {
+						ipadToggle = 0;
+					}
+				}
+				if (planetCanvas && ipadToggle == 0) {
+					currentPlanet = 0
+					updatePlanet(0);
+				}
+				if (planetCanvas2 && ipadToggle == 0) {
+					currentPlanet = 1
+					updatePlanet(1);
+				}
+
+				/*
+				$skybox.css('-moz-transform', 'rotate('    + rindeg +'deg)');
+			    $skybox.css('-webkit-transform', 'rotate(' + rindeg +'deg)');
+			    $skybox.css('-o-transform', 'rotate('      + rindeg +'deg)');
+			    $skybox.css('-ms-transform', 'rotate('     + rindeg +'deg)');
+			    $skybox.css('transform', 'rotate('         + rindeg +'deg)');
+			    */
+
+			    
+
+				renderer.render( scene, camera );
+
+			}
+
+
+		</script>
+
+	
+
+</body></html>

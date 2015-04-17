@@ -1,0 +1,519 @@
+<html>
+<script src="js/Cheddar.js">
+</script>
+<script src="js/testButton.js">
+</script>
+<script src="js/CAPIObject.js">
+</script>
+<script src="js/Stats.js">
+</script>
+<script src="threejs test/js/three.js">
+</script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>Cheddar Test</title>
+	<!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+	<style>
+			#container {
+				background: #000;
+				width: 400px;
+				height: 300px;
+			}
+			* {cursor: none;}
+		</style>
+</head>
+<body>	
+<div id="container"></div>
+<script>
+function init() {
+	
+	Cheddar.init({
+		width :320,
+		height:240,
+		clear :true,
+		renderCanvas:false
+	});
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	var root = this;
+	
+	Cheddar.canvas.style.position = "absolute"
+	
+	var bg = stage.addChild(new DisplayObject())
+	bg.on ("render", function (ctx) {
+		ctx.fillStyle = "#fff";
+		ctx.fillRect (0, 0, 320, 240);
+	})
+	
+	var a = stage.addChild(new TestButton("assets/playButton"))
+	var b = a.addChild(new TestButton("assets/playButton"))
+	a.y = 200
+	b.x = 100
+	var a = stage.addChild(new DisplayImage("assets/DancingPeaks.gif"));
+	a.x = 100;
+	a.y = 100;
+	a.vx = 0;
+	a.vy = 0;
+	a.ax = 0;
+	a.ay = 0;
+	var t = stage.addChild(new Text("this are test"));
+	
+	var b, c,
+	__hasProp = {}.hasOwnProperty,
+	__extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+	c = (function(_super) {
+
+	  __extends(c, _super);
+
+	  function c() {
+		return c.__super__.constructor.apply(this, arguments);
+	  }
+
+	  return c;
+
+	})(Button);
+
+	b = stage.addChild(new c("assets/playButton"));
+	
+	document.onmousemove = Cheddar.canvas.onmousemove
+	document.onmousedown = Cheddar.canvas.onmousedown
+	document.onmouseup = Cheddar.canvas.onmouseup
+	
+	stage.on("enterframe", function() {
+	  b.x = mouse.x;
+	  return b.y = mouse.y;
+	});
+	
+	stage.on ("enterframe", function () {
+		//a.moveRight();
+		t.x = mouse.x;
+		t.y = mouse.y;
+		a.ax = (mouse.x - a.x)/1000
+		a.ay = (mouse.y - a.y)/1000
+		a.vx += a.ax;
+		a.vy += a.ay;
+		a.x += a.vx;
+		a.y += a.vy;
+	});
+	
+	stage.on ("mousemove", function () {
+		//a.moveLeft();
+	})
+	
+	document.onkeypress = function (event) {
+		if (event.keyCode == 97) {
+			a.vx -= 0.2
+		}
+		if (event.keyCode == 100) {
+			a.vx += 0.2
+		}
+		if (event.keyCode == 119) {
+			a.vy -= 0.2
+		}
+		if (event.keyCode == 115) {
+			a.vy += 0.2
+		}
+	}
+	
+	/*
+	stage.on("render", function (context) {
+		var imageData = context.getImageData(0, 0, stage.stageWidth, stage.stageHeight);
+		
+		// Loop through imageData.data - an array with 4 values per pixel: red, green, blue, and alpha
+		for (var x = 0; x < imageData.width; x++) {
+			for (var y = 0; y < imageData.height; y++) {
+				var index = 4 * (y * imageData.width + x);
+				var d = (mouse.x - x)*(mouse.x - x) + (mouse.y - y)*(mouse.y - y)
+				imageData.data[index]     = Math.random()*d*0.5;
+				imageData.data[index + 1] = Math.random()*d*0.5;
+				imageData.data[index + 2] = Math.random()*d*0.5;
+				imageData.data[index + 3] = 255;
+			}
+		}
+		
+		context.putImageData(imageData,0,0)
+	})
+	*/
+	
+	a.testObj = {x:"testx", y:[1,2,3], z:a.x, w:{asdf:"lol"}}
+	
+	var c = new CAPIObject ("graph thing x");
+	c.addObject(new CAPIObject("another", a, "testObj"))
+	stage.on("enterframe", function (e){
+		//trace(c.toJson())
+		//trace(Cheddar.images[a.globalImageIndex].width)
+		a.testObj.z = a.x | 0;
+		a.x = a.x | 0
+		a.y = a.y | 0
+	})
+	
+	function customFunction (e) {
+		//alert("custom event now disabled")
+	}
+	
+	a.on("custom", customFunction)
+	
+	function onTClick (e) {
+		Cheddar.dispatchEvent("custom", e)
+		a.off ("custom", customFunction);
+	}
+	
+	t.on("click", onTClick)
+	
+	// set the scene size
+	var WIDTH = 400,
+	    HEIGHT = 300;
+
+	// set some camera attributes
+	var VIEW_ANGLE = 60,
+	    ASPECT = WIDTH / HEIGHT,
+	    NEAR = 0.1,
+	    FAR = 10000;
+
+	// get the DOM element to attach to
+	// - assume we've got jQuery to hand
+	var $container = $('#container');
+
+	// create a WebGL renderer, camera
+	// and a scene
+	var renderer = new THREE.WebGLRenderer();
+	var camera = new THREE.PerspectiveCamera(  VIEW_ANGLE,
+	                                ASPECT,
+	                                NEAR,
+	                                FAR  );
+	var scene = new THREE.Scene();
+
+	// the camera starts at 0,0,0 so pull it back
+	camera.position.z = 300;
+
+	// start the renderer
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.shadowMapEnabled = true;
+
+	// attach the render-supplied DOM element
+	$container.append(renderer.domElement);
+
+	// and the camera
+	scene.add(camera);
+	
+	var materials = [];
+
+	for ( var i = 0; i < 6; i ++ ) {
+		materials.push( new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff } ) );
+	}
+	// add to the scene
+	
+	var panelTexture = new THREE.Texture( Cheddar.canvas );
+
+	panelTexture.premultiplyAlpha = false;
+	panelTexture.needsUpdate = true;
+
+	var panelMaterial = new THREE.MeshLambertMaterial( { map: panelTexture } );
+	panelMaterial.transparent =  false;
+	panelMaterial.doubleSided = false;
+
+	//panelMaterial.blending = THREE.CustomBlending;
+	//panelMaterial.blendSrc = THREE.SrcAlphaFactor;
+	//panelMaterial.blendDst = THREE.SrcColorFactor;
+	//panelMaterial.blendEquation = THREE.AddEquation;
+	
+	var ambiance = new THREE.AmbientLight( 0x555555 );
+	scene.add( ambiance );
+	
+	// create a point light
+	var pointLight = new THREE.SpotLight( 0xFFFFFF );
+
+	// set its position
+	pointLight.position.x = -365
+	pointLight.position.y = 0;
+	pointLight.position.z = 365
+	
+	scene.add(pointLight);
+	pointLight.castShadow = true;
+	
+	var pointLight2 = new THREE.PointLight( 0xaaaaaa );
+
+	// set its position
+	pointLight2.position.x = -265;
+	pointLight2.position.y = 0;
+	pointLight2.position.z = 365;
+	pointLight2.rotation.y = 1.6
+	
+	scene.add( pointLight2 );
+	pointLight2.castShadow = true;
+
+	//var panelMesh = new THREE.Mesh( panelGeometry,  panelMaterial); 
+	for (i = 0 ; i < 6; i ++) {
+		materials[i] = panelMaterial;
+	}
+	
+	var CUBE_SIZE = 200
+	
+	cube = new THREE.Mesh( new THREE.CubeGeometry( CUBE_SIZE, CUBE_SIZE, CUBE_SIZE, 1, 1, 1, materials ), new THREE.MeshFaceMaterial() );
+	scene.add(cube);
+	cube.castShadow = true;
+	
+	var wallMats = []
+	for ( var i = 0; i < 6; i ++ ) {
+		wallMats.push( new THREE.MeshLambertMaterial(
+		{
+			color: Math.random()*(Math.pow(2,32)-1)
+		}));
+	}
+	var floor = new THREE.Mesh( new THREE.CubeGeometry( 1000, 10, 1000, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	scene.add(floor);
+	floor.position.y = -100
+	floor.receiveShadow = true
+	
+	var cieling = new THREE.Mesh( new THREE.CubeGeometry( 1000, 10, 1000, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	scene.add(cieling);
+	cieling.position.y = 300
+	cieling.receiveShadow = true
+	
+	var collisionObjects = [];
+	var wall1 = new THREE.Mesh( new THREE.CubeGeometry( 1000, 1000, 10, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	wall1.position.z = 500;
+	wall1.receiveShadow = true
+	var wall2 = new THREE.Mesh( new THREE.CubeGeometry( 1000, 1000, 10, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	wall2.position.z = -500;
+	wall2.receiveShadow = true
+	var wall3 = new THREE.Mesh( new THREE.CubeGeometry( 10, 1000, 1000, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	wall3.position.x = -500;
+	wall3.receiveShadow = true
+	var wall4 = new THREE.Mesh( new THREE.CubeGeometry( 10, 1000, 1000, 1, 1, 1, wallMats ), new THREE.MeshFaceMaterial() );
+	wall4.position.x = 500;
+	wall4.receiveShadow = true
+	scene.add(wall1);
+	scene.add(wall2);
+	scene.add(wall3);
+	scene.add(wall4);
+	collisionObjects.push(wall1)
+	collisionObjects.push(wall2)
+	collisionObjects.push(wall3)
+	collisionObjects.push(wall4)
+	
+	b.on("click", function () {
+		cube.rotation.y = 3;
+	})
+	
+	var SPEED = 10;
+	var ACCEL = 2;
+	var GRAVITY = -1;
+	var TURN_SPEED = 0.05;
+	var FRICTION = 0.8;
+	var JUMP_HEIGHT = 20;
+	
+	var grounded = false;
+	
+	var forwards   = false;
+	var backwards  = false;
+	var left       = false;
+	var right      = false;
+	var turnLeft   = false;
+	var turnRight  = false;
+	var turnUp     = false;
+	var turnDown   = false;
+	
+	window.onkeydown = function (e) {
+		if (e.keyCode == 65) {
+			left = true;
+		} else if (e.keyCode == 68) {
+			right = true;
+		}
+		if (e.keyCode == 37) {
+			turnLeft = true;
+		} else if (e.keyCode == 39) {
+			turnRight = true;
+		}
+		if (e.keyCode == 38) {
+			turnUp = true;
+		} else if (e.keyCode == 40) {
+			turnDown = true;
+		}
+		if (e.keyCode == 87) {
+			forwards = true;
+		} else if (e.keyCode == 83) {
+			backwards = true;
+		}
+		if (e.keyCode == 32 && grounded) {
+			camV.y = JUMP_HEIGHT
+			camera.position.y -= 1;
+			grounded = false;
+		}
+	}
+	window.onkeyup = function (e) {
+		if (e.keyCode == 65) {
+			left = false;
+		} else if (e.keyCode == 68) {
+			right = false;
+		}
+		if (e.keyCode == 87) {
+			forwards = false;
+		} else if (e.keyCode == 83) {
+			backwards = false;
+		}
+		if (e.keyCode == 38) {
+			turnUp = false;
+		} else if (e.keyCode == 40) {
+			turnDown = false;
+		}
+		if (e.keyCode == 37) {
+			turnLeft = false;
+		} else if (e.keyCode == 39) {
+			turnRight = false;
+		}
+	}
+	
+	function Vector () {
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+	}
+	
+	camV = new Vector();
+	camA = new Vector();
+	
+	var counter = 0;
+	
+	stage.on("enterframe", function () {
+		counter += 1;
+		grounded = false;
+		if (cube.rotation.y > 0) {
+			cube.rotation.y -= 0.2
+		}
+		//cube.rotation.z += 0.005
+		//cube.rotation.x += 0.005
+		panelTexture.needsUpdate = true;
+		if (left) {
+			camV.x -= ACCEL*Math.cos(camera.rotation.y);
+			camV.z += ACCEL*Math.sin(camera.rotation.y);
+		}
+		if (right) {
+			camV.x += ACCEL*Math.cos(camera.rotation.y);
+			camV.z -= ACCEL*Math.sin(camera.rotation.y);
+		}
+		if (forwards) {
+			camV.z -= ACCEL*Math.cos(camera.rotation.y);
+			camV.x -= ACCEL*Math.sin(camera.rotation.y);
+		}
+		if (backwards) {
+			camV.z += ACCEL*Math.cos(camera.rotation.y);
+			camV.x += ACCEL*Math.sin(camera.rotation.y);
+		}
+		if (turnLeft) {
+			camera.rotation.y += TURN_SPEED
+		}
+		if (turnRight) {
+			camera.rotation.y -= TURN_SPEED
+		}
+		if (turnUp) {
+			//camera.rotation.x += TURN_SPEED;
+		}
+		if (turnDown) {
+			//camera.rotation.x -= TURN_SPEED;
+		}
+
+		if (camV.x > SPEED) {
+			camV.x = SPEED
+		}if (camV.z > SPEED) {
+			camV.z = SPEED
+		}
+		if (camV.x < -SPEED) {
+			camV.x = -SPEED
+		}if (camV.y < -SPEED) {
+			camV.y = -SPEED
+		}if (camV.z < -SPEED) {
+			camV.z = -SPEED
+		}
+		
+		camV.x *= FRICTION;
+		//camV.y *= FRICTION;
+		camV.z *= FRICTION;
+		
+		camA.y = GRAVITY
+		
+		t.text = "              "+ camV.y
+		//a.alpha = 0.5
+		
+		//trace(camera.rotation.y)
+		camV.x += camA.x
+		camV.y += camA.y
+		camV.z += camA.z
+		
+		var oldX = camera.position.x;
+		var oldY = camera.position.y;
+		var oldZ = camera.position.z;
+		
+		camera.position.x += camV.x
+		camera.position.y += camV.y
+		camera.position.z += camV.z
+		
+		//for (var i=0 ; i < collisionObjects.length; i++) {
+			var cx = camera.position.x
+			var cy = camera.position.y
+			var cz = camera.position.z
+			var co = cube;
+			var colx = false;
+			var coly = false;
+			var colz = false;
+			if (cx > co.position.x - CUBE_SIZE / 2 - 1 && cx < co.position.x + CUBE_SIZE /2 + 1) {
+				colx = true;
+			}
+			if (cy > co.position.y - CUBE_SIZE / 2 - 1 && cy < co.position.y + CUBE_SIZE /2 + 1) {
+				coly = true;
+			}
+			if (cz > co.position.z - CUBE_SIZE / 2 - 1 && cz < co.position.z + CUBE_SIZE /2 + 1) {
+				colz = true;
+			}
+			
+			if (colx && coly && colz) {
+				if (colx && camera.position.y == 0) {
+					camera.position.x = oldX
+				}
+				if (coly) {
+					camera.position.y = oldY
+					camV.y = 0;
+					grounded = true;
+				}
+				if (colz  && camera.position.y == 0) {
+					camera.position.z = oldZ
+				}
+			}
+			
+		//}
+		
+		if (camera.position.y < 0) {
+			camera.position.y = 0
+			camV.y = 0
+			grounded = true;
+		}
+		if (camera.position.x > 490) {
+			camera.position.x = 490;
+		}
+		if (camera.position.x < -490) {
+			camera.position.x = -490;
+		}
+		if (camera.position.z > 490) {
+			camera.position.z = 490;
+		}
+		if (camera.position.z < -490) {
+			camera.position.z = -490;
+		}
+		
+		var c = counter/30
+		pointLight.color.r = Math.sin(c)*1 + 0.5;
+		pointLight.color.g = Math.sin(c)*1 + 0.5;
+		pointLight.color.b = Math.sin(c)*1 + 0.5;
+		pointLight.position.y = Math.sin(c)*100;
+	});
+	
+	stage.on("render", function (context) {
+		renderer.render(scene, camera);
+	})
+}
+window.onload = init;
+</script>
+</body>
+</html>

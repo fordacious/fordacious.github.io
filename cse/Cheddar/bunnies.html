@@ -1,0 +1,115 @@
+
+<!doctype html>
+<html><head> 
+<title>BunnyMark in HTML5 Canvas</title> 
+ 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+<script src="./js/Stats.js"></script>
+<script src="./js/Cheddar.js"></script>
+
+
+<style type="text/css">      
+  body{
+	background:#ffffff;
+	color:#000000;
+	font-family:arial;
+	font-size:90%;
+}
+  .wrap{width:640px; margin:0 auto;}
+  a{color:#0f0;}
+</style> 
+</head><body onLoad="setup();">
+<script type="text/javascript"> 
+
+Cheddar.init({
+	width:640,
+	height:480,
+	clear :true
+})
+var stage = Cheddar.stage;
+var mouse = Cheddar.mouse;
+ 
+function Bunny(){
+	this.speedX = 0;
+	this.speedY = 0;
+	this.x = 0;
+	this.y = 0;
+}
+
+function setup(){
+	var numBunnies = 3000;
+	var gravity = 3;
+	var bunnies = [];
+	var maxX = 640;
+	var minX = 0;
+	var maxY = 480;
+	var minY = 0;
+	
+	//img = new Image();
+	//img.src = "assets/wabbit_alpha.png";
+	var img = new DisplayImage("assets/wabbit_alpha.png");
+	var bunny; 
+	
+	for (var i = 0; i < numBunnies; i++){
+		bunny = new Bunny();
+		bunny.speedX = Math.random() * 10;
+		bunny.speedY = (Math.random() * 10) - 5;
+		
+		bunnies.push(bunny);
+	}
+
+	stage.on("enterframe", function (e) {
+		var bunny;
+		//Cheddar.context.fillStyle="rgba(255, 255, 255, 1)";
+		//Cheddar.context.fillRect(0,0, maxX, maxY);
+		for (i=0; i<numBunnies; i++){
+			bunny = bunnies[i];
+			
+			bunny.x += bunny.speedX;
+			bunny.y += bunny.speedY;
+			bunny.speedY += gravity;
+			
+			if (bunny.x > maxX)
+			{
+				bunny.speedX *= -1;
+				bunny.x = maxX;
+			}
+			else if (bunny.x < minX)
+			{
+				bunny.speedX *= -1;
+				bunny.x = minX;
+			}
+			
+			if (bunny.y > maxY){
+				bunny.speedY *= -0.8;
+				bunny.y = maxY;
+				
+				if (Math.random() > 0.5){
+					bunny.speedY -= Math.random() * 12;
+				}
+			} 
+			else if (bunny.y < minY){
+				bunny.speedY = 0;
+				bunny.y = minY;
+			}
+			
+			//img = Cheddar.images[0];
+			
+			img.x = bunny.x;
+			img.y = bunny.y;
+			img.enabled = false;
+			stage.enabled = false;
+			
+			//Cheddar.context.drawImage(img, bunny.x | 0, bunny.y | 0, img.width,img.height);
+			img.draw(Cheddar.context);
+		}
+	})
+}
+ 
+</script> 
+<div class="wrap"> 
+<div id="stats"></div>	 
+  <p>(most the code was borrowed from  <a href="http://sebleedelisle.com">Seb Lee-Delisle</a>. Stats by <a href="http://mrdoob.com/blog/post/700">Mr.Doob</a> )</p>
+</div> 
+ 
+</body></html>

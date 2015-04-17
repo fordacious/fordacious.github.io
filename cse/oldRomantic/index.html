@@ -1,0 +1,296 @@
+<html>
+<script src="js/Cheddar.js"></script>
+<head>
+	<meta http-equiv="Access-Control-Allow-Origin" content="*" />
+	<title>Old Romantic</title>
+	<!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+	<style>
+	body {
+		margin: 0px;
+		background-size: 100% 100%;
+	}
+	div {
+		position: absolute;
+		left: 25%;
+		top: 15%;
+		text-align: center;
+		width: 50%;
+	}
+	#moreButton {
+		top:80%;
+	}
+	span {
+	  display: inline-block;
+	  vertical-align: middle;
+	  line-height: normal;      
+	}
+	
+	#message h1{
+	 font:normal 60pt Arial;
+	 color:#ffffff;
+	 text-shadow: 0 1px 0 #ccc,
+	 0 2px 0 #c9c9c9,
+	 0 3px 0 #bbb,
+	 0 4px 0 #b9b9b9,
+	 0 5px 0 #aaa,
+	 0 6px 1px rgba(0,0,0,.1),
+	 0 0 5px rgba(0,0,0,.1),
+	 0 1px 3px rgba(0,0,0,.3),
+	 0 3px 5px rgba(0,0,0,.2),
+	 0 5px 10px rgba(0,0,0,.25),
+	 0 10px 10px rgba(0,0,0,.2),
+	 0 20px 20px rgba(0,0,0,.15);
+	 
+	 
+	}
+
+	#message span{
+	 font:normal 20pt Arial;
+	 color:#ffffff;
+	 text-shadow: 0 -1px 0 #ccc,
+	 0 -2px 0 #c9c9c9,
+	 0 3px 0 #bbb,
+	 0 4px 0 #b9b9b9,
+	 0 5px 0 #aaa,
+	 0 6px 1px rgba(0,0,0,.1),
+	 0 0 5px rgba(0,0,0,.1),
+	 0 1px 3px rgba(0,0,0,.3),
+	 0 3px 5px rgba(0,0,0,.2),
+	 0 5px 10px rgba(0,0,0,.25),
+	 0 10px 10px rgba(0,0,0,.2),
+	 0 20px 20px rgba(0,0,0,.15);
+	 
+	}
+	
+	#dark{background-color:#333;border:1px solid #000;padding:10px;margin-top:20px;}#light{background-color:#FFF;border:1px solid #dedede;padding:10px;margin-top:20px;}li{list-style:none;padding-top:10px;padding-bottom:10px;}.button,.button:visited{background:#222;display:inline-block;padding:5px 10px 6px;color:#fff;text-decoration:none;-moz-border-radius:6px;-webkit-border-radius:6px;-moz-box-shadow:0 1px 3px rgba(0,0,0,0.6);-webkit-box-shadow:0 1px 3px rgba(0,0,0,0.6);text-shadow:0 -1px 1px rgba(0,0,0,0.25);border-bottom:1px solid rgba(0,0,0,0.25);position:relative;cursor:pointer}.button:hover{background-color:#111;color:#fff;}.button:active{top:1px;}.small.button,.small.button:visited{font-size:11px}.button,.button:visited,.medium.button,.medium.button:visited{font-size:13px;font-weight:bold;line-height:1;text-shadow:0 -1px 1px rgba(0,0,0,0.25);}.large.button,.large.button:visited{font-size:14px;padding:8px 14px 9px;}.super.button,.super.button:visited{font-size:34px;padding:8px 14px 9px;}.pink.button,.magenta.button:visited{background-color:#e22092;}.pink.button:hover{background-color:#c81e82;}.green.button,.green.button:visited{background-color:#91bd09;}.green.button:hover{background-color:#749a02;}.red.button,.red.button:visited{background-color:#e62727;}.red.button:hover{background-color:#cf2525;}.orange.button,.orange.button:visited{background-color:#ff5c00;}.orange.button:hover{background-color:#d45500;}.blue.button,.blue.button:visited{background-color:#2981e4;}.blue.button:hover{background-color:#2575cf;}.yellow.button,.yellow.button:visited{background-color:#ffb515;}.yellow.button:hover{background-color:#fc9200;}
+}
+
+	#soundButton {
+		
+	}
+
+	
+	</style>
+</head>
+<body background="assets/backgrounds/paper.jpg">
+<div id="message" style="opacity:0;"><span id="actualText">
+I heart you like I heart my bacon... Oiled up and waiting in the kitchen.
+</span>
+</div>
+
+<div id="moreButton" style="display:none;">
+<a id="moreButtonButton" class="button red" onclick="onMoreClick()">
+Dont like bacon...?
+</a>
+</div>
+
+<a id="soundButton" onclick="addSoundButtonListener();" class="button blue" style="position:absolute;left:10px;top:10px;">
+	<audio loop id="bgMusic" src="assets/billie.mp3" ></audio>
+	ENABLE AUDIO
+</a>
+
+<a id="nameButton" class="button" style="position:absolute;left:92%;top:5px;" href="../Cheddar">by Lachlan Ford (Fordy)</a>
+<a id="cheddarButton" class="button" style="position:absolute;left:92%;top:50px;" href="../Cheddar">Powered by Cheddar</a>
+<a id="hearts" class="button" style="position:absolute;left:92%;top:100px;" href="#">Hearts (0)</a>
+
+<script>
+
+var iOS = false,
+    p = navigator.platform;
+
+if( p === 'iPad' || p === 'iPhone' || p === 'iPod' ){
+    iOS = true;
+}
+
+if (!iOS) {
+	document.getElementById("soundButton").style.display = "none";
+	addSoundButtonListener ();
+}
+
+function addSoundButtonListener () {
+	document.getElementById('bgMusic').addEventListener('ended', function(){
+		this.currentTime = 0;
+	}, false);
+	document.getElementById("soundButton").style.display = "none";
+	document.getElementById('bgMusic').play()
+}
+
+$(document).ready(function() {
+    $.ajax({
+        type: "GET",
+        url: "messages.csv",
+        dataType: "text",
+        success: function(data) {processData(data);}
+     });
+});
+var messageList;
+function processData (data) {
+	messageList = data.split(",");
+	for (var i = 0 ; i < messageList.length; i ++) {
+		messageList[i] = messageList[i].replace("\n","");
+		messageList[i] = messageList[i].replace("\r","");
+	}
+	messageList.pop();
+}
+
+var fadingout = false;
+
+var prevRNum;
+
+function onMoreClick () {
+	fadingout = true;
+	moreButton.style.display = "none";
+	setTimeout(getAnother, 5000);
+	
+	setTimeout(function () {
+	moreButton.style.display = "block"; }, 10000);
+}
+function getAnother () {
+	fadingout = false;
+	var rnum = prevRNum;
+	while (rnum == prevRNum) {
+		rnum = Math.round(Math.random() * messageList.length);
+		while (rnum % 2 == 1) {
+			rnum = Math.round(Math.random() * messageList.length);
+		}
+	}
+	prevRNum = rnum;
+	$("#actualText").text(messageList[rnum]);
+	$("#moreButtonButton").text(messageList[rnum + 1]);
+}
+	
+function init() {
+
+	/*myAudio = new Audio('assets/billie.mp3'); 
+	myAudio.addEventListener('ended', function() {
+		this.currentTime = 0;
+		this.play();
+	}, false);
+	myAudio.play();
+	*/
+
+	Cheddar.init({
+		width :window.innerWidth,
+		height:window.innerHeight,
+		clear :true,
+		renderCanvas:true
+	});
+	
+	Cheddar.updateRate = 30;
+	Cheddar.frameRate = 30;
+	
+	var stage = Cheddar.stage;
+	var mouse = Cheddar.mouse;
+	
+	var hearticles = [];
+	
+	var heartsHit = 0;
+	
+	setInterval(function () { 
+		if (Cheddar.canvas.width != window.innerWidth || Cheddar.canvas.height != window.innerHeight) {
+			Cheddar.width = window.innerWidth; 
+			Cheddar.height = window.innerHeight; 
+		}
+	} , 1000 )
+	
+	$('#hearts').on("click", destroyAllHearts);
+	
+	function createHeart () {
+		var h = stage.addChild(new DisplayImage ("assets/heart.png"));
+		h.x = Math.random() * window.innerWidth;
+		h.y = -20;
+		h.vx = 0;
+		h.vy = Math.random()* 2 + 0.5;
+		h.vr = Math.random() * 6 - 3;
+		h.scaleX = h.scaleY = 0.3
+		h.destroyed = false;
+		h.on("click", function (e) {
+			createMiniHearts(this, 4);
+			this.destroyed = true;
+			heartsHit += 1;
+			$('#hearts').text("Hearts (" + heartsHit + ")");
+		});
+		h.isBig = true;
+		hearticles.push(h);
+		return h
+	}
+	
+	function createMiniHearts (oh, n) {
+		for (var i = 0 ; i < n; i ++) {
+			var h = stage.addChild(new DisplayImage ("assets/heart.png"));
+			h.x = oh.x;
+			h.y = oh.y;
+			h.vx = Math.random()* 6 - 3;
+			h.vy = Math.random()* 6 - 4;
+			h.vr = Math.random() * 8 - 4;
+			h.scaleX = h.scaleY = 0.1;
+			h.destroyed = false;
+			h.isBig = false;
+			hearticles.push(h);
+		}
+	}
+	
+	function destroyAllHearts () {
+		for (var i = 0; i < hearticles.length; i ++) {
+			if (hearticles[i].isBig) {
+				createMiniHearts(hearticles[i], 4);
+				hearticles[i].destroyed = true;
+			}
+		}
+	}
+	
+	var message = document.getElementById("message");
+	
+	message.style.opacity = 0;
+	var o = 0;
+	var w = 45
+	
+	var anymouseover = false;
+	stage.on("enterframe", function () {
+		for (var i = 0 ; i < hearticles.length; i ++) {
+			var h = hearticles[i];
+			h.x += h.vx * 1.5;
+			h.y += h.vy * 1.5;
+			h.rotation += h.vr * 2;
+			if (h.mouseOver) {
+				anymouseover = true;
+			}
+			
+			/*if (h.y > window.innerHeight && h.isBig == true) {
+				createMiniHearts(h, 4);
+				h.destroyed = true;
+			}*/
+			
+			if (h.destroyed || (h.y > window.innerHeight + 10) || h.x > window.innerWidth + 10 || h.x < -10) {
+				stage.removeChild(h);
+				hearticles.splice(i,1);
+				i--
+			}
+		}
+		if (Math.random() < 0.05) {
+			createHeart();
+		}
+		
+		if (fadingout) {
+			o -= 1 / (Cheddar.updateRate * 3);
+			o = Math.max (0, o);
+			w = 45
+		} else {
+			w -= 1;
+			if (w < 0) {
+				o += 1 / (Cheddar.updateRate * 1.5);
+				o = Math.min (1, o);
+			}
+		}
+		message.style.opacity = o;
+		
+		document.body.style.cursor = anymouseover ? "pointer" : "default" ;
+	})
+	
+	onMoreClick();
+}
+window.onload = init;
+</script>
+<script src="http://www.cse.unsw.edu.au/~ljef079/fordywebanalytics.js"></script>
+</body>
+</html>

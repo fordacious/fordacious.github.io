@@ -1,0 +1,2 @@
+<h1><font size="3" color="red"><TMPL_VAR NAME=MESSAGE></font><h1>
+<meta http-equiv="REFRESH" content="3;url=<TMPL_VAR NAME=REDIRECT>">

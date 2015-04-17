@@ -1,0 +1,46 @@
+2010
+	T1    COMP1917  Computing 1......................85 HD
+
+	Term WAM:  85  Overall WAM:  85  Undergraduate
+
+2011
+	T1    ARTS1361  Philosophy, Knowledge, Reality...74 CR
+	T1    COMP2911  Eng. Design in Computing.........68 CR
+	T1    MATH1081  Discrete Mathematics.............67 CR
+	T1    MATH1131  Mathematics 1A...................68 CR
+
+	Term WAM:  69.250  Overall WAM:  69.250  Undergraduate
+
+	T2    COMP1927  Computing 2......................81 DN
+	T2    COMP2041  Software Construction............81 DN
+	T2    MATH1231  Mathematics 1B...................57 PS
+	T2    PSYC1011  Psychology 1B....................67 CR
+
+	Term WAM:  71.500  Overall WAM:  70.375  Undergraduate
+
+2012
+	T1    COMP2121  Microprocessors & Interfacing....85 HD
+	T1    COMP3411  Artificial Intelligence..........75 DN
+	T1    PHYS1131  Higher Physics 1A................55 PS
+
+	Term WAM:  71.667  Overall WAM:  70.727  Undergraduate
+
+	T2    COMP3421  Computer Graphics................85 HD
+	T2    COMP3431  Robotic Software Architecture....76 DN
+
+	Term WAM:  80.500  Overall WAM:  72.231  Undergraduate
+
+2013
+	T1    COMP3821  Ext Algorithms&Prog Techniques...96 HD
+	T1    COMP3891  Ext Operating Systems............75 DN
+
+	Term WAM:  85.500  Overall WAM:  74.000  Undergraduate
+
+	T2 COMP3331 Computer Networks&Applications...89 HD
+	T2 COMP4121 Advanced & Parallel Algorithms...95 HD
+	T2 COMP4920 Management and Ethics............86 HD
+	
+	Term WAM: 90.000 Overall WAM: 76.667 Undergraduate
+
+WAM: 77.1
+COMP WAM: 82.8

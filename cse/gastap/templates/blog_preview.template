@@ -1,0 +1,8 @@
+<hr>
+<h3><a href="<TMPL_VAR NAME=URL>"><TMPL_VAR NAME=BLOG_TITLE></a></h3>
+<p>
+Posted by <a href="<TMPL_VAR NAME=AUTHOR_URL>"><TMPL_VAR NAME=BLOG_AUTHOR></a> at <TMPL_VAR NAME=BLOG_DATE>
+<p>
+<TMPL_VAR NAME=BLOG_CONTENT>... <a href="<TMPL_VAR NAME=URL>">Read More</a>
+<p>
+Views: <TMPL_VAR NAME=NUM_VIEWS>

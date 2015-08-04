@@ -1,0 +1,14 @@
+{
+  "name": "mocha",
+  "homepage": "https://github.com/mochajs/mocha",
+  "version": "1.8.2",
+  "_release": "1.8.2",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.8.2",
+    "commit": "c1f4aaac1172f44940715c14c15398d3ef19c830"
+  },
+  "_source": "git://github.com/mochajs/mocha.git",
+  "_target": "~1.8.1",
+  "_originalSource": "mocha"
+}

@@ -1,0 +1,15 @@
+{
+	"source": [
+		"../src/preloadjs/version.js",
+		"../src/createjs/events/Event.js",
+		"../src/createjs/events/EventDispatcher.js",
+		"../src/createjs/utils/IndexOf.js",
+		"../src/createjs/utils/Proxy.js",
+		"../src/preloadjs/AbstractLoader.js",
+		"../src/preloadjs/LoadQueue.js",
+		"../src/preloadjs/TagLoader.js",
+		"../src/preloadjs/XHRLoader.js"
+	],
+
+	"docs_out_path":"./output/PreloadJSDocs/"
+}

@@ -1,9 +1,0 @@
-define([
-    'specs/manager.spec',
-    'specs/scene.spec',
-    'specs/references.spec',
-    'specs/resolutionProperty.spec',
-    'specs/time.spec',
-    'specs/EntityFactory.spec',
-    'specs/ComponentLibrary.spec'
-]);

@@ -1,0 +1,14 @@
+{
+    "name": "renderers",
+    "version": "0.1.0",
+    "dependencies": {
+        "jquery": "2.1.0",
+        "underscore": ">=1.4.2",
+        "requirejs": "~2",
+        "mocha": "~1.8.1",
+        "chai": "~1.8",
+        "sinon" : "~1.10.3",
+        "almond": "~0.2",
+        "sceneManager": "http://git.smartsparrow.com/andrei/scene-manager.git#0.1.1"
+    }
+}

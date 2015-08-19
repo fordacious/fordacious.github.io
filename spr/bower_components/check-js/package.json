@@ -1,0 +1,14 @@
+{
+  "name" : "checkjs",
+  "version" : "0.1.0",
+  "dependencies" : {
+    "grunt" : "0.4.0",
+    "grunt-mocha" : "",
+    "grunt-contrib-copy" : "",
+    "grunt-contrib-jshint" : "",
+    "grunt-contrib-clean" : "",
+    "grunt-contrib-watch" : "",
+    "grunt-contrib-uglify" : "",
+    "coverjs" : "0.0.11-alpha"
+  }
+}

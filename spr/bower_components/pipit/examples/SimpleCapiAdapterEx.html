@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title> Pipit CapiAdapter Example </title>
+
+    <style type="text/css">
+        .axis {
+            fill:none;
+            stroke:#000;
+            stroke-width: 1px;
+            font-size: 11px;
+        }
+
+        #angleInput {
+            margin-left: 166px;
+            width: 40px;
+        }
+
+        .label {
+            position: absolute;
+            margin-left: 55px;
+            font-size: 14px;
+            margin-top: 3px;
+        }
+    </style>
+    
+</head>
+
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="https://d1rpkia8qpfj4t.cloudfront.net/pipit-0.51.min.js"></script>
+    <script src="./graphHelper.js"></script>
+
+<body>
+    <h2> Pipit CapiAdapter Example </h2>
+
+    <div class="chart"></div>
+    <div class="label">Enter angle (0-90)</div>
+    <input type="value" id="angleInput" onKeypress = 'setSlopeValue(event)'>
+   
+    <script type= "text/javascript">
+
+        var model = new pipit.CapiAdapter.CapiModel({  
+            slope:45,
+            showSlope: true
+        });
+        
+        //this will listen to changes to slope attribute on the model and will be called when a change of value occurs everytime.
+        model.on('change:slope', function(model,values) {
+            var v = values.slope;
+            if(v >= 0 && v <= 90){
+                graph.drawProportionalityLine(v);
+                this.set('showSlope',true);
+                document.getElementById('angleInput').setAttribute('value',v);
+            }
+            
+        });
+
+        //this will listen to changes to showSlope attribute on the model and will be called when a change of value occurs everytime.
+        model.on('change:showSlope', function(model,values) {
+            graph.hideProportionalityLine(values.showSlope);
+            if(values.showSlope){
+                document.getElementById('angleInput').disabled = false;
+            }
+            else{
+                document.getElementById('angleInput').disabled = true;
+            }
+        });
+
+        /*
+        function name   : setSlopeValue
+        description     : called on keyPress to check if enter has been hit to change/set the slope value.
+        */
+        function setSlopeValue(event) {
+            if (!event) event = window.event;
+            var keyCode = event.keyCode || event.which;
+            if (keyCode == '13'){
+                var v = parseInt(document.getElementById('angleInput').value,10);
+                model.set('slope',v);
+            }  
+        }
+
+        /*
+        function name   : init
+        description     : calls all the intial set up functions
+         */
+        function init() {
+            //sets up the chart with the axis,scales,rules,ticks for drawing.
+            graph.setupChart();
+
+            // plots the points on the chart
+            graph.plotPoints(
+                [
+                    {x : 10, y : 90},
+                    {x : 50, y : 70},
+                    {x : 20, y : 40},
+                    {x : 10, y : 20}
+                ]
+            );
+
+            if(model.get('showSlope')){
+                 graph.drawProportionalityLine(model.get('slope'));
+            }
+            else{
+                document.getElementById('angleInput').disabled = true;
+            }
+        }
+
+        init();
+       
+        //Tells pipit to expose the following attributes 
+        pipit.CapiAdapter.expose('slope', model);
+        pipit.CapiAdapter.expose('showSlope', model);
+
+        // Tells pipit that the sim model is ready
+        pipit.Controller.notifyOnReady();
+
+    </script>
+</body>
+
+</html>

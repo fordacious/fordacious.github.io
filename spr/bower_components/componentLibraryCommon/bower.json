@@ -1,0 +1,18 @@
+{
+  "name": "renderers",
+  "version": "0.1.0",
+  "dependencies": {
+    "jquery": "2.1.0",
+    "jquery-ui": "1.10",
+    "jqueryui-touch-punch": "",
+    "underscore": ">=1.4.2",
+    "requirejs": "~2",
+    "mocha": "~1.8.1",
+    "chai": "~1.8",
+    "sinon": "~1.10.3",
+    "almond": "~0.2",
+    "backbone": "~1.0.0",
+    "sceneManager": "git@github.com:SmartSparrow/scene-manager.git",
+    "componentLibraryUtils": "git@github.com:SmartSparrow/componentLibrary-Utils.git"
+  }
+}

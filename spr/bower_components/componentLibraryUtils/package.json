@@ -1,0 +1,25 @@
+{
+    "name": "renderers",
+    "description": "Rendering Components",
+    "version": "0.2.0",
+    "author": {
+        "name": "Smart Sparrow"
+    },
+    "bugs": {
+        "url": "https://jira.smartsparrow.com/"
+    },
+    "engines": {
+        "node": "*"
+    },
+    "scripts": {
+        "test": "grunt test"
+    },
+    "devDependencies": {
+        "grunt":"0.4.2",
+        "grunt-mocha": "0.4.10",
+        "grunt-contrib-jshint": "~0.6.5",
+        "grunt-contrib-watch": "~0.5.3",
+        "mocha" : "~1.14"
+    },
+    "keywords": []
+}

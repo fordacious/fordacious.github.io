@@ -1,0 +1,1 @@
+<div class='CCountDisplay'>Cytosine: <%= CytosineCount %></div>

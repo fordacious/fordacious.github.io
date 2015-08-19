@@ -1,0 +1,1 @@
+<div class='ACountDisplay'>Adenine: <%= AdenineCount %></div>

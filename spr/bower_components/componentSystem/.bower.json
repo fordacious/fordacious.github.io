@@ -1,0 +1,18 @@
+{
+  "name": "ComponentSystem",
+  "dependencies": {
+    "requirejs": "~2",
+    "mocha": "~1.8.1",
+    "chai": "~1.8",
+    "almond": "~0.2"
+  },
+  "_release": "7e9b978286",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "7e9b978286b02c736493c1e46a76c6ab764265e8"
+  },
+  "_source": "http://git.smartsparrow.com/ben/component-system.git",
+  "_target": "*",
+  "_originalSource": "http://git.smartsparrow.com/ben/component-system.git"
+}

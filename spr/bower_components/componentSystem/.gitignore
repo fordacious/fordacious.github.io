@@ -1,0 +1,7 @@
+dist
+temp
+node_modules
+components
+app/assets/manifest.csv
+.idea
+bower_components

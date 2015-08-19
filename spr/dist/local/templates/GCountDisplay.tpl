@@ -1,1 +1,0 @@
-<div class='GCountDisplay'>Guanine: <%= GuanineCount %></div>

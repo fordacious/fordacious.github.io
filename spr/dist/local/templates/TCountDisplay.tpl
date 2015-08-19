@@ -1,1 +1,0 @@
-<div class='TCountDisplay'>Thymine: <%= ThymineCount %></div>

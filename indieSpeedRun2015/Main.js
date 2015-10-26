@@ -294,8 +294,6 @@ function drawHitbox(){
 function Main() {
     /* Link Canvas */
 
-    document.getElementById("loadingmsg").remove();
-
     canvas = document.getElementById('DeathRockStage');
     stage = new Stage(canvas);
         
@@ -355,6 +353,8 @@ function handleFileLoad(event) {
 // Add Title View Function
 
 function addTitleView() {
+    document.getElementById("loadingmsg").remove();
+
     startB.x = 360 - 31.5;
     startB.y = 415;
     startB.name = 'startB';

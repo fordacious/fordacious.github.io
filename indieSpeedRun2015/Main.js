@@ -294,6 +294,8 @@ function drawHitbox(){
 function Main() {
     /* Link Canvas */
 
+    document.getElementById("loadingmsg").remove();
+
     canvas = document.getElementById('DeathRockStage');
     stage = new Stage(canvas);
         

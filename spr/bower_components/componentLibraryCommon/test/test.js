@@ -1,9 +1,0 @@
-define([
-    'specs/components/CapiModelSync.spec',
-    'specs/components/Draggable.spec',
-    'specs/components/Droppable.spec',
-    'specs/components/OnDrop.spec',
-    'specs/components/PropertyVisibilityToggle.spec',
-    'specs/components/SetPropertyOnClick.spec',
-    'specs/components/StaticClassToggle.spec'
-]);

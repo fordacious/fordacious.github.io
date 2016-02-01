@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tea</title>
+	<script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="./main.js"></script>
+	<script src="./Game.js"></script>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+		}
+		.titleText {
+			position: fixed;
+		    top: 50%;
+		    left: 50%;
+		    margin-top: -382px;
+		    font-size: 12px;
+		    font-family: sans-serif;
+		    letter-spacing: 10px;
+		    color: #676767;
+		}
+		.playButton {
+			margin-top: -10px;
+		    margin-left: -220px;
+		    cursor: pointer;
+		    transition: opacity 3s;
+		}
+		.playButton.hidden {
+			opacity: 0;
+		}
+		.endtext {
+			cursor: initial;
+    		margin-left: -150px;
+		}
+		canvas {
+			box-shadow: 0 0 21px -7px rgba(0,0,0,0.5);
+
+			height: 600px;
+		    width: 800px;
+
+		    position: fixed;
+		    top: 50%;
+		    left: 50%;
+		    margin-top: -300px;
+		    margin-left: -400px;
+			background-color: #F5F1DF;
+
+		    transition: opacity 3s;
+		}
+		canvas.running {
+			cursor: none;
+		}
+		canvas.hidden {
+			opacity: 0;
+		}
+	</style>
+</head>
+<body>
+	<!--<div class="titleText">Ritual</div>-->
+	<canvas id="canvas" class="canvas hidden" width="800", height="600"></canvas>
+	<div class="titleText playButton">Click to Engage in the Ritual</div>
+	<div class="titleText playButton hidden endtext">Thanks for Engaging</div>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			main($('canvas'), $('.playButton'), $('.endtext'));
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+[submodule "relicsockettest"]
+	path = relicsockettest
+	url = https://github.com/fordacious/relicsockettest.git

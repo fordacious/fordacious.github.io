@@ -80,6 +80,8 @@
                 min-width: 125px;
             }
         </style>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="./web3_util.js"></script>
 	<!-- Global site tag (gtag.js) - Google Analytics -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-155859089-1"></script>
 	<script>
@@ -94,7 +96,7 @@
         <div class="main centered">
             <div class="centered">
                 <!-- <img class="profile-pic" src="profile.jpg"></img> -->
-                <div class="nameheader">
+                <div class="nameheader" onclick="runweb3()">
                     <p class="content-header inline underline">Lachlan Ford</p>
                 </div>
             </div>

@@ -4,7 +4,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <style>
             body {
-                background: url('background2.jpg');
+                background: #FAFAFA;
                 margin: 0;
                 background-position: 50% 25%;
             }
@@ -26,11 +26,14 @@
             .content-body {
                 width: 100%;
                 margin-bottom: 20px;
+                top: 20%;
+                position: absolute;
             }
             .content-header{
-                text-shadow: 0px 1px 2px #000;
+                text-shadow: 0px 0.75px 1.25px #000;
                 color: white;
                 font-weight: bold;
+                font-size: x-large;
             }
             a {
                 text-shadow: none;
@@ -55,7 +58,7 @@
                 width: 100%;
             }
 
-            .fancy-line, .fancy-line:before {
+            .fancy-line {
                 background: radial-gradient(ellipse at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 75%);
             }
 
@@ -79,70 +82,48 @@
                 max-width: 200px;
                 min-width: 125px;
             }
+
+            .calmbg {
+                background: url(background3.jpg);
+                width: 250px;
+                height: 250px;
+                background-size: 500px;
+                background-position-x: -125px;
+                background-position-y: -50px;
+                margin: auto;
+                box-shadow: 0px 0.75px 1px #000;
+            }
+
+            .invisible-separator {
+                height: 75px;
+            }
         </style>
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script src="./web3_util.js"></script>
 	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-155859089-1"></script>
+	<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=UA-155859089-1"></script>
 	<script>
 	  window.dataLayer = window.dataLayer || [];
 	  function gtag(){dataLayer.push(arguments);}
 	  gtag('js', new Date());
 
 	  gtag('config', 'UA-155859089-1');
-	</script>
+	</script> -->
     </head>
     <body class="vignette">
-        <div class="main centered">
+        <div class="main centered vertical-centered">
             <div class="centered">
                 <!-- <img class="profile-pic" src="profile.jpg"></img> -->
-                <div class="nameheader" onclick="runweb3()">
+                <!-- <div class="nameheader" onclick="runweb3()">
                     <p class="content-header inline underline">Lachlan Ford</p>
-                </div>
+                </div> -->
             </div>
             <div class="content-body">
-                <div class="fancy-line" />
-                <p class="content-header inline theme">Technology</p>
-                <p class="content-header inline separator">|</p>
-                <p class="content-header inline theme">Art</p>
-                <p class="content-header inline separator">|</p>
-                <p class="content-header inline theme">Ideas</p>
-                <div class="fancy-line" />
-                <div class="content-header">
-                    <!-- <p class="content-header inline">Technologist based in Seattle</p>
-                    <br/> -->
-                    <p class="content-header inline">Creating XR technology and XR open standards at Microsoft</p>
-                    <br />
-                    <p class="content-header inline">Art everywhere else</p>
-                    <br />
-                    <a href="https://www.microsoft.com/en-us/hololens">HoloLens</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://www.microsoft.com/en-us/windows/windows-mixed-reality">Windows Mixed Reality</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://www.khronos.org/openxr/">OpenXR</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://www.w3.org/TR/webxr/">WebXR</a>
-                </div>
-                <div class="fancy-line" />
-                <br/>
-                <div class="content-header inline">
-                    <a href="https://www.linkedin.com/in/lachlanford/">LinkedIn</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://medium.com/@Ludum_Ford">Medium</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://twitter.com/ludum_ford">Twitter</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://www.instagram.com/lach_ig/">Instagram</a>
-                    <p class="content-header inline separator">|</p>
-                    <a href="https://open.spotify.com/artist/4UeswHmlY65nf5QZE6VmX9">Kerr Ring</a>
-                </div>
-                <div class="content-body">
-                    <p class="content-header inline">Contact</p>
-                    <p class="content-header inline separator">|</p>
-                    <p class="content-header inline">laford at microsoft dot com</p>
-                    <p class="content-header inline separator">|</p>
-                    <p class="content-header inline">lachlanfordau at gmail dot com</p>
-                </div>
+                <div class="fancy-line"></div>
+                <p class="content-header inline">⬤ · ⬤ · ⬤</p>
+                <div class="fancy-line"></div>
+                <div class="invisible-separator"></div>
+                <div class="calmbg"></div>
             </div>
         </div>
     </body>

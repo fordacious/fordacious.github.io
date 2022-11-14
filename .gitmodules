@@ -1,3 +1,6 @@
 [submodule "relicsockettest"]
 	path = relicsockettest
 	url = https://github.com/fordacious/relicsockettest.git
+[submodule "webgame"]
+	path = webgame
+	url = https://github.com/NunoDasNeves/webgame.git

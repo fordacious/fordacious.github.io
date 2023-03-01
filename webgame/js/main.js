@@ -163,10 +163,10 @@ function makeEntity(props) {
     return entity;
 }
 
-function PlayerRenderState() {
+function SpiderRenderState() {
     return {
-        head: {x:3, y: -1, radius: 3},
-        body: {x: -1, y: 0, radius: 5},
+        head: {x:3, y: -1},
+        body: {x: -1, y: 0},
         // TODO eyes?
         // Left, right, front, back
         // First 2 are front left and front right arms etc...
@@ -182,8 +182,8 @@ function PlayerRenderState() {
         jumpTimer: 0, // For jumping animation
         throwTimer: 0, // For throwing animation
         webInteractionTimer: 0, // For web interaction animation
-        lastKnownPosition: {x: 0, y: 0},
-        lastKnownDirection: null,
+        lastKnownPosition: null,
+        lastKnownDirection: {x: 0, y: 0 },
     };
 }
 
@@ -194,7 +194,7 @@ function initState() {
         camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         //camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 0.2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         map: mapData,
-        player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null, renderState:PlayerRenderState()}),
+        player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null, renderState:SpiderRenderState()}),
         currentNodeSelection: null,
         input: {
             wPressed: false,
@@ -347,15 +347,18 @@ function renderMap () {
 
     // TODO implement particle rendering for entity interactions
 
-    // Redner a small yellow circle for the player
-    renderPlayer();
+    renderEntityWithState(state.player, state.player.radius, "cyan", "blue", "pink");
 
     // Render lists of stuff
     const entities = state.enemies.concat(state.items).concat(state.flies);
 
     for (let i = 0; i < entities.length; ++i) {
-        const entity = entities[i]
-        drawCircle(entity, entity.radius, entity.color);
+        const entity = entities[i];
+        if (entity.renderState != null) {
+            renderEntityWithState(entity, entity.radius, entity.color, entity.color, entity.color);
+        } else {
+            drawCircle(entity, entity.radius, entity.color);
+        }
     }
 
     // map end zone
@@ -401,56 +404,56 @@ function copyvec(vec) {
     return {x: vec.x, y: vec.y};
 }
 
-function updatePlayerRenderState() {
-    let movementDir = copyvec(state.player.velocity);
-    if (state.player.velocity.x == 0 && state.player.velocity.y == 0 && state.player.renderState.lastKnownDirection != null) {
+function updateEntityRenderState(entity) {
+    let movementDir = copyvec(entity.velocity);
+    if (entity.velocity.x == 0 && entity.velocity.y == 0 && entity.renderState.lastKnownDirection != null) {
         // TODO if you land and dont move, this will be wrong (will be last velocity value)
-        movementDir = copyvec(state.player.currentEdge ? subVec(state.player.currentEdge.node1, state.player.currentEdge.node2) : state.player.renderState.lastKnownDirection);
+        movementDir = copyvec(entity.currentEdge ? subVec(entity.currentEdge.node1, entity.currentEdge.node2) : entity.renderState.lastKnownDirection);
     }
 
-    const currentNode = state.player.currentNode;
-    const currentEdge = state.player.currentEdge;
+    const currentNode = entity.currentNode;
+    const currentEdge = entity.currentEdge;
     // TODO stunTimer, jumpTimer
 
-    for (let i = 0; i < state.player.renderState.legPositions.length; i++) {
+    for (let i = 0; i < entity.renderState.legPositions.length; i++) {
         let legRowIndex = ((i / 2) - 1);
         if (legRowIndex > 0) {
             legRowIndex *= 2;
         }
-        let legPosition = state.player.renderState.legPositions[i];
-        let legTarget = state.player.renderState.legTargets[i];
-        let legAdjustment = scaleVector(normalize(movementDir), state.player.renderState.legRadius * legRowIndex * 2);
+        let legPosition = entity.renderState.legPositions[i];
+        let legTarget = entity.renderState.legTargets[i];
+        let legAdjustment = scaleVector(normalize(movementDir), entity.renderState.legRadius * legRowIndex * 2);
         //let legAdjustment = {x:0, y:0};
 
-        let legTargetDistFromPlayer = dist(state.player, legTarget);
-        let needUpdateTarget = state.player.renderState.legUpdateIndex == i && legTargetDistFromPlayer > state.player.renderState.legLength;
+        let legTargetDistFromPlayer = dist(entity, legTarget);
+        let needUpdateTarget = entity.renderState.legUpdateIndex == i && legTargetDistFromPlayer > entity.renderState.legLength;
 
         if (needUpdateTarget) {
-            if (state.player.currentNode) {
+            if (entity.currentNode) {
                 // TODO splay on node
-                let vec = {x: state.player.currentNode.x, y: state.player.currentNode.y};
+                let vec = {x: entity.currentNode.x, y: entity.currentNode.y};
                 vec = addVec(vec, legAdjustment);
                 legTarget.x = vec.x;
                 legTarget.y = vec.y;
-            } else if (state.player.currentEdge) {
+            } else if (entity.currentEdge) {
                 // Get player point projected onto current edge
-                let legSnapPoint = projectPointOntoLine(state.player, currentEdge.node1, currentEdge.node2);
+                let legSnapPoint = projectPointOntoLine(entity, currentEdge.node1, currentEdge.node2);
 
                 let vec = addVec(legSnapPoint, legAdjustment);
                 legTarget.x = vec.x;
                 legTarget.y = vec.y;
             } else {
                 // TODO falling
-                let vec = addVec(state.player, legAdjustment);
+                let vec = addVec(entity, legAdjustment);
                 legTarget.x = vec.x;
                 legTarget.y = vec.y;
             }
 
-            let legTargetVector = subVec(legTarget, state.player);
-            let legTargetDistFromPlayer = dist(state.player, legTarget);
-            if (legTargetDistFromPlayer > state.player.renderState.legLength * 2) {
-                legTarget.x = state.player.x + legTargetVector.x / legTargetDistFromPlayer * state.player.renderState.legLength;
-                legTarget.y = state.player.y + legTargetVector.y / legTargetDistFromPlayer * state.player.renderState.legLength;
+            let legTargetVector = subVec(legTarget, entity);
+            let legTargetDistFromPlayer = dist(entity, legTarget);
+            if (legTargetDistFromPlayer > entity.renderState.legLength * 2) {
+                legTarget.x = entity.x + legTargetVector.x / legTargetDistFromPlayer * entity.renderState.legLength;
+                legTarget.y = entity.y + legTargetVector.y / legTargetDistFromPlayer * entity.renderState.legLength;
             }
             
             // Get vector from leg to target, rotate 45 degrees randomly clockwise or anticlockwise
@@ -460,104 +463,108 @@ function updatePlayerRenderState() {
             let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
             let legTargetVectorX = Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist;
             let legTargetVectorY = Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist;
-            state.player.renderState.legVelocities[i].x = legTargetVectorX * 0.2;
-            state.player.renderState.legVelocities[i].y = legTargetVectorY * 0.2;
+            entity.renderState.legVelocities[i].x = legTargetVectorX * 0.2;
+            entity.renderState.legVelocities[i].y = legTargetVectorY * 0.2;
         }
 
-        if (state.player.item) {
+        if (entity.item) {
             if (i == 0) {
-                legTarget.x = state.player.x - state.player.radius;
-                legTarget.y = state.player.y - state.player.radius;
-                legPosition.x = state.player.x - state.player.radius;
-                legPosition.y = state.player.y - state.player.radius;
-                state.player.renderState.legVelocities[i].x = 0;
-                state.player.renderState.legVelocities[i].y = 0;
+                legTarget.x = entity.x - entity.radius;
+                legTarget.y = entity.y - entity.radius;
+                legPosition.x = entity.x - entity.radius;
+                legPosition.y = entity.y - entity.radius;
+                entity.renderState.legVelocities[i].x = 0;
+                entity.renderState.legVelocities[i].y = 0;
             } else if (i == 1) {
-                legTarget.x = state.player.x + state.player.radius;
-                legTarget.y = state.player.y - state.player.radius;
-                legPosition.x = state.player.x + state.player.radius;
-                legPosition.y = state.player.y - state.player.radius;
-                state.player.renderState.legVelocities[i].x = 0;
-                state.player.renderState.legVelocities[i].y = 0;
+                legTarget.x = entity.x + entity.radius;
+                legTarget.y = entity.y - entity.radius;
+                legPosition.x = entity.x + entity.radius;
+                legPosition.y = entity.y - entity.radius;
+                entity.renderState.legVelocities[i].x = 0;
+                entity.renderState.legVelocities[i].y = 0;
             }
-        } else if (state.player.renderState.isHoldingItem) {
+        } else if (entity.renderState.isHoldingItem) {
             // Get vector from player to mouse mouse position
-            const mouseVec = normalize({x: state.input.mouseX - state.player.x, y: state.input.mouseY - state.player.y});
+            const mouseVec = normalize({x: state.input.mouseX - entity.x, y: state.input.mouseY - entity.y});
             let vec = scaleVector(mouseVec, 10);
 
             if (i == 0 || i == 1) {
-                state.player.renderState.legVelocities[i].x = vec.x;
-                state.player.renderState.legVelocities[i].y = vec.y;
+                entity.renderState.legVelocities[i].x = vec.x;
+                entity.renderState.legVelocities[i].y = vec.y;
             }
         }
 
         // Accelerate leg towards legTarget
-        let accel = scaleVector(subVec(legTarget, legPosition), state.player.renderState.legAccel);
+        let accel = scaleVector(subVec(legTarget, legPosition), entity.renderState.legAccel);
 
-        state.player.renderState.legVelocities[i].x += accel.x;
-        state.player.renderState.legVelocities[i].y += accel.y;
-        state.player.renderState.legVelocities[i].x *= 0.8;
-        state.player.renderState.legVelocities[i].y *= 0.8;
-        legPosition.x += state.player.renderState.legVelocities[i].x;
-        legPosition.y += state.player.renderState.legVelocities[i].y;
+        entity.renderState.legVelocities[i].x += accel.x;
+        entity.renderState.legVelocities[i].y += accel.y;
+        entity.renderState.legVelocities[i].x *= 0.8;
+        entity.renderState.legVelocities[i].y *= 0.8;
+        legPosition.x += entity.renderState.legVelocities[i].x;
+        legPosition.y += entity.renderState.legVelocities[i].y;
 
         // constrain leg position legLength from player
-        let legLength = state.player.renderState.legLength;
-        let legVector = subVec(legPosition, state.player);
+        let legLength = entity.renderState.legLength;
+        let legVector = subVec(legPosition, entity);
         let legDistance = Math.sqrt(legVector.x * legVector.x + legVector.y * legVector.y);
         if (legDistance > legLength * 2) {
-            legPosition.x = state.player.x + legVector.x / legDistance * legLength;
-            legPosition.y = state.player.y + legVector.y / legDistance * legLength;
+            legPosition.x = entity.x + legVector.x / legDistance * legLength;
+            legPosition.y = entity.y + legVector.y / legDistance * legLength;
         }
     }
-    state.player.renderState.legUpdateIndex = (state.player.renderState.legUpdateIndex + 1) % state.player.renderState.legPositions.length;
+    entity.renderState.legUpdateIndex = (entity.renderState.legUpdateIndex + 1) % entity.renderState.legPositions.length;
 
     // TODO not working for some reason
-    state.player.renderState.lastKnownDirection = subVec(state.player, state.player.renderState.lastKnownPosition);
-    state.player.renderState.lastKnownPosition = {x: state.player.x, y: state.player.y};
+    if (!entity.renderState.lastKnownPosition) {
+        entity.renderState.lastKnownPosition = entity;
+    }
+    entity.renderState.lastKnownDirection = subVec(entity, entity.renderState.lastKnownPosition);
+    entity.renderState.lastKnownPosition = {x: entity.x, y: entity.y};
 
-    state.player.renderState.isHoldingItem = state.player.item != null;
+    entity.renderState.isHoldingItem = entity.item != null;
 }
 
-function renderPlayer() {
-    if (state.player.item) {
-        let vec = {x: state.player.x, y: state.player.y - state.player.radius};
-        drawCircle(vec, state.player.item.radius, state.player.item.color)
+function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
+    if (entity.item) {
+        let vec = {x: entity.x, y: entity.y - entity.radius};
+        drawCircle(vec, entity.item.radius, entity.item.color)
     }
 
-    for (let i = 0; i < state.player.renderState.legPositions.length; i++) {
-        let legPosition = state.player.renderState.legPositions[i];
+    for (let i = 0; i < entity.renderState.legPositions.length; i++) {
+        let legPosition = entity.renderState.legPositions[i];
 
         // Draw a curve from the player to legPosition
-        let playerToLeg = subVec(legPosition, state.player);
+        let playerToLeg = subVec(legPosition, entity);
         let legTargetDist = Math.sqrt(playerToLeg.x * playerToLeg.x + playerToLeg.y * playerToLeg.y);
         let legTargetAngle = Math.atan2(playerToLeg.y, playerToLeg.x);
         let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
-        let legTargetVector = addVec(state.player, 
+        let legTargetVector = addVec(entity, 
             {
                 x: Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist,
                 y: Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist
             });
 
         // Draw bezier curve from the player to the legPosition such that the curve curves away from the player before arriving at legPosition
-        let controlPoint1 = addVec(state.player, scaleVector(subVec(legTargetVector, state.player), 0.5));
+        let controlPoint1 = addVec(entity, scaleVector(subVec(legTargetVector, entity), 0.5));
         let controlPoint2 = addVec(legPosition, scaleVector(subVec(legTargetVector, legPosition), 0.5));
-        drawCurve(state.player, controlPoint1, controlPoint2, legPosition, "pink");
+        drawCurve(entity, controlPoint1, controlPoint2, legPosition, legColor);
 
         drawCircle(
             legPosition,
-            state.player.renderState.legRadius,
-            "pink");
+            entity.radius / (6 / 2),
+            legColor);
     }
 
     drawCircle(
-            addVec(state.player, rotateVector(state.player.renderState.body, state.player.renderState.lastKnownDirection)),
-            state.player.renderState.body.radius,
-            state.player.stunTimer > 0 ? "orange" : "blue");
+            addVec(entity, rotateVector(entity.renderState.body, entity.renderState.lastKnownDirection)),
+            entity.radius / (6 / 5),
+            entity.stunTimer > 0 ? "orange" : bodyColor);
     drawCircle(
-            addVec(state.player, rotateVector(state.player.renderState.head, state.player.renderState.lastKnownDirection)),
-            state.player.renderState.head.radius,
-            state.player.stunTimer > 0 ? "orange" : "cyan");
+            addVec(entity, rotateVector(entity.renderState.head, entity.renderState.lastKnownDirection)),
+            entity.radius / (6 / 3),
+            entity.stunTimer > 0 ? "orange" : headColor);
+
 }
 
 // Scale a vector by a scalar
@@ -1341,6 +1348,12 @@ function update (timeMs, timeDelta)
     // Add all the stuff to entities list
     var entities = [state.player].concat(state.enemies).concat(state.items).concat(state.flies);
 
+    for (let i = 0; i < entities.length; i ++) {
+        if (entities[i].renderState != null) {
+            updateEntityRenderState(entities[i]);
+        }
+    }
+
     // Get all edges
     let edges = [];
     for (let i = 0; i < state.map.length; i++) {
@@ -1518,6 +1531,7 @@ function spawnEnemy()
         nextNode: null,
         update: enemyUpdate,
         type: [ENEMY_SMOL,ENEMY_BIG][randomInt(0,2)],
+        renderState: SpiderRenderState()
     });
     enemy.radius = enemyRadii[enemy.type];
     enemy.foodEaten = [0,1][enemy.type];
@@ -1542,9 +1556,6 @@ function gameLoop(timeElapsed)
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
         update(timeElapsed, frameTime);
-
-        // TODO put somewhere better
-        updatePlayerRenderState();
     }
     render();
 }

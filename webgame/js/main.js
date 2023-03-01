@@ -155,6 +155,7 @@ function makeEntity(props) {
         stunTimer: 0,
         jumpTimer: 0,
         update: (() => {}),
+        renderState: null,
     };
     for (const [key, value] of Object.entries(props)) {
         entity[key] = value;
@@ -162,12 +163,38 @@ function makeEntity(props) {
     return entity;
 }
 
+function PlayerRenderState() {
+    return {
+        head: {x:3, y: -1, radius: 3},
+        body: {x: -1, y: 0, radius: 5},
+        // TODO eyes?
+        // Left, right, front, back
+        // First 2 are front left and front right arms etc...
+        legPositions:[{x:4,y:-10},{x:4,y:10},{x:2,y:-10},{x:2,y:10},{x:0,y:-10},{x:0,y:10},{x:-2,y:-10},{x:2,y:10}],
+        legTargets:[{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0},{x:0,y:0}],
+        legRadius: 2,
+        legVelocities: [{x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0},{x: 0, y: 0},{x: 0, y: 0}],
+        legAccel: 0.11,
+        legKneeLength: 10,
+        legLength: 15,
+        legUpdateIndex: 0,
+        isHoldingItem: false,
+        jumpTimer: 0, // For jumping animation
+        throwTimer: 0, // For throwing animation
+        webInteractionTimer: 0, // For web interaction animation
+        lastKnownPosition: {x: 0, y: 0},
+        lastKnownDirection: null,
+    };
+}
+
+// TODO moving directly left right up or down causes the camera x y to be NaN. Starting it at 1, 1 avoids it.
 function initState() {
     state = {
         gameOver: false,
-        camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
+        camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
+        //camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 0.2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         map: mapData,
-        player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null}),
+        player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null, renderState:PlayerRenderState()}),
         currentNodeSelection: null,
         input: {
             wPressed: false,
@@ -318,15 +345,10 @@ function renderMap () {
 
     // TODO render a circle for the web shot radius
 
+    // TODO implement particle rendering for entity interactions
+
     // Redner a small yellow circle for the player
-    context.beginPath();
-    let coords = worldToCamera(state.player.x, state.player.y);
-    context.arc(coords.x, coords.y, state.player.radius / state.camera.scale, 0, 2 * Math.PI);
-    context.fillStyle = state.player.stunTimer > 0 ? "orange" : "yellow";
-    context.fill();
-    if (state.player.item) {
-        drawCircle(state.player, state.player.item.radius, state.player.item.color)
-    }
+    renderPlayer();
 
     // Render lists of stuff
     const entities = state.enemies.concat(state.items).concat(state.flies);
@@ -353,6 +375,222 @@ function renderMap () {
     drawRectangle({x:-100000, y:-100000}, 100000 * 2, 100000 * 2, grd);
 }
 
+// TODO this is just a scale of dir by vec's magnitude, so maybe not needed?
+// Rotate vector around origin towards direction vector
+function rotateVector(vec, dir) {
+    let angle = Math.atan2(dir.y, dir.x);
+    let x = vec.x * Math.cos(angle) - vec.y * Math.sin(angle);
+    let y = vec.x * Math.sin(angle) + vec.y * Math.cos(angle);
+    return {x: x, y: y};
+}
+
+// TODO need render state for player
+// TODO implement parametric legs for player
+// Legs have a target point they ease to in an arcing motion
+// When carrying something the player holds his front arms above is head
+// When throwing something the player does a throwing motion
+// When creating or destroying a web, the player does some kind of animation
+// When stunned, the player curls up or flails while rotating
+// When falling the player spreads their legs out
+// Legs go from the body to the current web
+// Player should probably be a navy color with salmon colored eyes
+// Should have 2 cute fangs
+// When holding an item, it should be pointing towards the direction it would be thrown. TODO Might need an indicator
+// TODO indicator for web interaction / web throw radius?
+function copyvec(vec) {
+    return {x: vec.x, y: vec.y};
+}
+function renderPlayer() {
+    let movementDir = copyvec(state.player.velocity);
+    if (state.player.velocity.x == 0 && state.player.velocity.y == 0 && state.player.renderState.lastKnownDirection != null) {
+        // TODO if you land and dont move, this will be wrong (will be last velocity value)
+        movementDir = copyvec(state.player.currentEdge ? subVec(state.player.currentEdge.node1, state.player.currentEdge.node2) : state.player.renderState.lastKnownDirection);
+    }
+
+    const currentNode = state.player.currentNode;
+    const currentEdge = state.player.currentEdge;
+    // TODO stunTimer, jumpTimer
+
+    if (state.player.item) {
+        let vec = {x: state.player.x, y: state.player.y - state.player.radius};
+        drawCircle(vec, state.player.item.radius, state.player.item.color)
+    }
+
+    for (let i = 0; i < state.player.renderState.legPositions.length; i++) {
+        let legRowIndex = ((i / 2) - 1);
+        if (legRowIndex > 0) {
+            legRowIndex *= 2;
+        }
+        let legPosition = state.player.renderState.legPositions[i];
+        let legTarget = state.player.renderState.legTargets[i];
+        let legAdjustment = scaleVector(normalize(movementDir), state.player.renderState.legRadius * legRowIndex * 2);
+        //let legAdjustment = {x:0, y:0};
+
+        let legTargetDistFromPlayer = dist(state.player, legTarget);
+        let needUpdateTarget = state.player.renderState.legUpdateIndex == i && legTargetDistFromPlayer > state.player.renderState.legLength;
+
+        if (needUpdateTarget) {
+            if (state.player.currentNode) {
+                // TODO splay on node
+                let vec = {x: state.player.currentNode.x, y: state.player.currentNode.y};
+                vec = addVec(vec, legAdjustment);
+                legTarget.x = vec.x;
+                legTarget.y = vec.y;
+            } else if (state.player.currentEdge) {
+                // Get player point projected onto current edge
+                let legSnapPoint = projectPointOntoLine(state.player, currentEdge.node1, currentEdge.node2);
+
+                let vec = addVec(legSnapPoint, legAdjustment);
+                legTarget.x = vec.x;
+                legTarget.y = vec.y;
+            } else {
+                // TODO falling
+                let vec = addVec(state.player, legAdjustment);
+                legTarget.x = vec.x;
+                legTarget.y = vec.y;
+            }
+
+            let legTargetVector = subVec(legTarget, state.player);
+            let legTargetDistFromPlayer = dist(state.player, legTarget);
+            if (legTargetDistFromPlayer > state.player.renderState.legLength * 2) {
+                legTarget.x = state.player.x + legTargetVector.x / legTargetDistFromPlayer * state.player.renderState.legLength;
+                legTarget.y = state.player.y + legTargetVector.y / legTargetDistFromPlayer * state.player.renderState.legLength;
+            }
+            
+            // Get vector from leg to target, rotate 45 degrees randomly clockwise or anticlockwise
+            let legTargetVector2 = subVec(legTarget, legPosition);
+            let legTargetDist = Math.sqrt(legTargetVector2.x * legTargetVector2.x + legTargetVector2.y * legTargetVector2.y);
+            let legTargetAngle = Math.atan2(legTargetVector2.y, legTargetVector2.x);
+            let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
+            let legTargetVectorX = Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist;
+            let legTargetVectorY = Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist;
+            state.player.renderState.legVelocities[i].x = legTargetVectorX * 0.2;
+            state.player.renderState.legVelocities[i].y = legTargetVectorY * 0.2;
+        }
+
+        if (state.player.item) {
+            if (i == 0) {
+                legTarget.x = state.player.x - state.player.radius;
+                legTarget.y = state.player.y - state.player.radius;
+                legPosition.x = state.player.x - state.player.radius;
+                legPosition.y = state.player.y - state.player.radius;
+                state.player.renderState.legVelocities[i].x = 0;
+                state.player.renderState.legVelocities[i].y = 0;
+            } else if (i == 1) {
+                legTarget.x = state.player.x + state.player.radius;
+                legTarget.y = state.player.y - state.player.radius;
+                legPosition.x = state.player.x + state.player.radius;
+                legPosition.y = state.player.y - state.player.radius;
+                state.player.renderState.legVelocities[i].x = 0;
+                state.player.renderState.legVelocities[i].y = 0;
+            }
+        } else if (state.player.renderState.isHoldingItem) {
+            // Get vector from player to mouse mouse position
+            const mouseVec = normalize({x: state.input.mouseX - state.player.x, y: state.input.mouseY - state.player.y});
+            let vec = scaleVector(mouseVec, 10);
+
+            if (i == 0 || i == 1) {
+                state.player.renderState.legVelocities[i].x = vec.x;
+                state.player.renderState.legVelocities[i].y = vec.y;
+            }
+        }
+
+        // Accelerate leg towards legTarget
+        let accel = scaleVector(subVec(legTarget, legPosition), state.player.renderState.legAccel);
+
+        state.player.renderState.legVelocities[i].x += accel.x;
+        state.player.renderState.legVelocities[i].y += accel.y;
+        state.player.renderState.legVelocities[i].x *= 0.8;
+        state.player.renderState.legVelocities[i].y *= 0.8;
+        legPosition.x += state.player.renderState.legVelocities[i].x;
+        legPosition.y += state.player.renderState.legVelocities[i].y;
+
+        // constrain leg position legLength from player
+        let legLength = state.player.renderState.legLength;
+        let legVector = subVec(legPosition, state.player);
+        let legDistance = Math.sqrt(legVector.x * legVector.x + legVector.y * legVector.y);
+        if (legDistance > legLength * 2) {
+            legPosition.x = state.player.x + legVector.x / legDistance * legLength;
+            legPosition.y = state.player.y + legVector.y / legDistance * legLength;
+        }
+
+        // Draw a curve from the player to legPosition
+        let legTargetVector2 = subVec(legPosition, state.player);
+        let legTargetDist = Math.sqrt(legTargetVector2.x * legTargetVector2.x + legTargetVector2.y * legTargetVector2.y);
+        let legTargetAngle = Math.atan2(legTargetVector2.y, legTargetVector2.x);
+        let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
+        let legTargetVector = addVec(state.player, 
+            {
+                x: Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist,
+                y: Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist
+            });
+
+        // Draw bezier curve from the player to the legPosition such that the curve curves away from the player before arriving at legPosition
+        let controlPoint1 = addVec(state.player, scaleVector(subVec(legTargetVector, state.player), 0.5));
+        let controlPoint2 = addVec(legPosition, scaleVector(subVec(legTargetVector, legPosition), 0.5));
+        drawCurve(state.player, controlPoint1, controlPoint2, legPosition, "pink");
+
+        drawCircle(
+            legPosition,
+            state.player.renderState.legRadius,
+            "pink");
+    }
+    state.player.renderState.legUpdateIndex = (state.player.renderState.legUpdateIndex + 1) % state.player.renderState.legPositions.length;
+
+    // TODO not working for some reason
+    state.player.renderState.lastKnownDirection = subVec(state.player, state.player.renderState.lastKnownPosition);
+    state.player.renderState.lastKnownPosition = {x: state.player.x, y: state.player.y};
+
+    drawCircle(
+            addVec(state.player, rotateVector(state.player.renderState.body, state.player.renderState.lastKnownDirection)),
+            state.player.renderState.body.radius,
+            state.player.stunTimer > 0 ? "orange" : "blue");
+    drawCircle(
+            addVec(state.player, rotateVector(state.player.renderState.head, state.player.renderState.lastKnownDirection)),
+            state.player.renderState.head.radius,
+            state.player.stunTimer > 0 ? "orange" : "cyan");
+
+    state.player.renderState.isHoldingItem = state.player.item != null;
+
+}
+
+// Scale a vector by a scalar
+function scaleVector(a, s) {
+    return {
+        x: a.x * s,
+        y: a.y * s
+    };
+}
+
+// lerp
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+// Project point onto line
+function projectPointOntoLine(point, lineStart, lineEnd) {
+    let lineVector = normalize({x: lineEnd.x - lineStart.x, y: lineEnd.y - lineStart.y});
+    let lineToPoint = {x: point.x - lineStart.x, y: point.y - lineStart.y};
+    let projection = dotProduct(lineToPoint, lineVector);
+    return addVec(lineStart, scaleVector(lineVector, projection));
+}
+
+// Add vectors
+function addVec(vec1, vec2) {
+    return {
+        x: vec1.x + vec2.x,
+        y: vec1.y + vec2.y
+    };
+}
+
+// Vector difference
+function subVec(vec1, vec2) {
+    return {
+        x: vec1.x - vec2.x,
+        y: vec1.y - vec2.y
+    };
+}
+
 function nestRadius()
 {
     return nestBaseRadius + nestRadiusInc*state.score;
@@ -373,6 +611,18 @@ function drawRectangle(worldPos, width, height, fillStyle) {
     context.rect(coords.x, coords.y, width / state.camera.scale, height / state.camera.scale);
     context.fillStyle = fillStyle;
     context.fill();
+}
+
+function drawCurve(origin, controlPoint1, controlPoint2, destination, color) {
+    let coords = worldToCamera(origin.x, origin.y);
+    let cp1 = worldToCamera(controlPoint1.x, controlPoint1.y);
+    let cp2 = worldToCamera(controlPoint2.x, controlPoint2.y);
+    let dest = worldToCamera(destination.x, destination.y);
+    context.beginPath();
+    context.moveTo(coords.x, coords.y);
+    context.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, dest.x, dest.y);
+    context.strokeStyle = color;
+    context.stroke();
 }
 
 function circleLineSegmentCollision(object, radius, lineStart, lineEnd) {
@@ -435,6 +685,10 @@ function normalize(vector) {
 
 function dotProduct(vector1, vector2) {
     return vector1.x * vector2.x + vector1.y * vector2.y;
+}
+
+function crossProduct(vector1, vector2) {
+    return vector1.x * vector2.y - vector1.y * vector2.x;
 }
 
 function physicsUpdate (entity, edges)
@@ -756,7 +1010,11 @@ function enemyUpdate(entity, timeMs, timeDelta)
         entity.velocity = {x:0,y:0};
     }
 
+    // TODO player shold slow down if holding an item?
+
     // big enemies kick player off web
+    // TODO need to have player drop item if holding item (and eject it in a random direction)
+    // TOOD small enemies should also steal items from player?
     if (dist(entity, state.player) < (entity.radius + state.player.radius)) {
         if (entity.type == ENEMY_BIG) {
             // TODO player drop items in random direction or straight down

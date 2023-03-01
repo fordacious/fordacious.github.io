@@ -355,6 +355,9 @@ function renderMap () {
     for (let i = 0; i < entities.length; ++i) {
         const entity = entities[i];
         if (entity.renderState != null) {
+            if (entity.type == ENEMY_SMOL) {
+                entity.color = "#ff5050";
+            }
             renderEntityWithState(entity, entity.radius, entity.color, entity.color, entity.color);
         } else {
             drawCircle(entity, entity.radius, entity.color);

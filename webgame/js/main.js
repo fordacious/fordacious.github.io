@@ -549,8 +549,9 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
             });
 
         // Draw bezier curve from the player to the legPosition such that the curve curves away from the player before arriving at legPosition
-        let controlPoint1 = addVec(entity, scaleVector(subVec(legTargetVector, entity), 0.5));
-        let controlPoint2 = addVec(legPosition, scaleVector(subVec(legTargetVector, legPosition), 0.5));
+        let legLength = 5;
+        let controlPoint1 = addVec(entity, rotateVector({x: 0, y: (i % 2 == 0) ? -legLength : legLength}, entity.renderState.lastKnownDirection));
+        let controlPoint2 = addVec(legPosition, rotateVector({x: 0, y: (i % 2 == 0) ? -legLength : legLength}, entity.renderState.lastKnownDirection));
         drawCurve(entity, controlPoint1, controlPoint2, legPosition, legColor);
 
         drawCircle(

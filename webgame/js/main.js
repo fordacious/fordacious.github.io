@@ -460,14 +460,18 @@ function updateEntityRenderState(entity) {
             }
             
             // Get vector from leg to target, rotate 45 degrees randomly clockwise or anticlockwise
-            let legTargetVector2 = subVec(legTarget, legPosition);
-            let legTargetDist = Math.sqrt(legTargetVector2.x * legTargetVector2.x + legTargetVector2.y * legTargetVector2.y);
-            let legTargetAngle = Math.atan2(legTargetVector2.y, legTargetVector2.x);
-            let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
-            let legTargetVectorX = Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist;
-            let legTargetVectorY = Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist;
-            entity.renderState.legVelocities[i].x = legTargetVectorX * 0.2;
-            entity.renderState.legVelocities[i].y = legTargetVectorY * 0.2;
+            // let legTargetVector2 = subVec(legTarget, legPosition);
+            // let legTargetDist = Math.sqrt(legTargetVector2.x * legTargetVector2.x + legTargetVector2.y * legTargetVector2.y);
+            // let legTargetAngle = Math.atan2(legTargetVector2.y, legTargetVector2.x);
+            // let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
+            // let legTargetVectorX = Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist;
+            // let legTargetVectorY = Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist;
+            // entity.renderState.legVelocities[i].x = legTargetVectorX * 0.2;
+            // entity.renderState.legVelocities[i].y = legTargetVectorY * 0.2;
+
+            let velocityVec = rotateVector({x: 0, y: (i % 2 == 0) ? -1 : 1}, entity.renderState.lastKnownDirection);
+            entity.renderState.legVelocities[i].x = velocityVec.x * 2;
+            entity.renderState.legVelocities[i].y = velocityVec.y * 2;
         }
 
         if (entity.item) {
@@ -552,7 +556,7 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
         let legLength = 5;
         let controlPoint1 = addVec(entity, rotateVector({x: 0, y: (i % 2 == 0) ? -legLength : legLength}, entity.renderState.lastKnownDirection));
         let controlPoint2 = addVec(legPosition, rotateVector({x: 0, y: (i % 2 == 0) ? -legLength : legLength}, entity.renderState.lastKnownDirection));
-        drawCurve(entity, controlPoint1, controlPoint2, legPosition, legColor);
+        drawCurve(entity, controlPoint1, controlPoint2, legPosition, legColor, 2);
 
         drawCircle(
             legPosition,
@@ -630,7 +634,7 @@ function drawRectangle(worldPos, width, height, fillStyle) {
     context.fill();
 }
 
-function drawCurve(origin, controlPoint1, controlPoint2, destination, color) {
+function drawCurve(origin, controlPoint1, controlPoint2, destination, color, thickness) {
     let coords = worldToCamera(origin.x, origin.y);
     let cp1 = worldToCamera(controlPoint1.x, controlPoint1.y);
     let cp2 = worldToCamera(controlPoint2.x, controlPoint2.y);
@@ -639,6 +643,10 @@ function drawCurve(origin, controlPoint1, controlPoint2, destination, color) {
     context.moveTo(coords.x, coords.y);
     context.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, dest.x, dest.y);
     context.strokeStyle = color;
+    // set no dash
+    context.setLineDash([]);
+    // set line thickness to thickness
+    context.lineWidth = thickness;
     context.stroke();
 }
 

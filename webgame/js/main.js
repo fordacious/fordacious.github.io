@@ -400,7 +400,8 @@ function rotateVector(vec, dir) {
 function copyvec(vec) {
     return {x: vec.x, y: vec.y};
 }
-function renderPlayer() {
+
+function updatePlayerRenderState() {
     let movementDir = copyvec(state.player.velocity);
     if (state.player.velocity.x == 0 && state.player.velocity.y == 0 && state.player.renderState.lastKnownDirection != null) {
         // TODO if you land and dont move, this will be wrong (will be last velocity value)
@@ -410,11 +411,6 @@ function renderPlayer() {
     const currentNode = state.player.currentNode;
     const currentEdge = state.player.currentEdge;
     // TODO stunTimer, jumpTimer
-
-    if (state.player.item) {
-        let vec = {x: state.player.x, y: state.player.y - state.player.radius};
-        drawCircle(vec, state.player.item.radius, state.player.item.color)
-    }
 
     for (let i = 0; i < state.player.renderState.legPositions.length; i++) {
         let legRowIndex = ((i / 2) - 1);
@@ -513,11 +509,29 @@ function renderPlayer() {
             legPosition.x = state.player.x + legVector.x / legDistance * legLength;
             legPosition.y = state.player.y + legVector.y / legDistance * legLength;
         }
+    }
+    state.player.renderState.legUpdateIndex = (state.player.renderState.legUpdateIndex + 1) % state.player.renderState.legPositions.length;
+
+    // TODO not working for some reason
+    state.player.renderState.lastKnownDirection = subVec(state.player, state.player.renderState.lastKnownPosition);
+    state.player.renderState.lastKnownPosition = {x: state.player.x, y: state.player.y};
+
+    state.player.renderState.isHoldingItem = state.player.item != null;
+}
+
+function renderPlayer() {
+    if (state.player.item) {
+        let vec = {x: state.player.x, y: state.player.y - state.player.radius};
+        drawCircle(vec, state.player.item.radius, state.player.item.color)
+    }
+
+    for (let i = 0; i < state.player.renderState.legPositions.length; i++) {
+        let legPosition = state.player.renderState.legPositions[i];
 
         // Draw a curve from the player to legPosition
-        let legTargetVector2 = subVec(legPosition, state.player);
-        let legTargetDist = Math.sqrt(legTargetVector2.x * legTargetVector2.x + legTargetVector2.y * legTargetVector2.y);
-        let legTargetAngle = Math.atan2(legTargetVector2.y, legTargetVector2.x);
+        let playerToLeg = subVec(legPosition, state.player);
+        let legTargetDist = Math.sqrt(playerToLeg.x * playerToLeg.x + playerToLeg.y * playerToLeg.y);
+        let legTargetAngle = Math.atan2(playerToLeg.y, playerToLeg.x);
         let legTargetAngleOffset = Math.random() * Math.PI / 4 - Math.PI / 8;
         let legTargetVector = addVec(state.player, 
             {
@@ -535,11 +549,6 @@ function renderPlayer() {
             state.player.renderState.legRadius,
             "pink");
     }
-    state.player.renderState.legUpdateIndex = (state.player.renderState.legUpdateIndex + 1) % state.player.renderState.legPositions.length;
-
-    // TODO not working for some reason
-    state.player.renderState.lastKnownDirection = subVec(state.player, state.player.renderState.lastKnownPosition);
-    state.player.renderState.lastKnownPosition = {x: state.player.x, y: state.player.y};
 
     drawCircle(
             addVec(state.player, rotateVector(state.player.renderState.body, state.player.renderState.lastKnownDirection)),
@@ -549,9 +558,6 @@ function renderPlayer() {
             addVec(state.player, rotateVector(state.player.renderState.head, state.player.renderState.lastKnownDirection)),
             state.player.renderState.head.radius,
             state.player.stunTimer > 0 ? "orange" : "cyan");
-
-    state.player.renderState.isHoldingItem = state.player.item != null;
-
 }
 
 // Scale a vector by a scalar
@@ -1536,6 +1542,9 @@ function gameLoop(timeElapsed)
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
         update(timeElapsed, frameTime);
+
+        // TODO put somewhere better
+        updatePlayerRenderState();
     }
     render();
 }

@@ -347,7 +347,7 @@ function renderMap () {
 
     // TODO implement particle rendering for entity interactions
 
-    renderEntityWithState(state.player, state.player.radius, "cyan", "blue", "pink");
+    renderEntityWithState(state.player, state.player.radius, "cyan", "blue", "turquoise");
 
     // Render lists of stuff
     const entities = state.enemies.concat(state.items).concat(state.flies);

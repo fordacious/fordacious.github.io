@@ -791,7 +791,6 @@ function itemUpdate(entity, timeMs, timeDelta)
             IncrementScore();
         }
     }
-    if (!state.gameOver) { IncrementScore();}
 }
 
 function IncrementScore() {

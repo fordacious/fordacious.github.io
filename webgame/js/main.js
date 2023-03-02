@@ -568,6 +568,7 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
             addVec(entity, rotateVector(entity.renderState.body, entity.renderState.lastKnownDirection)),
             entity.radius / (6 / 5),
             entity.stunTimer > 0 ? "orange" : bodyColor);
+    // TODO instead of having a head position, just put it at the edge of the body
     drawCircle(
             addVec(entity, rotateVector(entity.renderState.head, entity.renderState.lastKnownDirection)),
             entity.radius / (6 / 3),
@@ -790,6 +791,7 @@ function itemUpdate(entity, timeMs, timeDelta)
             IncrementScore();
         }
     }
+    if (!state.gameOver) { IncrementScore();}
 }
 
 function IncrementScore() {
@@ -1347,7 +1349,7 @@ function update (timeMs, timeDelta)
             }
         }
 
-        if (currentKeyFrame >= 1 && state.enemies.length < 500) {
+        if (currentKeyFrame >= 1 && state.enemies.length < 250) {
             state.score = 0;
             // Call spawnBabby with a random velocity vector of length 1
             const randomVec = normalize({x: Math.random() * 2 - 1, y: Math.random() * 2 - 1});
@@ -1504,7 +1506,8 @@ function spawnBabby(x,y,velocity)
         update: enemyUpdate,
         type: ENEMY_BABBY,
         foodEaten: 0,
-        radius: 6,
+        radius: 3,
+        renderState: SpiderRenderState(),
     });
 
     state.enemies.push(babby);

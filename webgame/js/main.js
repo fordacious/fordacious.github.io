@@ -409,6 +409,9 @@ function copyvec(vec) {
 
 function updateEntityRenderState(entity) {
     let movementDir = copyvec(entity.velocity);
+    if (!entity.velocity) {
+        movementDir = {x: 0, y: 0};
+    }
     if (entity.velocity.x == 0 && entity.velocity.y == 0 && entity.renderState.lastKnownDirection != null) {
         // TODO if you land and dont move, this will be wrong (will be last velocity value)
         movementDir = copyvec(entity.currentEdge ? subVec(entity.currentEdge.node1, entity.currentEdge.node2) : entity.renderState.lastKnownDirection);
@@ -551,6 +554,10 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
                 x: Math.cos(legTargetAngle + legTargetAngleOffset) * legTargetDist,
                 y: Math.sin(legTargetAngle + legTargetAngleOffset) * legTargetDist
             });
+
+        if (mag(playerToLeg) > radius * 10) {
+            continue;
+        }
 
         // Draw bezier curve from the player to the legPosition such that the curve curves away from the player before arriving at legPosition
         let legLength = 5;
@@ -704,9 +711,8 @@ function scaleVec(vector, factor) {
 
 function normalize(vector) {
     let length = mag(vector);
-    vector.x /= length;
-    vector.y /= length;
-    return vector;
+    if (length == 0) { return {x: 0, y: 0 }; }
+    return {x: vector.x / length, y: vector.y / length};
 }
 
 function dotProduct(vector1, vector2) {

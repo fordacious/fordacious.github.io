@@ -1,17 +1,134 @@
 <html>
     <head>
-        <title>Games</title>
+        <title>Computing</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <style>
+            body {
+                background: #FAFAFA;
+                margin: 0;
+                background-position: 50% 25%;
+            }
+            .centered {
+                margin: auto;
+                text-align: center;
+            }
+            .inline {
+                display: inline-block;
+            }
+            .profile-pic {
+                border-radius: 50%;
+                box-shadow: 0px 1px 2px #000;
+                width: 150px;
+                margin-left: 15px;
+            }
+            .nameheader {
+                font-size: larger;
+                margin-bottom: 20px;
+            }
+            .content-body {
+                width: 100%;
+                margin-bottom: 20px;
+                //top: 20%;
+                position: absolute;
+                padding-bottom: 20px;
+            }
+
+            .description {
+                margin-left: 25%;
+                text-align: justify;
+                width: 50%;
+            }
+
+            @media (max-width: 1024px) {
+                .description {
+                    margin-left: 12.5%;
+                    text-align: justify;
+                    width: 75%;
+                }
+            }
+
+            .content-header{
+                color: #444;
+                font-weight: bold;
+                font-size: x-large;
+            }
+            a {
+                text-shadow: none;
+            }
+            .fancy-line { 
+                border: 0; 
+                height: 1px;
+                margin: 0.5em 0;
+            }
+            .fancy-line:before {
+                top: -0.5em;
+                height: 1em;
+            }
+            .fancy-line:after {
+                height: 0.5em;
+                top: calc(-0.5em + 1px);
+            }
+
+            .fancy-line:before, .fancy-line:after {
+                content: '';
+                position: absolute;
+                width: 50%;
+            }
+
+            .fancy-line {
+                background: radial-gradient(ellipse at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 75%);
+            }
+
+            .vignette {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              box-shadow: 0 0 50px rgba(0,0,0,0.4) inset;
+            }
+
+            .main {
+                padding-top: 20px;
+                height: 100%;
+            }
+
+            .theme {
+                width: 25%;
+                max-width: 200px;
+                min-width: 125px;
+            }
+
+            .calmbg {
+                background: url(background3.jpg);
+                width: 250px;
+                height: 250px;
+                background-size: 500px;
+                background-position-x: -125px;
+                background-position-y: -50px;
+                margin: auto;
+                box-shadow: 0px 0.75px 1px #000;
+            }
+
+            .invisible-separator {
+                height: 20px;
+            }
 
         </style>
     </head>
     <body>
-        <h1>Here are some games</h1>
-        <hr/>
-        <p>
-            <div class="project_title"><a href="./globalGameJam2016/index.html">Ritual</a></div>
-            <div class="project_title"><a href="./indieSpeedRun2015/index.html">Death Rock</a></div>
-            <div class="project_title"><a href="./Butterfly.swf">Butterfly Kisses</a></div>
-        </p>
+        <div class="main centered vertical-centered">
+            <div class="content-body">
+                <p class="content-header inline">Games</p>
+                <p>
+                <a href="webgame/index.html">Webgame</a>
+                </p>
+                <div class="fancy-line"></div>
+                <div class="invisible-separator"></div>
+                <a href="index.html">Home</a>
+                <div class="invisible-separator"></div>
+                <div class="fancy-line"></div>
+            </div>
+        </div>
     </body>
 </html>

@@ -1,20 +1,34 @@
 <html>
 <head>
-	<meta charset="utf-8">
-  	<meta name="viewport" content="width=device-width,initial-scale=1.0">
-  	<meta name="description" content="GAME">
-	<title>GAME</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="GAME">
+    <title>GAME</title>
+    <script>
+        function goFullScreen(){
+            var canvas = document.getElementById("gamecanvas");
+            if(canvas.requestFullScreen)
+                canvas.requestFullScreen();
+            else if(canvas.webkitRequestFullScreen)
+                canvas.webkitRequestFullScreen();
+            else if(canvas.mozRequestFullScreen)
+                canvas.mozRequestFullScreen();
+        }
+    </script>
 </head>
 <body>
     <div id="gamediv">
-        <canvas id="gamecanvas" width="1280px" height="960px" style="border:1px solid black;"></canvas>
+        <!-- TODO spacebar currently scrolls if the canvas is too big and there is content below it that is cut off -->
+        <!-- <canvas id="gamecanvas" width="1280px" height="960px" style="border:1px solid black;"></canvas> -->
+        <canvas id="gamecanvas" width="1024px" height="768px" style="border:1px solid black; cursor: none;"></canvas>
     </div>
+    <p><button onclick="goFullScreen();">Go Fullscreen</button></p>
     <p>
         Goal: Bring the flies (green) back to the nest (yellow).
         <br></br>
         Small enemies can be thrown, large enemies will throw YOU!
         <br></br>
-        <b>WASD</b> to move, <b>Spacebar</b> to jump, <b>E</b> to pick up and thrown things (<b>Mouse</b> to aim throwing), <b>R</b> to remove webs (<b>Mouse</b> to select), <b>Click</b> to place webs (<b>Mouse</b> to aim)
+        <b>WASD</b> to move, <b>Spacebar</b> to jump, <b>Mouse</b> to place webs, remove webs, and throw things
     </p>
     <script type="module" src="js/main.js"></script>
 </body>

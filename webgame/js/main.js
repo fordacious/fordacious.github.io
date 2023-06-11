@@ -1,4 +1,22 @@
+/*
+Need start screen?
+Fix space scrolling
+    Add instructions to start screen
+Fix dotted line appearing for intersecting edges
+Tutorial / conveyance
+Enemy clarity / mechanical clarity
+Legs are kinda backwards
+Pickup animation (lines radiating from player)
+    or at least some arm movement
+sfx
+
+Small enemies eat your food?
+*/
+
 window.onload = start;
+
+let TEST_AutomaticPickup = true;
+let TEST_ThrowAndCutWithMouse = true;
 
 let canvas = null;
 let context = null;
@@ -8,6 +26,7 @@ const frameTime = 1000 / 60;
 const gravity = 0.5;
 const terminalVelocity = 7;
 const nodeSelectionRadius = 50;
+const edgeSelectionRadius = 15;
 const webShotRadius = 150;
 const playerActionCooldownTime = 500;
 const playerStunTime = 1000;
@@ -22,7 +41,7 @@ const airAccel = 0.05;
 const generatedNodeRequiredDistance = 50;
 
 const nestBaseRadius = 15;
-const nestRadiusInc = 5;
+const nestRadiusInc = 4;
 const scoreMax = 20;
 
 const enemySightRadius = 120;
@@ -165,7 +184,7 @@ function makeEntity(props) {
 
 function SpiderRenderState() {
     return {
-        head: {x:3, y: -1},
+        head: {x:3, y: TEST_ThrowAndCutWithMouse ? 0 : -1},
         body: {x: -1, y: 0},
         // TODO eyes?
         // Left, right, front, back
@@ -187,12 +206,11 @@ function SpiderRenderState() {
     };
 }
 
-// TODO moving directly left right up or down causes the camera x y to be NaN. Starting it at 1, 1 avoids it.
 function initState() {
     state = {
         gameOver: false,
-        camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
-        //camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 0.2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
+        camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
+        //camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 0.2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         map: mapData,
         player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null, renderState:SpiderRenderState()}),
         currentNodeSelection: null,
@@ -203,7 +221,11 @@ function initState() {
             dPressed: false,
             ePressed: false,
             rPressed: false,
-            spacePressed: false
+            spacePressed: false,
+            mouseX: 0,
+            mouseY: 0,
+            mousePosWorld: {x: 0, y: 0},
+            mouseWasPressed: false,
         },
         enemies: [],
         items: [],
@@ -276,26 +298,66 @@ function disconnectNodes(node1, node2) {
     node2.edges.splice(node2.edges.indexOf(node1), 1);
 }
 
-function render() {
+function render(timeElapsed) {
+    let width = canvas.width;
+    let height = canvas.height;
     // Clear context
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, width, height);
     // Set awesome canvas background
     // linear gradient from #333333 to #444444
     let grdcoords1 = worldToCamera(-200, -200);
-    let grdcoords2 = worldToCamera(canvas.width - 500, canvas.height - 400);
+    let grdcoords2 = worldToCamera(width - 500, height - 400);
     let grd = context.createLinearGradient(grdcoords1.x, grdcoords1.y, grdcoords2.x, grdcoords2.y);
     grd.addColorStop(0, "#333333");
     grd.addColorStop(1, "#444444");
     context.fillStyle = grd;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    renderMap();
+    context.fillRect(0, 0, width, height);
+    renderMap(timeElapsed);
+
+    // Render mouse cursor
+
+    // TODO render behind gradient?
+    // TODO render hint for throwing item
+    // TODO render hint for creating web
+    // TODO render hint for cutting web
+    // context push state
+    context.save();
+    // drop shadow on circle
+    context.shadowBlur = 10;
+    context.shadowColor = "#000000";
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+    drawCircle({x:state.input.mousePosWorld.x, y: state.input.mousePosWorld.y}, 5 * state.camera.scale, "#EEEEEE");
+    context.restore();
 }
 
-function renderMap () {
+function renderMap (timeElapsed) {
     // Render nest (behind)
     //context.globalAlpha = 0.2;
     drawCircle({x:0,y:0}, nestRadius(), "#ffff00");
     //context.globalAlpha = 1.0;
+
+    //state.edgeToDelete = state.map[3].edges[0];
+    if (TEST_ThrowAndCutWithMouse && state.edgeToDelete) {
+        context.save();
+        // drop shadow on circle
+        context.shadowBlur = 10;
+        context.shadowColor = "#FF0000";
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+
+        context.beginPath();
+        let coords = worldToCamera(state.edgeToDelete.node1.x, state.edgeToDelete.node1.y);
+        let coords2 = worldToCamera(state.edgeToDelete.node2.x, state.edgeToDelete.node2.y);
+        context.moveTo(coords.x, coords.y);
+        context.lineTo(coords2.x, coords2.y);
+
+        context.strokeStyle = "#FFCCCC";
+        context.setLineDash([]);
+        context.lineWidth = 2 / state.camera.scale;
+        context.stroke();
+        context.restore();
+    }
 
     // Render edges first so they're behind nodes
     for (let i = 0; i < state.map.length; i++) {
@@ -326,20 +388,39 @@ function renderMap () {
         drawCircle(node, node == state.player.currentNode || node == state.currentNodeSelection ? 10 : 8, color)
     }
 
+    // TODO this is rendering even if it would intersect another edge, which is not allowed
     // render line from player currentNode to currentNodeSelection if currentNodeSelection is not null
     if (state.currentNodeSelection != null && state.player.currentNode != null) {
-        let distance = dist(state.player.currentNode, state.currentNodeSelection);
-        if (distance < webShotRadius) {
-            context.beginPath();
-            let coords1 = worldToCamera(state.player.currentNode.x, state.player.currentNode.y);
-            let coords2 = worldToCamera(state.currentNodeSelection.x, state.currentNodeSelection.y);
-            context.moveTo(coords1.x, coords1.y);
-            context.lineTo(coords2.x, coords2.y);
-            // set line style to light gray and dotted
-            context.strokeStyle = "fuscous";
-            context.setLineDash([5, 15]);
-            context.lineWidth = 1 / state.camera.scale;
-            context.stroke();
+        if (!TEST_ThrowAndCutWithMouse || state.player.item == null) {
+
+            let intersects = false;
+            // for each edge, check if the line intersects with it
+            for (let i = 0; i < state.map.length && !intersects; i++) {
+                let node1 = state.map[i];
+                for (let j = 0; j < state.map[i].edges.length && !intersects; j++) {
+                    let node2 = state.map[i].edges[j];
+                    if (node1 != state.player.currentNode && node1 != state.currentNodeSelection && node2 != state.player.currentNode && node2 != state.currentNodeSelection) {
+                        if (lineIntersects(state.player.currentNode, state.currentNodeSelection, node1, node2)) {
+                            intersects = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            let distance = dist(state.player.currentNode, state.currentNodeSelection);
+            if (!intersects && distance < webShotRadius) {
+                context.beginPath();
+                let coords1 = worldToCamera(state.player.currentNode.x, state.player.currentNode.y);
+                let coords2 = worldToCamera(state.currentNodeSelection.x, state.currentNodeSelection.y);
+                context.moveTo(coords1.x, coords1.y);
+                context.lineTo(coords2.x, coords2.y);
+                // set line style to light gray and dotted
+                context.strokeStyle = "fuscous";
+                context.setLineDash([5, 15]);
+                context.lineWidth = 1 / state.camera.scale;
+                context.stroke();
+            }
         }
     }
 
@@ -355,8 +436,15 @@ function renderMap () {
     for (let i = 0; i < entities.length; ++i) {
         const entity = entities[i];
         if (entity.renderState != null) {
-            if (entity.type == ENEMY_SMOL) {
-                entity.color = "#ff5050";
+            if (entity.type == ENEMY_SMOL || entity.type == ENEMY_BIG) {
+                entity.color = entity.radius == enemyRadii[ENEMY_SMOL] ? "#ff8833" : "red";
+                if (entity.radius == enemyRadii[ENEMY_BIG] + 1) {
+                    entity.color = "#ff0000";
+                } else if (entity.radius == enemyRadii[ENEMY_BIG] + 2) {
+                    entity.color = "#ff0044";
+                } else if (entity.radius == enemyRadii[ENEMY_BIG] + 3) {
+                    entity.color = "#ff0088"
+                }
             }
             renderEntityWithState(entity, entity.radius, entity.color, entity.color, entity.color);
         } else {
@@ -575,12 +663,18 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
             addVec(entity, rotateVector(entity.renderState.body, entity.renderState.lastKnownDirection)),
             entity.radius / (6 / 5),
             entity.stunTimer > 0 ? "orange" : bodyColor);
-    // TODO instead of having a head position, just put it at the edge of the body
-    drawCircle(
-            addVec(entity, rotateVector(entity.renderState.head, entity.renderState.lastKnownDirection)),
-            entity.radius / (6 / 3),
-            entity.stunTimer > 0 ? "orange" : headColor);
 
+    if (TEST_ThrowAndCutWithMouse) {
+        drawCircle(
+                addVec(entity, rotateVector(entity.renderState.head, subVec({x: state.input.mouseX, y: state.input.mouseY}, entity))),
+                entity.radius / (6 / 3),
+                entity.stunTimer > 0 ? "orange" : headColor);
+    } else {
+        drawCircle(
+                addVec(entity, rotateVector(entity.renderState.head, entity.renderState.lastKnownDirection)),
+                entity.radius / (6 / 3),
+                entity.stunTimer > 0 ? "orange" : headColor);
+    }
 }
 
 // Scale a vector by a scalar
@@ -801,7 +895,7 @@ function itemUpdate(entity, timeMs, timeDelta)
 
 function IncrementScore() {
     state.score++;
-    if (state.score > scoreMax) {
+    if (state.score >= scoreMax) {
         state.gameOver = true;
     }
 }
@@ -1050,6 +1144,14 @@ function enemyUpdate(entity, timeMs, timeDelta)
     if (dist(entity, state.player) < (entity.radius + state.player.radius)) {
         if (entity.type == ENEMY_BIG) {
             // TODO player drop items in random direction or straight down
+
+            // Random direction
+            const randomVec = normalize({x: Math.random() * 2 - 1, y: Math.random() * 2 - 1});
+            let throwVelocity = {x: randomVec.x * throwForce, y: randomVec.y * throwForce};
+            if (state.player.item) {
+                throwItem(state.player, throwVelocity);
+            }
+
             state.player.gotKicked = true;
             state.player.stunTimer = playerStunTime;
             state.player.kickDirection = entity.x > state.player.x ? -1 : 1;
@@ -1092,8 +1194,43 @@ function removeEntity(e)
     e.exists = false; // won't be updated in update()=
 }
 
+function throwItem(entity, throwVelocity) {
+    entity.item.x = entity.x;
+    entity.item.y = entity.y;
+    entity.item.currentEdge = null;
+    entity.item.currentNode = null;
+
+    if (entity.item.entityType == "item") {
+        state.items.push(entity.item);
+        console.log("released item");
+    } else if (entity.item.entityType == "enemy") {
+        state.enemies.push(entity.item);
+        console.log("released enemy");
+    }
+    entity.item.velocity = throwVelocity;
+    entity.item.acceleration = {x: 0, y: gravity};
+    entity.item.jumpTimer = playerJumpCooldown;
+
+    entity.item = null;
+    entity.cooldown = playerActionCooldownTime;
+}
+
+function distToLineSegment(lineStart, lineEnd, point) {
+    const lineLength = dist(lineStart, lineEnd);
+    const t = ((point.x - lineStart.x) * (lineEnd.x - lineStart.x) + (point.y - lineStart.y) * (lineEnd.y - lineStart.y)) / (lineLength * lineLength);
+    if (t < 0) {
+        return dist(lineStart, point);
+    } else if (t > 1) {
+        return dist(lineEnd, point);
+    } else {
+        return dist(point, {x: lineStart.x + t * (lineEnd.x - lineStart.x), y: lineStart.y + t * (lineEnd.y - lineStart.y)});
+    }
+}
+
 function playerUpdate(entity, timeMs, timeDelta)
 {
+    state.edgeToDelete = null;
+
     entity.cooldown = Math.max(0, entity.cooldown - timeDelta);
     entity.stunTimer = Math.max(0, entity.stunTimer - timeDelta);
     entity.jumpTimer = Math.max(0, entity.jumpTimer - timeDelta);
@@ -1109,6 +1246,36 @@ function playerUpdate(entity, timeMs, timeDelta)
     // TODO snap to node if falling (may need to artificially expand the radius)
     entity.currentNode = !isJumping ? getNodeUnderEntity(entity) : null;
     let moveTowardsNode = null;
+
+    // select edge for deletion
+    // Should be null if the player is holding an item
+    // If current node, should be closest edge to mouse connected to current node
+    // If no current node, should be the current edge if mouse is close to it
+    if (!entity.item) {
+        if (entity.currentNode) {
+            // iterate over edges and select the one closest to the mouse
+            let closestEdge = null;
+            let closestEdgeDistance = Number.MAX_VALUE;
+            for (let i = 0; i < entity.currentNode.edges.length; ++i) {
+                const node2 = entity.currentNode.edges[i];
+                const distance = distToLineSegment(entity.currentNode, node2, state.input.mousePosWorld);
+                if (distance < closestEdgeDistance && distance < edgeSelectionRadius) {
+                    closestEdge = {node1: entity.currentNode, node2: node2};
+                    closestEdgeDistance = distance;
+                }
+            }
+            if (closestEdge) {
+                state.edgeToDelete = closestEdge;
+            }
+        } else if (entity.currentEdge) {
+            // If shorted mouse distance from line is < edgeSelectionRadius, then select the edge
+            let currentEdgeDistanceFromMouse = distToLineSegment(entity.currentEdge.node1, entity.currentEdge.node2, state.input.mousePosWorld);
+            //console.log(currentEdgeDistanceFromMouse);
+            if (currentEdgeDistanceFromMouse < edgeSelectionRadius) {
+                state.edgeToDelete = entity.currentEdge;
+            }
+        }
+    }
 
     if (!state.gameOver) {
         state.camera.targetScale = ((entity.velocity.y >= terminalVelocity) ? 2 : 1) / CameraScaleRatio();
@@ -1169,9 +1336,16 @@ function playerUpdate(entity, timeMs, timeDelta)
         console.log((entity.currentNode ? "node " : "edge ") + "(" + moveTowardsNode.x + ", " + moveTowardsNode.y + ")");
     }
 
-    // TODO need to refine web breaking so player always breaks the right one
-    let destroyWebActionPressed = isStunned ? false : state.input.rPressed;
-    let itemInteractActionPressed = isStunned ? false : state.input.ePressed;
+    let destroyWebActionPressed;
+    let itemInteractActionPressed;
+    if (!TEST_ThrowAndCutWithMouse) {
+        // TODO need to refine web breaking so player always breaks the right one
+        destroyWebActionPressed = isStunned ? false : state.input.rPressed;
+        itemInteractActionPressed = isStunned ? false : state.input.ePressed;
+    } else {
+        destroyWebActionPressed = state.input.mouseWasPressed;
+        itemInteractActionPressed = state.input.mouseWasPressed;
+    }
 
     function jumpPlayer (vel) {
         console.log("jumping");
@@ -1204,90 +1378,116 @@ function playerUpdate(entity, timeMs, timeDelta)
         }
     }
 
-    if (state.player.gotKicked) {
-        jumpPlayer({x: state.player.kickDirection * stunPower, y: -stunPower});
+    if (entity.gotKicked) {
+        jumpPlayer({x: entity.kickDirection * stunPower, y: -stunPower});
+    }
+
+    function tryPickUpItem() {
+        let pickedUp = false;
+        // Pick up item
+        for (let i = 0; i < state.items.length; ++i) {
+            const item = state.items[i];
+            if (dist(item, entity) < playerPickupRadius) {
+                entity.item = item;
+                item.velocity = {x: 0, y: 0};
+                item.acceleration = {x: 0, y: 0};
+                state.items.splice(i, 1);
+                entity.cooldown = playerActionCooldownTime;
+                pickedUp = true;
+                break;
+            }
+        }
+        if (!pickedUp) {
+            // Pick up enemy
+            for (let i = 0; i < state.enemies.length; ++i) {
+                const enemy = state.enemies[i];
+                if (enemy.type == ENEMY_SMOL && dist(enemy, entity) < playerPickupRadius) {
+                    state.enemies.splice(i, 1);
+                    entity.item = enemy; // Make new entity from enemy
+                    enemy.velocity = {x: 0, y: 0};
+                    enemy.acceleration = {x: 0, y: 0};
+                    entity.cooldown = playerActionCooldownTime;
+                    enemy.jumpTimer = playerJumpCooldown;
+                    pickedUp = true;
+                    console.log("picked up enemy");
+                    break;
+                }
+            }
+        }
+        return pickedUp;
+    }
+    if (entity.cooldown <= 0) {
+        if (TEST_AutomaticPickup) {
+            if (entity.item == null && tryPickUpItem()) {
+                entity.cooldown = playerActionCooldownTime;
+            }
+        }
     }
 
     if (entity.cooldown <= 0) {
-        if (destroyWebActionPressed) {
-            if (entity.currentNode) {
-                // Get edge from currentNode to state.currentNodeSelection
-                let edge = null;
-                for (let i = 0; i < entity.currentNode.edges.length; ++i) {
-                    let e = entity.currentNode.edges[i];
-                    if (e == state.currentNodeSelection) {
-                        edge = e;
-                        break;
-                    }
-                }
-                if (edge) {
-                    disconnectNodes(entity.currentNode, state.currentNodeSelection);
-                    entity.cooldown = playerActionCooldownTime;
-                }
-            } else if (entity.currentEdge) {
-                // Destroy current edge
-                disconnectNodes(entity.currentEdge.node1, entity.currentEdge.node2);
-                entity.cooldown = playerActionCooldownTime;
-            }
-        } else if (itemInteractActionPressed) {
-            // TODO ability to pick up and throw small enemies
+        if (itemInteractActionPressed) {
             // pick up or put down item
             if (entity.item) {
-                entity.item.x = entity.x;
-                entity.item.y = entity.y;
-                entity.item.currentEdge = null;
-                entity.item.currentNode = null;
-
-                if (entity.item.entityType == "item") {
-                    state.items.push(entity.item);
-                    console.log("released item");
-                } else if (entity.item.entityType == "enemy") {
-                    state.enemies.push(entity.item);
-                    console.log("released enemy");
-                }
-
                 const mouseVec = normalize({x: state.input.mouseX - entity.x, y: state.input.mouseY - entity.y});
                 let throwVelocity = {x: mouseVec.x * throwForce, y: mouseVec.y * throwForce};
-                entity.item.velocity = throwVelocity;
-                entity.item.acceleration = {x: 0, y: gravity};
-                entity.item.jumpTimer = playerJumpCooldown;
-
-                entity.item = null;
-                entity.cooldown = playerActionCooldownTime;
+                throwItem(entity, throwVelocity);
             } else {
-                let pickedUp = false;
-                // Pick up item
-                for (let i = 0; i < state.items.length; ++i) {
-                    const item = state.items[i];
-                    if (dist(item, entity) < playerPickupRadius) {
-                        entity.item = item;
-                        item.velocity = {x: 0, y: 0};
-                        item.acceleration = {x: 0, y: 0};
-                        state.items.splice(i, 1);
-                        entity.cooldown = playerActionCooldownTime;
-                        pickedUp = true;
-                        break;
-                    }
+                if (!TEST_AutomaticPickup) {
+                    tryPickUpItem();
                 }
-                if (!pickedUp) {
-                    // Pick up enemy
-                    for (let i = 0; i < state.enemies.length; ++i) {
-                        const enemy = state.enemies[i];
-                        if (enemy.type == ENEMY_SMOL && dist(enemy, entity) < playerPickupRadius) {
-                            state.enemies.splice(i, 1);
-                            entity.item = enemy; // Make new entity from enemy
-                            enemy.velocity = {x: 0, y: 0};
-                            enemy.acceleration = {x: 0, y: 0};
+            }
+        }
+    }
+
+    if (entity.cooldown <= 0) {
+        // Connect web
+        if (state.input.mouseWasPressed && !getPlayerEdge()) {
+            // Get node under mouse
+            let node = getNodeUnderMouse(state.input.mouseX, state.input.mouseY);
+            if (node != null) {
+                let playerDistance = dist(entity, node);
+                if (playerDistance < webShotRadius) {
+                    // Add edge between node and current player node
+                    let playerNode = getNodeUnderEntity(entity);
+                    if (playerNode) {
+                        if (connectNode(state.map, playerNode, node)) {
                             entity.cooldown = playerActionCooldownTime;
-                            enemy.jumpTimer = playerJumpCooldown;
-                            pickedUp = true;
-                            console.log("picked up enemy");
-                            break;
                         }
                     }
                 }
             }
         }
+    }
+
+    if (entity.cooldown <= 0) {
+        if (destroyWebActionPressed) {
+            if (!TEST_ThrowAndCutWithMouse) {
+                if (entity.currentNode) {
+                    // Get edge from currentNode to state.currentNodeSelection
+                    let edge = null;
+                    for (let i = 0; i < entity.currentNode.edges.length; ++i) {
+                        let e = entity.currentNode.edges[i];
+                        if (e == state.currentNodeSelection) {
+                            edge = e;
+                            break;
+                        }
+                    }
+                    if (edge) {
+                        disconnectNodes(entity.currentNode, state.currentNodeSelection);
+                        entity.cooldown = playerActionCooldownTime;
+                    }
+                } else if (entity.currentEdge) {
+                    // Destroy current edge
+                    disconnectNodes(entity.currentEdge.node1, entity.currentEdge.node2);
+                    entity.cooldown = playerActionCooldownTime;
+                }
+            } else {
+                if (destroyWebActionPressed && state.edgeToDelete) {
+                    disconnectNodes(state.edgeToDelete.node1, state.edgeToDelete.node2);
+                    entity.cooldown = playerActionCooldownTime;
+                }
+            }
+        } 
     }
 
     if (entity.gotKicked || entity.jumpTimer > 0) {
@@ -1296,18 +1496,19 @@ function playerUpdate(entity, timeMs, timeDelta)
         entity.gotKicked = false;
     }
 
-    if (mag(entity) <= nestRadius() && entity.item && entity.item.type == ITEM_FOOD) {
+    if (mag(entity) <= nestRadius() && entity.item && entity.item.entityType == "item" && entity.item.type == ITEM_FOOD) {
         entity.item = null;
         IncrementScore();
     }
+
     // Log entity velocity
     // console.log("velocity: (" + entity.velocity.x + ", " + entity.velocity.y + ")");
 }
 
 function update (timeMs, timeDelta)
 {
-    // TODO player pos is sometimes becoming NaN somehow, resulting in camera NaN
-    // TODO seems to be when player is moving straight up
+    let mousePosScreen = screenToCanvas(state.input.mouseClientX || 0, state.input.mouseClientY || 0);
+    state.input.mousePosWorld = cameraToWorld(mousePosScreen.x, mousePosScreen.y);
 
     if (state.camera.easeMode == "quadtratic") {
         // Ease camera scale to targetScale
@@ -1428,6 +1629,8 @@ function update (timeMs, timeDelta)
             }
         }
     }
+
+    state.input.mouseWasPressed = false;
 }
 
 function randomInt(loInclusive, hiExclusive)
@@ -1497,7 +1700,6 @@ function spawnFood(x,y)
     return food;
 }
 
-// TODO make babby's not enemies
 function spawnBabby(x,y,velocity)
 {
     const babby = makeEntity({
@@ -1522,13 +1724,15 @@ function spawnBabby(x,y,velocity)
 function spawnEnemy()
 {
     let possibleNodes = [];
-    for (let i = 0; i < state.map.length; ++i) {
+    // Skip the first 10 nodes (they are the nest nodes)
+    for (let i = 10; i < state.map.length; ++i) {
         let node = state.map[i];
         let hasEnemy = false;
         for (let j = 0; j < state.enemies.length; ++j) {
             let enemy = state.enemies[j];
             let distance = dist(node, enemy);
-            if (distance < 20) {
+            //let playerDistance = dist(enemy, state.player);
+            if (distance < 20 /*&& playerDistance > 50*/) {
                 hasEnemy = true;
                 break;
             }
@@ -1577,7 +1781,7 @@ function gameLoop(timeElapsed)
         timeSinceLastUpdate -= frameTime;
         update(timeElapsed, frameTime);
     }
-    render();
+    render(timeElapsed);
 }
 
 function getNodeUnderEntity(e) {
@@ -1617,13 +1821,23 @@ function getNodeUnderMouse(x, y) {
     return closestNode;
 }
 
+// Convert clientX and clientY to coords in canvas space
+function screenToCanvas(x, y) {
+    let rect = canvas.getBoundingClientRect();
+    return {x: x - rect.left, y: y - rect.top};
+} 
+
 
 // Initialize mouse events on document
 function initEvents() {
     // Mouse move
     document.addEventListener('mousemove', function (event) {
         // Get mouse position
-        let mouseWorldPos = cameraToWorld(event.clientX, event.clientY);
+        state.input.mouseClientX = event.clientX;
+        state.input.mouseClientY = event.clientY;
+
+        let mouseWorldPosScreen = screenToCanvas(event.clientX, event.clientY);
+        let mouseWorldPos = cameraToWorld(mouseWorldPosScreen.x, mouseWorldPosScreen.y);
         // Store in state.input
         state.input.mouseX = mouseWorldPos.x;
         state.input.mouseY = mouseWorldPos.y;
@@ -1633,76 +1847,60 @@ function initEvents() {
 
     // Mouse down
     document.addEventListener('mousedown', function (event) {
-        // If player is on an edge, return null
-        if (getPlayerEdge() || state.player.cooldown > 0) {return;}
         // Get mouse position
-        let mouseWorldPos = cameraToWorld(event.clientX, event.clientY);
-        // Get node under mouse
-        let node = getNodeUnderMouse(mouseWorldPos.x, mouseWorldPos.y);
-        if (node != null) {
-            // TODO move somewhere else
-            // TODO don't allow creation of edges that cut through nodes
-            let playerDistance = dist(state.player, node);
-            if (playerDistance < webShotRadius) {
-                // Add edge between node and current player node
-                let playerNode = getNodeUnderEntity(state.player);
-                if (playerNode) {
-                    if (connectNode(state.map, playerNode, node)) {
-                        state.player.cooldown = playerActionCooldownTime;
-                    }
-                }
-            }
-        }
+        state.input.mouseWasPressed = true;
     });
 
     // Key event detecting w a s and d
     document.addEventListener('keydown', function (event) {
-        if (event.key == 'w') {
+        if (event.key == 'w' || event.key == 'W') {
             state.input.wPressed = true;
         }
-        if (event.key == 's') {
+        if (event.key == 's' || event.key == 'S') {
             state.input.sPressed = true;
         }
-        if (event.key == 'e') {
+        if (event.key == 'e' || event.key == 'E') {
             state.input.ePressed = true;
         }
-        if (event.key == 'd') {
+        if (event.key == 'd' || event.key == 'D') {
             state.input.dPressed = true;
         }
         // a
-        if (event.key == 'a') {
+        if (event.key == 'a' || event.key == 'A') {
             state.input.aPressed = true;
         }
         // r
-        if (event.key == 'r') {
+        if (event.key == 'r' || event.key == 'R') {
             state.input.rPressed = true;
         }
         // spacebar
         if (event.keyCode == 32) {
             state.input.spacePressed = true;
         }
+
+        return !(event.keyCode == 32);
     });
 
     // Key up event
     document.addEventListener('keyup', function (event) {
-        if (event.key == 'w') {
+        if (event.key == 'w' | event.key == 'W') {
             state.input.wPressed = false;
         }
-        if (event.key == 's') {
+        if (event.key == 's' | event.key == 'S') {
             state.input.sPressed = false;
         }
-        if (event.key == 'e') {
+        if (event.key == 'e' | event.key == 'E') {
             state.input.ePressed = false;
         }
-        if (event.key == 'd') {
+        if (event.key == 'd' | event.key == 'D') {
             state.input.dPressed = false;
         }
         // a
-        if (event.key == 'a') {
+        if (event.key == 'a' | event.key == 'A') {
             state.input.aPressed = false;
         }
         // r
-        if (event.key == 'r') {
+        if (event.key == 'r' | event.key == 'R') {
             state.input.rPressed = false;
         }
         // spacebar

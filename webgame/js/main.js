@@ -8,7 +8,8 @@ Enemy clarity / mechanical clarity
 Legs are kinda backwards
 Pickup animation (lines radiating from player)
     or at least some arm movement
-sfx
+Larger enemies should do more knockback but move slower
+juice, particles, sfx, music?
 
 Small enemies eat your food?
 */
@@ -209,11 +210,12 @@ function SpiderRenderState() {
 function initState() {
     state = {
         gameOver: false,
-        camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
+        camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 2.5, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         //camera: {x: 0, y: 0, width:canvas.width, height:canvas.height, scale: 0.2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
         map: mapData,
         player: makeEntity({entityType: "player", moveSpeed: 2, radius: 6, update: playerUpdate, item: null, renderState:SpiderRenderState()}),
         currentNodeSelection: null,
+        isRunning: false,
         input: {
             wPressed: false,
             sPressed: false,
@@ -222,8 +224,6 @@ function initState() {
             ePressed: false,
             rPressed: false,
             spacePressed: false,
-            mouseX: 0,
-            mouseY: 0,
             mousePosWorld: {x: 0, y: 0},
             mouseWasPressed: false,
         },
@@ -583,7 +583,7 @@ function updateEntityRenderState(entity) {
             }
         } else if (entity.renderState.isHoldingItem) {
             // Get vector from player to mouse mouse position
-            const mouseVec = normalize({x: state.input.mouseX - entity.x, y: state.input.mouseY - entity.y});
+            const mouseVec = normalize({x: state.input.mousePosWorld.x - entity.x, y: state.input.mousePosWorld.y - entity.y});
             let vec = scaleVector(mouseVec, 10);
 
             if (i == 0 || i == 1) {
@@ -666,7 +666,7 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
 
     if (TEST_ThrowAndCutWithMouse) {
         drawCircle(
-                addVec(entity, rotateVector(entity.renderState.head, subVec({x: state.input.mouseX, y: state.input.mouseY}, entity))),
+                addVec(entity, rotateVector(entity.renderState.head, subVec({x: state.input.mousePosWorld.x, y: state.input.mousePosWorld.y}, entity))),
                 entity.radius / (6 / 3),
                 entity.stunTimer > 0 ? "orange" : headColor);
     } else {
@@ -1428,7 +1428,7 @@ function playerUpdate(entity, timeMs, timeDelta)
         if (itemInteractActionPressed) {
             // pick up or put down item
             if (entity.item) {
-                const mouseVec = normalize({x: state.input.mouseX - entity.x, y: state.input.mouseY - entity.y});
+                const mouseVec = normalize({x: state.input.mousePosWorld.x - entity.x, y: state.input.mousePosWorld.y - entity.y});
                 let throwVelocity = {x: mouseVec.x * throwForce, y: mouseVec.y * throwForce};
                 throwItem(entity, throwVelocity);
             } else {
@@ -1443,7 +1443,7 @@ function playerUpdate(entity, timeMs, timeDelta)
         // Connect web
         if (state.input.mouseWasPressed && !getPlayerEdge()) {
             // Get node under mouse
-            let node = getNodeUnderMouse(state.input.mouseX, state.input.mouseY);
+            let node = getNodeUnderMouse(state.input.mousePosWorld.x, state.input.mousePosWorld.y);
             if (node != null) {
                 let playerDistance = dist(entity, node);
                 if (playerDistance < webShotRadius) {
@@ -1509,6 +1509,9 @@ function update (timeMs, timeDelta)
 {
     let mousePosScreen = screenToCanvas(state.input.mouseClientX || 0, state.input.mouseClientY || 0);
     state.input.mousePosWorld = cameraToWorld(mousePosScreen.x, mousePosScreen.y);
+
+    // Get node under mouse
+    state.currentNodeSelection = getNodeUnderMouse(state.input.mousePosWorld.x, state.input.mousePosWorld.y);
 
     if (state.camera.easeMode == "quadtratic") {
         // Ease camera scale to targetScale
@@ -1600,6 +1603,7 @@ function update (timeMs, timeDelta)
 
     if (state.player.y > mapEndZone && !state.gameOver) {
         initState();
+        state.isRunning = true;
         return;
     }
 
@@ -1779,7 +1783,9 @@ function gameLoop(timeElapsed)
 
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
-        update(timeElapsed, frameTime);
+        if (state.isRunning) {
+            update(timeElapsed, frameTime);
+        }
     }
     render(timeElapsed);
 }
@@ -1835,14 +1841,6 @@ function initEvents() {
         // Get mouse position
         state.input.mouseClientX = event.clientX;
         state.input.mouseClientY = event.clientY;
-
-        let mouseWorldPosScreen = screenToCanvas(event.clientX, event.clientY);
-        let mouseWorldPos = cameraToWorld(mouseWorldPosScreen.x, mouseWorldPosScreen.y);
-        // Store in state.input
-        state.input.mouseX = mouseWorldPos.x;
-        state.input.mouseY = mouseWorldPos.y;
-        // Get node under mouse
-        state.currentNodeSelection = getNodeUnderMouse(mouseWorldPos.x, mouseWorldPos.y);
     });
 
     // Mouse down
@@ -1853,20 +1851,20 @@ function initEvents() {
 
     // Key event detecting w a s and d
     document.addEventListener('keydown', function (event) {
-        if (event.key == 'w' || event.key == 'W') {
+        if (event.key == 'w' || event.key == 'W' || event.key == 38) {
             state.input.wPressed = true;
         }
-        if (event.key == 's' || event.key == 'S') {
+        if (event.key == 's' || event.key == 'S' || event.key == 40) {
             state.input.sPressed = true;
         }
         if (event.key == 'e' || event.key == 'E') {
             state.input.ePressed = true;
         }
-        if (event.key == 'd' || event.key == 'D') {
+        if (event.key == 'd' || event.key == 'D' || event.key == 39) {
             state.input.dPressed = true;
         }
         // a
-        if (event.key == 'a' || event.key == 'A') {
+        if (event.key == 'a' || event.key == 'A' || event.key == 37) {
             state.input.aPressed = true;
         }
         // r
@@ -1883,24 +1881,24 @@ function initEvents() {
 
     // Key up event
     document.addEventListener('keyup', function (event) {
-        if (event.key == 'w' | event.key == 'W') {
+        if (event.key == 'w' || event.key == 'W' || event.key == 38) {
             state.input.wPressed = false;
         }
-        if (event.key == 's' | event.key == 'S') {
+        if (event.key == 's' || event.key == 'S' || event.key == 40) {
             state.input.sPressed = false;
         }
-        if (event.key == 'e' | event.key == 'E') {
+        if (event.key == 'e' || event.key == 'E') {
             state.input.ePressed = false;
         }
-        if (event.key == 'd' | event.key == 'D') {
+        if (event.key == 'd' || event.key == 'D' || event.key == 39) {
             state.input.dPressed = false;
         }
         // a
-        if (event.key == 'a' | event.key == 'A') {
+        if (event.key == 'a' || event.key == 'A' || event.key == 37) {
             state.input.aPressed = false;
         }
         // r
-        if (event.key == 'r' | event.key == 'R') {
+        if (event.key == 'r' || event.key == 'R') {
             state.input.rPressed = false;
         }
         // spacebar
@@ -1910,8 +1908,15 @@ function initEvents() {
     });
 }
 
+function startGame() {
+    state.isRunning = true;
+}
+
 function start()
 {
+    let startButton = document.getElementById("startbutton");
+    startButton.addEventListener("click", startGame);
+
     // Get #gameCanvas
     canvas = document.getElementById("gamecanvas");
     // Get 2d context from canvas

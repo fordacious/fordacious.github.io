@@ -14,22 +14,35 @@
             else if(canvas.mozRequestFullScreen)
                 canvas.mozRequestFullScreen();
         }
+        window.addEventListener("keydown", function(event){
+            if (event.key == 'f' || event.key == 'F') {
+                goFullScreen();
+            }
+        });
+
+        function removeUI() {
+            document.getElementById("instructionsDiv").style.display = "none";
+            document.getElementById("gamecanvas").style.cursor = "none";
+        }
     </script>
 </head>
-<body>
+<body >
     <div id="gamediv">
         <!-- TODO spacebar currently scrolls if the canvas is too big and there is content below it that is cut off -->
         <!-- <canvas id="gamecanvas" width="1280px" height="960px" style="border:1px solid black;"></canvas> -->
-        <canvas id="gamecanvas" width="1024px" height="768px" style="border:1px solid black; cursor: none;"></canvas>
+        <canvas id="gamecanvas" width="1280px" height="960px" style="border:1px solid black;">
+        </canvas>
+        <div id="instructionsDiv" style="position: absolute; left: 25px; top: 25px; padding: 10px; padding-top: 0px; border-radius: 5px;  background-color: rgb(255 255 255 / 0.3); backdrop-filter: blur(10px);">
+        <p>
+            <b style="color: darkblue;">Bring</b> the <b style="color:lightgreen;">flies</b> back to the <b style="color:yellow;">nest</b>. Don't get <b style="color: darkred;">thrown</b> off the web.
+            <br></br>
+            <b>W A S D</b> + <b>Spacebar</b> to move, <b>Mouse</b> to place webs, remove webs, and throw.
+            <br></br>
+            <b>F</b> to go fullscreen.
+        </p>
+        <p><button id="startbutton" onclick="removeUI();">Begin!</button></p>
     </div>
-    <p><button onclick="goFullScreen();">Go Fullscreen</button></p>
-    <p>
-        Goal: Bring the flies (green) back to the nest (yellow).
-        <br></br>
-        Small enemies can be thrown, large enemies will throw YOU!
-        <br></br>
-        <b>WASD</b> to move, <b>Spacebar</b> to jump, <b>Mouse</b> to place webs, remove webs, and throw things
-    </p>
+    </div>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

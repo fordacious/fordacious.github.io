@@ -337,26 +337,31 @@ function renderMap (timeElapsed) {
     drawCircle({x:0,y:0}, nestRadius(), "#ffff00");
     //context.globalAlpha = 1.0;
 
+    var renderedWebHints = false;
     //state.edgeToDelete = state.map[3].edges[0];
-    if (TEST_ThrowAndCutWithMouse && state.edgeToDelete) {
-        context.save();
-        // drop shadow on circle
-        context.shadowBlur = 10;
-        context.shadowColor = "#FF0000";
-        context.shadowOffsetX = 0;
-        context.shadowOffsetY = 0;
+    if (TEST_ThrowAndCutWithMouse) {
+        if (state.edgeToDelete) {
+            context.save();
+            // drop shadow on circle
+            context.shadowBlur = 10;
+            context.shadowColor = "#FF0000";
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
 
-        context.beginPath();
-        let coords = worldToCamera(state.edgeToDelete.node1.x, state.edgeToDelete.node1.y);
-        let coords2 = worldToCamera(state.edgeToDelete.node2.x, state.edgeToDelete.node2.y);
-        context.moveTo(coords.x, coords.y);
-        context.lineTo(coords2.x, coords2.y);
+            context.beginPath();
+            let coords = worldToCamera(state.edgeToDelete.node1.x, state.edgeToDelete.node1.y);
+            let coords2 = worldToCamera(state.edgeToDelete.node2.x, state.edgeToDelete.node2.y);
+            context.moveTo(coords.x, coords.y);
+            context.lineTo(coords2.x, coords2.y);
 
-        context.strokeStyle = "#FFCCCC";
-        context.setLineDash([]);
-        context.lineWidth = 2 / state.camera.scale;
-        context.stroke();
-        context.restore();
+            context.strokeStyle = "#FFCCCC";
+            context.setLineDash([]);
+            context.lineWidth = 2 / state.camera.scale;
+            context.stroke();
+            context.restore();
+
+            renderedWebHints = true;
+        }
     }
 
     // Render edges first so they're behind nodes
@@ -391,7 +396,7 @@ function renderMap (timeElapsed) {
     // TODO this is rendering even if it would intersect another edge, which is not allowed
     // render line from player currentNode to currentNodeSelection if currentNodeSelection is not null
     if (state.currentNodeSelection != null && state.player.currentNode != null) {
-        if (!TEST_ThrowAndCutWithMouse || state.player.item == null) {
+        //if (!TEST_ThrowAndCutWithMouse || state.player.item == null) {
 
             let intersects = false;
             // for each edge, check if the line intersects with it
@@ -420,8 +425,10 @@ function renderMap (timeElapsed) {
                 context.setLineDash([5, 15]);
                 context.lineWidth = 1 / state.camera.scale;
                 context.stroke();
+
+                renderedWebHints = true;
             }
-        }
+        //}
     }
 
     // TODO render a circle for the web shot radius
@@ -617,7 +624,9 @@ function updateEntityRenderState(entity) {
     if (!entity.renderState.lastKnownPosition) {
         entity.renderState.lastKnownPosition = entity;
     }
-    entity.renderState.lastKnownDirection = subVec(entity, entity.renderState.lastKnownPosition);
+    if (entity.x != entity.renderState.lastKnownPosition.x || entity.y != entity.renderState.lastKnownPosition.y) {
+        entity.renderState.lastKnownDirection = subVec(entity, entity.renderState.lastKnownPosition);
+    }
     entity.renderState.lastKnownPosition = {x: entity.x, y: entity.y};
 
     entity.renderState.isHoldingItem = entity.item != null;
@@ -664,7 +673,7 @@ function renderEntityWithState(entity, radius, headColor, bodyColor, legColor) {
             entity.radius / (6 / 5),
             entity.stunTimer > 0 ? "orange" : bodyColor);
 
-    if (TEST_ThrowAndCutWithMouse) {
+    if (TEST_ThrowAndCutWithMouse && entity.item != null) {
         drawCircle(
                 addVec(entity, rotateVector(entity.renderState.head, subVec({x: state.input.mousePosWorld.x, y: state.input.mousePosWorld.y}, entity))),
                 entity.radius / (6 / 3),

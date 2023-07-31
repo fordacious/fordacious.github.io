@@ -1251,7 +1251,7 @@ function playerUpdate(entity, timeMs, timeDelta)
     // Should be null if the player is holding an item
     // If current node, should be closest edge to mouse connected to current node
     // If no current node, should be the current edge if mouse is close to it
-    if (!entity.item) {
+    if (!entity.item || TEST_ThrowAndCutWithMouse) {
         if (entity.currentNode) {
             // iterate over edges and select the one closest to the mouse
             let closestEdge = null;
@@ -1425,21 +1425,6 @@ function playerUpdate(entity, timeMs, timeDelta)
     }
 
     if (entity.cooldown <= 0) {
-        if (itemInteractActionPressed) {
-            // pick up or put down item
-            if (entity.item) {
-                const mouseVec = normalize({x: state.input.mousePosWorld.x - entity.x, y: state.input.mousePosWorld.y - entity.y});
-                let throwVelocity = {x: mouseVec.x * throwForce, y: mouseVec.y * throwForce};
-                throwItem(entity, throwVelocity);
-            } else {
-                if (!TEST_AutomaticPickup) {
-                    tryPickUpItem();
-                }
-            }
-        }
-    }
-
-    if (entity.cooldown <= 0) {
         // Connect web
         if (state.input.mouseWasPressed && !getPlayerEdge()) {
             // Get node under mouse
@@ -1488,6 +1473,21 @@ function playerUpdate(entity, timeMs, timeDelta)
                 }
             }
         } 
+    }
+
+    if (entity.cooldown <= 0) {
+        if (itemInteractActionPressed) {
+            // pick up or put down item
+            if (entity.item) {
+                const mouseVec = normalize({x: state.input.mousePosWorld.x - entity.x, y: state.input.mousePosWorld.y - entity.y});
+                let throwVelocity = {x: mouseVec.x * throwForce, y: mouseVec.y * throwForce};
+                throwItem(entity, throwVelocity);
+            } else {
+                if (!TEST_AutomaticPickup) {
+                    tryPickUpItem();
+                }
+            }
+        }
     }
 
     if (entity.gotKicked || entity.jumpTimer > 0) {

@@ -47,9 +47,28 @@ function makeEntity(props) {
     return entity;
 }
 
-// Some samples planets
-function makeMap() {
-    return [makeEntity({
+const cameraZoomEaseFactor = 0.1;
+
+const map_singleton = {
+    name: "map_singleton",
+    player: {entityType: "player", x: 0, y: -400, radius: 10, mass: 1, velocity: {x:-3, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: 0,
+        y: 0,
+        radius: 100,
+        mass: 5000,
+        velocity: {x: 0, y: 0},
+        color: "#ffaa00",
+    }]
+};
+
+const map_dao = {
+    name: "map_dao",
+    player: {entityType: "player", x: 0, y: -900, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
         entityType: "planet",
         x: 0,
         y: -250,
@@ -57,10 +76,9 @@ function makeMap() {
         mass: 5000,
         orbit: 1,
         velocity: {x: 2.5, y: 0},
-        color: randomColor(),
-        update: planetUpdate,
-    }),
-    makeEntity({
+        color: "RANDOM",
+    },
+    {
         entityType: "planet",
         x: 0,
         y: 250,
@@ -68,29 +86,145 @@ function makeMap() {
         mass: 5000,
         orbit: 0,
         velocity: {x: -2.5, y: 0},
-        color: randomColor(),
-        update: planetUpdate,
-    }),
-    makeEntity({
+        color: "RANDOM",
+    }]
+};
+
+const map_threebody = {
+    name: "map_threebody",
+    player: {entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: 0,
+        y: -250,
+        radius: 100,
+        mass: 5000,
+        orbit: 1,
+        velocity: {x: 2.5, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: 250,
+        radius: 100,
+        mass: 5000,
+        orbit: 0,
+        velocity: {x: -2.5, y: 0},
+        color: "RANDOM",
+    },
+    {
         entityType: "planet",
         x: 0,
         y: -1000,
         radius: 100,
         mass: 5000,
         velocity: {x: -3.5, y: 0},
-        color: randomColor(),
-        update: planetUpdate,
-    }),
-    /*makeEntity({
+        color: "RANDOM",
+    }]
+};
+
+const map_level = {
+    name: "map_level",
+    player: {entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
         entityType: "planet",
         x: 0,
-        y: -1300,
-        radius: 50,
-        mass: 100,
-        orbit: 2,
-        velocity: {x: -7.5, y: 0},
-        color: randomColor()
-    })*/];
+        y: 0,
+        radius: 100,
+        mass: 10000,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffaa00",
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -1000,
+        radius: 100,
+        mass: 5000,
+        velocity: {x: -3.5, y: 0},
+        color: "#aacc88",
+    }],
+    collectables: [{
+        entityType: "collectable",
+        x: 0,
+        y: 500,
+        radius: 10,
+        mass: 1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: -150,
+        y: 0,
+        radius: 10,
+        mass: 1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: 300,
+        y: 0,
+        radius: 10,
+        mass: 1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: 0,
+        y: -300,
+        radius: 10,
+        mass: 1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    }]
+};
+
+const levels = [map_singleton, map_dao, map_threebody, map_level];
+let currentLevel = 3;
+function startGame () {
+    initState(JSON.stringify(levels[currentLevel]))
+}
+
+function loadLevelFromJSON(json) {
+
+    let mapobj = JSON.parse(json);
+
+    mapobj.planets = mapobj.planets || [];
+    mapobj.collectables = mapobj.collectables || [];
+
+    mapobj.player.update = playerUpdate;
+    mapobj.player.exists = true;
+
+    for (let planet of mapobj.planets) {
+        if (planet.color === "RANDOM") {
+            planet.color = randomColor();
+        }
+
+        planet.update = planetUpdate;
+        planet.exists = true;
+    }
+
+    // Make collectables exist
+    for (let collectable of mapobj.collectables) {
+        collectable.update = collectablesUpdate;
+        collectable.exists = true;
+    }
+
+    if (mapobj.camera.width === "CANVAS_WIDTH") {
+        mapobj.camera.width = canvas.width;
+    }
+    if (mapobj.camera.height === "CANVAS_HEIGHT") {
+        mapobj.camera.height = canvas.height;
+    }
+
+    return mapobj;
 }
 
 function makeInitParticles() {
@@ -193,13 +327,16 @@ function renderField(entities) {
 }
 
 // TODO moving directly left right up or down causes the camera x y to be NaN. Starting it at 1, 1 avoids it.
-function initState() {
+function initState(json) {
+    console.log("Loading level: " + json);
+    let levelData = loadLevelFromJSON(json);
+    console.log(levelData);
     state = {
         gameOver: false,
-        camera: {x: 1, y: 1, width:canvas.width, height:canvas.height, scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: 0.01, easeMode: "quadtratic"},
-        //player: makeEntity({entityType: "player", x: -500, y: 0, radius: 10, mass: 1, velocity: {x:0, y: 7}, update: playerUpdate, color: "#00ffff"}),
-        player: makeEntity({entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, update: playerUpdate, color: "#00ffff"}),
-        planets: makeMap(),
+        camera: levelData.camera,
+        player: levelData.player,
+        planets: levelData.planets || [],
+        collectables: levelData.collectables || [],
         particles: makeInitParticles(),
         field: makeField(),
         gravityMap: new Array(1000*1000),
@@ -228,8 +365,9 @@ function lineIntersects(p1, p2, q1, q2) {
 }
 
 function render(state) {
-    // Clear context
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    // gobal alpha
+    context.globalAlpha = 1;
+
     // Set awesome canvas background
     // linear gradient from #333333 to #444444
     let grdcoords1 = worldToCamera(-200, -200);
@@ -243,22 +381,42 @@ function render(state) {
     renderField(state.field);
 
     // Draw player circle
-    drawCircle({x: state.player.x, y: state.player.y}, state.player.radius, state.player.color);
+    if (state.player) {
+        drawCircle({x: state.player.x, y: state.player.y}, state.player.radius, state.player.color);
+    }
+
 
     // Draw particles
     for (let particle of state.particles) {
         let color = particle.color;
         // Set particle color alpha to closer to 0 based on lifetime
+
         context.save();
+        // Set additive hue blending
+        context.globalCompositeOperation = "lighter";
         context.globalAlpha = particle.lifetime / 100;
-        drawCircle({x: particle.x, y: particle.y}, particle.radius, particle.color);
+        
+        drawCircle({x: particle.x, y: particle.y}, particle.radius * 2, particle.color);
+
         context.restore();
     }
 
     // Draw planets
+    context.save();
+    context.globalAlpha = 1;
     for (let planet of state.planets) {
         drawCircle({x: planet.x, y: planet.y}, planet.radius, planet.color);
     }
+    context.restore();
+
+    // draw collectables as circle but with larger empty circle around it
+    context.save();
+    context.globalCompositeOperation = "lighter";
+    for (let collectable of state.collectables) {
+        drawCircle({x: collectable.x, y: collectable.y}, collectable.radius - 5, collectable.color);
+        drawCircle({x: collectable.x, y: collectable.y}, collectable.radius + 5, collectable.color, true);
+    }
+    context.restore();
 }
 
 function rotateVectorAngle(vec, angle) {
@@ -317,12 +475,20 @@ function subVec(vec1, vec2) {
     };
 }
 
-function drawCircle(worldPos, radius, fillStyle)
+function drawCircle(worldPos, radius, fillStyle, isGradient)
 {
+    isGradient = isGradient || false;
     let coords = worldToCamera(worldPos.x, worldPos.y);
     context.beginPath();
     context.arc(coords.x, coords.y, radius / state.camera.scale, 0, 2 * Math.PI);
-    context.fillStyle = fillStyle;
+    if (isGradient) {
+        let grd = context.createRadialGradient(coords.x, coords.y, 0, coords.x, coords.y, radius / state.camera.scale);
+        grd.addColorStop(0, fillStyle);
+        grd.addColorStop(1, "#000000");
+        context.fillStyle = grd;
+    } else {
+        context.fillStyle = fillStyle;
+    }
     context.fill();
 }
 
@@ -414,7 +580,11 @@ function physicsUpdate (entity, entities, gravitySources)
 
     // assumes planets are first in the list of entities
     if (entity.orbit != undefined) {
-        gravitySources = [entities[entity.orbit]];
+        if (entity.orbit == -1) {
+            gravitySources = [];
+        } else {
+            gravitySources = [entities[entity.orbit]];
+        }
     }
 
     // Get gravity from each entity
@@ -423,6 +593,9 @@ function physicsUpdate (entity, entities, gravitySources)
             continue;
         }
         let distance = dist(entity, otherEntity);
+        if (distance == 0) {
+            distance = 0.00001;
+        }
         let angle = Math.atan2(otherEntity.y - entity.y, otherEntity.x - entity.x);
         let gravitationForceFromOtherEntity = (otherEntity.mass / (distance * distance));
         entity.acceleration.x += gravitationForceFromOtherEntity * Math.cos(angle);
@@ -451,8 +624,23 @@ function removeEntity(e)
 function planetUpdate(entity, timeMs, timeDelta) {
 }
 
+function collectablesUpdate(entity, timeMs, timeDelta) {
+} 
+
 function playerUpdate(entity, timeMs, timeDelta)
 {
+    state.particles.push(makeEntity({
+        entityType: "particle", // TODO probably dont need to differentiate
+        x: entity.x + Math.random() * entity.radius / 2,
+        y: entity.y + Math.random() * entity.radius / 2,
+        radius: 1,
+        mass: 1,
+        velocity: {x: -entity.velocity.x + (Math.random() * 0.1) - 0.05, y: -entity.velocity.y + (Math.random() * 0.1) - 0.05},
+        color: entity.color, // TODO move to render state later,
+        lifetime: 100 + Math.random() * 100,
+        update: particleUpdate,
+    }));
+
     const maxSpeed = 10;
     const accel = 0.1;
     let movement = {x: 0, y: 0};
@@ -469,12 +657,7 @@ function playerUpdate(entity, timeMs, timeDelta)
         movement.x += accel;
     }
 
-    // velocity vector with movement applied
-    let newVelocity = addVec(entity.velocity, movement);
-    //if (mag(newVelocity) < maxSpeed) {
-        // apply it
-        entity.velocity = newVelocity;
-    //}
+    let isInputting = movement.x != 0 && movement.y != 0; 
 
     // For each planet, if its colliding, bounce off
     for (let planet of state.planets) {
@@ -482,49 +665,88 @@ function playerUpdate(entity, timeMs, timeDelta)
             // First move the player such that its not colliding
             let normal = normalize(subVec(entity, planet));
             let distance = dist(entity, planet);
-            let overlap = entity.radius + planet.radius - distance;
+            let overlap = entity.radius + planet.radius - distance + 0.5;
             entity.x += normal.x * overlap;
             entity.y += normal.y * overlap;
 
+            // TODO if grounded on planet, give extra boost to get off it
+            // or figure out some other way player doesn't get stuck
+
             // Bounce off
             let dot = dotProduct(entity.velocity, normal);
-            let friction = 0.8;
-            let amount = scaleVec(normal, 2 * dot * friction);
+            let bounceFriction = 0.8;
+            let bounceFactor = 1; // TODO was 2
+            let amount = scaleVec(normal, 2 * dot * bounceFriction * (isInputting ? bounceFactor : 1));
             entity.velocity = subVec(entity.velocity, amount);
+            let surfaceFriction = 0.99;
+            entity.velocity.x *= surfaceFriction;
+            entity.velocity.y *= surfaceFriction;
+
+            // Add the velocity of the object
+            //entity.velocity.x += planet.velocity.x;
+            //entity.velocity.y += planet.velocity.y;
 
             // Make a particle burst
-            if (mag(amount) > 10) {
+            if (mag(amount) > 5) {
                 for (let i = 0; i < 100; ++i) {
                     state.particles.push(makeEntity({
                         entityType: "particle",
                         x: entity.x,
                         y: entity.y,
-                        radius: 3,
+                        radius: 1,
                         mass: 1,
                         // Velocity should be amount * random offset
                         //velocity: {x: -amount.x / 5 + Math.random() * 4 - 2, y: -amount.y / 5 + Math.random() * 4 - 2},
                         velocity: {x: Math.random() * 10 - 5, y: Math.random() * 10 - 5},
                         color: planet.color, // TODO move to render state later,
-                        lifetime: 100 + Math.random() * 100,
+                        lifetime: 100 + Math.random() * 400,
                         update: particleUpdate,
                     }));
                 }
+
+                /*
+                // 10 larger, short lived, redder ones
+                for (let i = 0; i < 10; ++i) {
+                    state.particles.push(makeEntity({
+                        entityType: "particle",
+                        x: entity.x,
+                        y: entity.y,
+                        radius: 10,
+                        mass: 1,
+                        // Velocity should be amount * random offset
+                        //velocity: {x: -amount.x / 5 + Math.random() * 4 - 2, y: -amount.y / 5 + Math.random() * 4 - 2},
+                        velocity: {x: Math.random() * 10 - 5, y: Math.random() * 10 - 5},
+                        color: "#ff0000", // TODO move to render state later,
+                        lifetime: 10 + Math.random() * 50,
+                        update: particleUpdate,
+                    }));
+                }
+                */
             }
         }
     }
 
-    //return;
-    state.particles.push(makeEntity({
-        entityType: "particle", // TODO probably dont need to differentiate
-        x: entity.x + Math.random() * entity.radius / 2,
-        y: entity.y + Math.random() * entity.radius / 2,
-        radius: 1,
-        mass: 1,
-        velocity: {x: -entity.velocity.x + (Math.random() * 0.1) - 0.05, y: -entity.velocity.y + (Math.random() * 0.1) - 0.05},
-        color: entity.color, // TODO move to render state later,
-        lifetime: 100 + Math.random() * 100,
-        update: particleUpdate,
-    }));
+    // Check collision with collectables. If we hit them, explode them
+    for (let collectable of state.collectables) {
+        if (circleCollision(entity, entity.radius, collectable, collectable.radius)) {
+            collectable.velocity.x = entity.velocity.x / 2;
+            collectable.velocity.y = entity.velocity.y / 2;
+            explodeEntity(collectable);
+            state.score += 1;
+
+            if (state.collectables.length == 1) {
+                // Kill player on last collectable
+                //explodeEntity(entity);
+            }
+        }
+    }
+
+    // velocity vector with movement applied
+    let newVelocity = addVec(entity.velocity, movement);
+    //if (mag(newVelocity) < maxSpeed) {
+        // apply it
+        entity.velocity = newVelocity;
+    //}
 }
 
 function particleUpdate (entity) {
@@ -532,6 +754,50 @@ function particleUpdate (entity) {
     if (entity.lifetime < 0) {
         removeEntity(entity);
     }
+
+    // TODO just handles destroying without colliding for now
+    // When it goes into the planet, it gets flung out fast
+    if(mag(entity.velocity) > 20) {
+        removeEntity(entity);
+    }
+}
+
+function explodeEntity(entity) {
+    // If planet 1 exists, destroy it and replace if with 500 particles of the same color in the same circle radius
+    if (!entity) {
+        return;
+    }
+    let x = entity.x;
+    let y = entity.y;
+    let radius = entity.radius;
+    let color = entity.color;
+
+    let numParticles = entity.radius * entity.radius;
+
+    // Area = PI * r * r, so to fill it with 500 cirlces, we want to
+    let particleRadius = 1;
+    particleRadius = particleRadius < 1 ? 1 : particleRadius;
+
+    // Place particles around the circle
+    for (let i = 0; i < numParticles; i++) {
+        let angle = Math.random() * 2 * Math.PI;
+        let amount = Math.random();
+        let particleX = x + Math.cos(angle) * amount * radius;
+        let particleY = y + Math.sin(angle) * amount * radius;
+        state.particles.push(makeEntity({
+            entityType: "particle",
+            x: particleX,
+            y: particleY,
+            radius: particleRadius,
+            mass: 1,
+            velocity: {x: entity.velocity.x + Math.cos(angle) * amount * 2, y: entity.velocity.y + Math.sin(angle) * amount * 2},
+            color: color,
+            lifetime: 500 + Math.random() * 1400,
+            update: particleUpdate,
+        }));
+    }
+
+    removeEntity(entity);
 }
 
 function update (timeMs, timeDelta)
@@ -545,8 +811,8 @@ function update (timeMs, timeDelta)
     }
 
     // Add all the stuff to entities list
-    var nonparticles = [state.player].concat(state.planets);
-    var entities = [].concat(state.planets).concat([state.player]).concat(state.particles).concat(state.field);
+    var nonparticles = (state.player ? [state.player] : []).concat(state.planets);
+    var entities = [].concat(state.planets).concat((state.player ? [state.player] : [])).concat(state.particles).concat(state.field);
 
     // Update gravity map
     // for (let i = 0; i < state.gravityMap.length; ++i) {
@@ -567,12 +833,12 @@ function update (timeMs, timeDelta)
     // Set camera target scale based on the locations of all entities such that we can see all of them
     let maxDist = 0;
     for (let entity of nonparticles) {
-        let dist = Math.max(Math.abs(entity.x - state.player.x), Math.abs(entity.y - state.player.y));
+        let dist = Math.max(Math.abs(entity.x), Math.abs(entity.y));
         if (dist > maxDist && dist < 10000) {
             maxDist = dist;
         }
     }
-    state.camera.targetScale = Math.max(1, maxDist / 300);
+    state.camera.targetScale = Math.max(2, maxDist / 400);
 
     // update
     for (let i = 0; i < entities.length; ++i) {
@@ -591,12 +857,15 @@ function update (timeMs, timeDelta)
     }
 
     // cull nonexistent entities from lists
-    for (const list of [state.particles]) {
+    for (const list of [state.particles, state.planets, state.collectables]) {
         for (let i = list.length - 1; i >= 0; --i) {
-            if (!list[i].exists || mag(list[i].velocity) > 20) {
+            if (!list[i].exists) {
                 list.splice(i, 1);
             }
         }
+    }
+    if (state.player && !state.player.exists) {
+        state.player = undefined;
     }
 }
 
@@ -670,6 +939,30 @@ function initEvents() {
         if (event.keyCode == 32) {
             state.input.spacePressed = true;
         }
+
+        if (event.key == 'p') {
+            if (state.player) {
+                explodeEntity(state.player);
+            } else {
+                explodeEntity(state.planets[state.planets.length - 1]);
+            }
+        }
+
+        if (event.key == '.') {
+            currentLevel++;
+            if (currentLevel >= levels.length) {
+                currentLevel = 0;
+            }
+            startGame();
+        }
+
+        if (event.key == ',') {
+            currentLevel--;
+            if (currentLevel < 0) {
+                currentLevel = levels.length - 1;
+            }
+            startGame();
+        }
     });
 
     // Key up event
@@ -708,8 +1001,8 @@ function start()
     // Get 2d context from canvas
     context = canvas.getContext("2d");
 
-    initState();
     initEvents();
+    startGame();
 
     window.requestAnimationFrame(gameLoop);
 }

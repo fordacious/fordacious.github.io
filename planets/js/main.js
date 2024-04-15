@@ -127,7 +127,7 @@ const map_threebody = {
 
 const map_level = {
     name: "map_level",
-    player: {entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
     planets: [{
         entityType: "planet",
@@ -154,6 +154,7 @@ const map_level = {
         y: 500,
         radius: 10,
         mass: 1,
+        orbit: -1,
         velocity: {x: 0, y: 0},
         color: "#ffff00",
     },
@@ -163,6 +164,7 @@ const map_level = {
         y: 0,
         radius: 10,
         mass: 1,
+        orbit: -1,
         velocity: {x: 0, y: 0},
         color: "#ffff00",
     },
@@ -172,6 +174,7 @@ const map_level = {
         y: 0,
         radius: 10,
         mass: 1,
+        orbit: -1,
         velocity: {x: 0, y: 0},
         color: "#ffff00",
     },
@@ -179,6 +182,16 @@ const map_level = {
         entityType: "collectable",
         x: 0,
         y: -300,
+        radius: 10,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: 0,
+        y: -1300,
         radius: 10,
         mass: 1,
         velocity: {x: 0, y: 0},
@@ -625,7 +638,19 @@ function planetUpdate(entity, timeMs, timeDelta) {
 }
 
 function collectablesUpdate(entity, timeMs, timeDelta) {
-} 
+    state.particles.push(makeEntity({
+        entityType: "particle", // TODO probably dont need to differentiate
+        x: entity.x + Math.random() * entity.radius / 2,
+        y: entity.y + Math.random() * entity.radius / 2,
+        radius: 1,
+        mass: 1,
+        orbit: entity.orbit,
+        velocity: {x: -entity.velocity.x + (Math.random() * 4) - 2, y: -entity.velocity.y + (Math.random() * 4) - 2},
+        color: entity.color, // TODO move to render state later,
+        lifetime: 20 + Math.random() * 20,
+        update: particleUpdate,
+    }));
+}
 
 function playerUpdate(entity, timeMs, timeDelta)
 {
@@ -812,7 +837,11 @@ function update (timeMs, timeDelta)
 
     // Add all the stuff to entities list
     var nonparticles = (state.player ? [state.player] : []).concat(state.planets);
-    var entities = [].concat(state.planets).concat((state.player ? [state.player] : [])).concat(state.particles).concat(state.field);
+    var entities = [].concat(state.planets)
+                     .concat((state.player ? [state.player] : []))
+                     .concat(state.collectables)
+                     .concat(state.particles)
+                     .concat(state.field);
 
     // Update gravity map
     // for (let i = 0; i < state.gravityMap.length; ++i) {

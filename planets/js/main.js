@@ -196,10 +196,74 @@ const map_level = {
         mass: 1,
         velocity: {x: 0, y: 0},
         color: "#ffff00",
+    }],
+};
+
+const map_inverse_mass_test = {
+    name: "map_inverse_mass_test",
+    player: {entityType: "player", x: 0, y: 0, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: 0,
+        y: -500,
+        radius: 100,
+        mass: -1000,
+        velocity: {x:0, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: 500,
+        radius: 100,
+        mass: -1000,
+        velocity: {x: 0, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -2000,
+        radius: 100,
+        mass: -50000,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: 2000,
+        radius: 100,
+        mass: -50000,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: -2000,
+        y: 0,
+        radius: 100,
+        mass: -50000,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "RANDOM",
+    },
+    {
+        entityType: "planet",
+        x: 2000,
+        y: 0,
+        radius: 100,
+        mass: -50000,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "RANDOM",
     }]
 };
 
-const levels = [map_singleton, map_dao, map_threebody, map_level];
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test];
 let currentLevel = 3;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))

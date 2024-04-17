@@ -2,11 +2,212 @@ window.onload = start;
 
 let canvas = null;
 let context = null;
+let webglcanvas = null;
+let gl = null;
+let program = null;
 let state = null;
 
 const frameTime = 1000 / 60;
 
 const canvasDesignWidth = 640;
+
+// Set up shaders
+// Most basic vertex shader
+// Were just rendering a quad to show a fragment shader
+const vertexShaderSource = `
+    attribute vec2 position;
+    void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+    }`;
+
+const fragmentShaderSource = `
+    // Set float precision
+    precision highp float;
+
+    // Uniform for camera coordinates
+    uniform vec2 cameraPosition;
+    uniform float cameraScale;
+
+    uniform float iTime;
+
+    uniform float seed;
+
+    //CBS
+    //Parallax scrolling fractal galaxy.
+    //Inspired by JoshP's Simplicity shader: https://www.shadertoy.com/view/lslGWr
+
+    // http://www.fractalforums.com/new-theories-and-research/very-simple-formula-for-fractal-patterns/
+    float field(in vec3 p,float s, float time) {
+        float strength = 7. + .03 * log(1.e-6 + fract(sin(time) * 4373.11));
+        float accum = s/4.;
+        float prev = 0.;
+        float tw = 0.;
+        for (int i = 0; i < 26; ++i) {
+            float mag = dot(p, p);
+            p = abs(p) / mag + vec3(-.5, -.4, -1.5);
+            float w = exp(-float(i) / 7.);
+            accum += w * exp(-strength * pow(abs(mag - prev), 2.2));
+            tw += w;
+            prev = mag;
+        }
+        return max(0., 5. * accum / tw - .7);
+    }
+
+    // Less iterations for second layer
+    float field2(in vec3 p, float s, float time) {
+        float strength = 7. + .03 * log(1.e-6 + fract(sin(time) * 4373.11));
+        float accum = s/4.;
+        float prev = 0.;
+        float tw = 0.;
+        for (int i = 0; i < 18; ++i) {
+            float mag = dot(p, p);
+            p = abs(p) / mag + vec3(-.5, -.4, -1.5);
+            float w = exp(-float(i) / 7.);
+            accum += w * exp(-strength * pow(abs(mag - prev), 2.2));
+            tw += w;
+            prev = mag;
+        }
+        return max(0., 5. * accum / tw - .7);
+    }
+
+    vec3 nrand3( vec2 co )
+    {
+        vec3 a = fract( cos( co.x*8.3e-3 + co.y )*vec3(1.3e5, 4.7e5, 2.9e5) );
+        vec3 b = fract( sin( co.x*0.3e-3 + co.y )*vec3(8.1e5, 1.0e5, 0.1e5) );
+        vec3 c = mix(a, b, 0.5);
+        return c;
+    }
+
+
+    void main() {
+        //float iTime = iTime / 100000.;
+
+        float oldiTime = iTime / 10000.;
+        float iTime = iTime / 1000.;
+        //float iTime = 0.;
+
+        // TODO pass in
+        vec2 iResolution = vec2(1280.0, 960.0);
+        vec2 fragCoord = gl_FragCoord.xy;
+
+        vec2 uv = 2. * fragCoord.xy / iResolution.xy - 1.;
+        vec2 uvs = uv * iResolution.xy / max(iResolution.x, iResolution.y);
+
+        uvs *= cameraScale / 5.;
+
+        vec3 p = vec3(uvs / 4., 0) + vec3(1., -1.3, iTime / 2500.0);
+        //p += .2 * vec3(sin(iTime / 16.), sin(iTime / 12.),  sin(iTime / 128.));
+        vec3 p2 = vec3(uvs / (4.+0.2+0.4), 1.5) + vec3(2., -1.3, -1. + iTime / 5000.0);
+        //p2 += 0.25 * vec3(sin(iTime / 16.), sin(iTime / 12.),  sin(iTime / 128.));
+
+        // modify p and p2 based on camera position
+
+        float cameraFactor = 1000000.;
+        vec2 cameraPosition = cameraPosition;
+        cameraPosition.y *= -1.;
+
+        p.xy += (cameraPosition / cameraFactor * (cameraScale * 10.));
+        p2.xy += (cameraPosition / cameraFactor * (cameraScale * 10.)) / 2.;
+
+        float freqs[4];
+        //Sound
+        freqs[0] = 0.; // texture( iChannel0, vec2( 0.01, 0.25 ) ).x;
+        freqs[1] = 0.; // texture( iChannel0, vec2( 0.07, 0.25 ) ).x;
+        freqs[2] = 0.; // texture( iChannel0, vec2( 0.15, 0.25 ) ).x;
+        freqs[3] = 0.; // texture( iChannel0, vec2( 0.30, 0.25 ) ).x;
+
+        p.z += seed;
+        p2.z += seed;
+
+        float t = field(p,freqs[2], seed);
+        float v = (1. - exp((abs(uv.x) - 1.) * 6.)) * (1. - exp((abs(uv.y) - 1.) * 6.));
+        
+        //Second Layer
+        float t2 = field2(p2,freqs[3], seed);
+        float g = 1.8 * t2 * t2 * t2;
+        float b = 1.2  * t2 * t2;
+        float r = t2* freqs[0];
+        float a = t2;
+        vec4 c2 = mix(.4, 1., v) * vec4(r, g, b, a);
+        
+        //Let's add some stars
+        //Thanks to http://glsl.heroku.com/e#6904.0
+        vec2 seed = p.xy * 2.0; 
+        seed = floor(seed * iResolution.x);
+        vec3 rnd = nrand3( seed );
+        vec4 starcolor = vec4(pow(rnd.y,40.0));
+        
+        //Second Layer
+        vec2 seed2 = p2.xy * 2.0;
+        seed2 = floor(seed2 * iResolution.x);
+        vec3 rnd2 = nrand3( seed2 );
+        starcolor += vec4(pow(rnd2.y,40.0));
+        
+        gl_FragColor = c2+starcolor;
+        //gl_FragColor = starcolor;
+    }`;
+
+function initShaders() {
+    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexShaderSource);
+    gl.compileShader(vertexShader);
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        console.error("Error compiling vertex shader", gl.getShaderInfoLog(vertexShader));
+        return;
+    }
+
+    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentShaderSource);
+    gl.compileShader(fragmentShader);
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        console.error("Error compiling fragment shader", gl.getShaderInfoLog(fragmentShader));
+        return;
+    }
+
+    program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+}
+
+function renderShaders(state) {
+    // Draw a quad covering the canvas that we can render our fragment shader to
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,
+        1, -1,
+        -1, 1,
+        -1, 1,
+        1, -1,
+        1, 1
+    ]), gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Set camera position and size uniforms
+    //state.camera.x = 0;
+    //state.camera.y = 0;
+    //state.camera.scale = 5;
+    //state.camera.scale = state.player.x / 100 + 1;
+    const cameraPositionLocation = gl.getUniformLocation(program, "cameraPosition");
+    gl.uniform2f(cameraPositionLocation, state.camera.x, state.camera.y);
+    const cameraScaleLocation = gl.getUniformLocation(program, "cameraScale");
+    gl.uniform1f(cameraScaleLocation, state.camera.scale);
+
+    // random seed for aesthetics control
+    const seedLocation = gl.getUniformLocation(program, "seed");
+    gl.uniform1f(seedLocation, state.seed);
+
+    // set time uniform
+    const timeLocation = gl.getUniformLocation(program, "iTime");
+    gl.uniform1f(timeLocation, state.timestamp);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
 
 function dist(point1, point2) {
     return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
@@ -50,6 +251,7 @@ function makeEntity(props) {
 const cameraZoomEaseFactor = 0.1;
 
 const map_singleton = {
+    seed: -0.5,
     name: "map_singleton",
     player: {entityType: "player", x: 0, y: -400, radius: 10, mass: 1, velocity: {x:-3, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
@@ -65,6 +267,7 @@ const map_singleton = {
 };
 
 const map_dao = {
+    seed: 0.5,
     name: "map_dao",
     player: {entityType: "player", x: 0, y: -900, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
@@ -91,6 +294,7 @@ const map_dao = {
 };
 
 const map_threebody = {
+    seed: 0.2,
     name: "map_threebody",
     player: {entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
@@ -126,6 +330,7 @@ const map_threebody = {
 };
 
 const map_level = {
+    seed: 0,
     name: "map_level",
     player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
@@ -152,7 +357,7 @@ const map_level = {
         entityType: "collectable",
         x: 0,
         y: 500,
-        radius: 10,
+        radius: 20,
         mass: 1,
         orbit: -1,
         velocity: {x: 0, y: 0},
@@ -162,7 +367,7 @@ const map_level = {
         entityType: "collectable",
         x: -150,
         y: 0,
-        radius: 10,
+        radius: 20,
         mass: 1,
         orbit: -1,
         velocity: {x: 0, y: 0},
@@ -172,7 +377,7 @@ const map_level = {
         entityType: "collectable",
         x: 300,
         y: 0,
-        radius: 10,
+        radius: 20,
         mass: 1,
         orbit: -1,
         velocity: {x: 0, y: 0},
@@ -182,7 +387,7 @@ const map_level = {
         entityType: "collectable",
         x: 0,
         y: -300,
-        radius: 10,
+        radius: 20,
         mass: 1,
         orbit: -1,
         velocity: {x: 0, y: 0},
@@ -192,7 +397,7 @@ const map_level = {
         entityType: "collectable",
         x: 0,
         y: -1300,
-        radius: 10,
+        radius: 20,
         mass: 1,
         velocity: {x: 0, y: 0},
         color: "#ffff00",
@@ -200,6 +405,7 @@ const map_level = {
 };
 
 const map_inverse_mass_test = {
+    seed: -0.2,
     name: "map_inverse_mass_test",
     player: {entityType: "player", x: 0, y: 0, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
@@ -410,6 +616,7 @@ function initState(json) {
     console.log(levelData);
     state = {
         gameOver: false,
+        seed: levelData.seed || 0,
         camera: levelData.camera,
         player: levelData.player,
         planets: levelData.planets || [],
@@ -445,6 +652,11 @@ function render(state) {
     // gobal alpha
     context.globalAlpha = 1;
 
+    // Clear canvas black
+    context.fillStyle = "#000000";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    /*
     // Set awesome canvas background
     // linear gradient from #333333 to #444444
     let grdcoords1 = worldToCamera(-200, -200);
@@ -454,6 +666,7 @@ function render(state) {
     grd.addColorStop(1, "#444444");
     context.fillStyle = grd;
     context.fillRect(0, 0, canvas.width, canvas.height);
+    */
 
     renderField(state.field);
 
@@ -895,8 +1108,10 @@ function update (timeMs, timeDelta)
         // Ease camera scale to targetScale
         state.camera.scale += (state.camera.targetScale - state.camera.scale) * state.camera.zoomEaseFactor;
         // Ease camera x and y towards player position
-        //state.camera.x += (state.player.x - state.camera.x) * state.camera.easeFactor;
-        //state.camera.y += (state.player.y - state.camera.y) * state.camera.easeFactor;
+        let targetX = state.player ? state.player.x : 0;
+        let targetY = state.player ? state.player.y : 0; 
+        state.camera.x += (targetX - state.camera.x) * state.camera.easeFactor;
+        state.camera.y += (targetY - state.camera.y) * state.camera.easeFactor;
     }
 
     // Add all the stuff to entities list
@@ -931,7 +1146,7 @@ function update (timeMs, timeDelta)
             maxDist = dist;
         }
     }
-    state.camera.targetScale = Math.max(2, maxDist / 400);
+    state.camera.targetScale = state.player ? Math.max(2, maxDist / 400) : 5;
 
     // update
     for (let i = 0; i < entities.length; ++i) {
@@ -987,6 +1202,9 @@ function gameLoop(timeElapsed)
         timeSinceLastUpdate -= frameTime;
         update(timeElapsed, frameTime);
     }
+
+    state.timestamp = timeElapsed;
+    renderShaders(state);
     render(state);
 }
 
@@ -1089,12 +1307,18 @@ function initEvents() {
 
 function start()
 {
-    // Get #gameCanvas
+    // Get #gamecanvas
     canvas = document.getElementById("gamecanvas");
     // Get 2d context from canvas
     context = canvas.getContext("2d");
 
+    // Get #webglcanvas
+    webglcanvas = document.getElementById("webglcanvas");
+    // Get webgl context from canvas
+    gl = webglcanvas.getContext("webgl");
+
     initEvents();
+    initShaders();
     startGame();
 
     window.requestAnimationFrame(gameLoop);

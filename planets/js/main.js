@@ -5,11 +5,22 @@ let context = null;
 let webglcanvas = null;
 let gl = null;
 let program = null;
+let shaderResourcesInitialized = false;
+let fieldValuesTexture = null;
+let fieldValues = null;
+
 let state = null;
 
 const frameTime = 1000 / 60;
 
 const canvasDesignWidth = 640;
+
+// Num points in the field (square grid of points)
+// so numFields x numFields
+const numFields = 60;
+//const numFields = 120;
+
+let renderWarping = false;
 
 // Set up shaders
 // Most basic vertex shader
@@ -31,6 +42,12 @@ const fragmentShaderSource = `
     uniform float iTime;
 
     uniform float seed;
+
+    // Field
+    uniform vec2 fieldStartPosition;
+    uniform vec2 fieldEndPosition;
+    // Field values as texture
+    uniform sampler2D fieldValues;
 
     //CBS
     //Parallax scrolling fractal galaxy.
@@ -78,7 +95,6 @@ const fragmentShaderSource = `
         return c;
     }
 
-
     void main() {
         //float iTime = iTime / 100000.;
 
@@ -92,8 +108,9 @@ const fragmentShaderSource = `
 
         vec2 uv = 2. * fragCoord.xy / iResolution.xy - 1.;
         vec2 uvs = uv * iResolution.xy / max(iResolution.x, iResolution.y);
+        vec2 uvsold = uvs;
 
-        uvs *= cameraScale / 5.;
+        uvs *= cameraScale / (5. * (iResolution.x / iResolution.y));
 
         vec3 p = vec3(uvs / 4., 0) + vec3(1., -1.3, iTime / 2500.0);
         //p += .2 * vec3(sin(iTime / 16.), sin(iTime / 12.),  sin(iTime / 128.));
@@ -102,12 +119,12 @@ const fragmentShaderSource = `
 
         // modify p and p2 based on camera position
 
-        float cameraFactor = 1000000.;
+        float cameraFactor = 100000.;
         vec2 cameraPosition = cameraPosition;
         cameraPosition.y *= -1.;
 
-        p.xy += (cameraPosition / cameraFactor * (cameraScale * 10.));
-        p2.xy += (cameraPosition / cameraFactor * (cameraScale * 10.)) / 2.;
+        p.xy += (cameraPosition / cameraFactor)  / 0.5;
+        p2.xy += (cameraPosition / cameraFactor) / 2.;
 
         float freqs[4];
         //Sound
@@ -118,6 +135,24 @@ const fragmentShaderSource = `
 
         p.z += seed;
         p2.z += seed;
+
+        // sample field values at uvs
+        vec2 fieldCoords = uvs;
+        //fieldCoords *= cameraScale / 6.66666666;
+        //fieldCoords.y += 0.5;
+
+        //fieldCoords.xy = fieldCoords.yx;
+        fieldCoords += (cameraPosition.xy / cameraFactor) * 23.5;
+        fieldCoords += vec2(0.5, 0.5);
+
+        fieldCoords.y = 1. - fieldCoords.y;
+        vec4 fieldValuesTex = texture2D(fieldValues, fieldCoords);
+
+        vec2 offset = (fieldValuesTex.xy - 0.5) * 0.125;
+        vec2 offset2 = (fieldValuesTex.xy - 0.5) * 0.125;
+
+        p.xy += offset;
+        p2.xy += offset2;
 
         float t = field(p,freqs[2], seed);
         float v = (1. - exp((abs(uv.x) - 1.) * 6.)) * (1. - exp((abs(uv.y) - 1.) * 6.));
@@ -142,9 +177,15 @@ const fragmentShaderSource = `
         seed2 = floor(seed2 * iResolution.x);
         vec3 rnd2 = nrand3( seed2 );
         starcolor += vec4(pow(rnd2.y,40.0));
-        
-        gl_FragColor = c2+starcolor;
+
+        gl_FragColor = vec4(0., 0., 0., 1.0);
+        //gl_FragColor += c2+starcolor + fieldValuesTex / 2.;
+        gl_FragColor += c2+starcolor;
         //gl_FragColor = starcolor;
+
+        //gl_FragColor = vec4(offset.x, offset.y, 0., 1.);
+
+        //gl_FragColor.rg = ((fieldValuesTex.xy - 128.) / 128.) * 10.;
     }`;
 
 function initShaders() {
@@ -205,6 +246,66 @@ function renderShaders(state) {
     // set time uniform
     const timeLocation = gl.getUniformLocation(program, "iTime");
     gl.uniform1f(timeLocation, state.timestamp);
+
+    // Upload field values
+    // Field start
+    const fieldStartPositionLocation = gl.getUniformLocation(program, "fieldStartPosition");
+    gl.uniform2f(fieldStartPositionLocation, state.field[0].x, state.field[0].y);
+    // Field end
+    const fieldEndPositionLocation = gl.getUniformLocation(program, "fieldEndPosition");
+    gl.uniform2f(fieldEndPositionLocation, state.field[state.field.length - 1].x, state.field[state.field.length - 1].y);
+    // Field values
+    if (!shaderResourcesInitialized) {
+        // Create a numFields x numFields texture to store the field values
+        fieldValuesTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, fieldValuesTexture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, numFields, numFields, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        // Set texture parameters
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        shaderResourcesInitialized = true;
+    }
+
+    function toInt(float) {
+        return Math.floor(float * 255);
+    }
+
+    let max = 0;
+    let min = 1000;
+    // Set field values
+    fieldValues = new Uint8Array(numFields * numFields * 4);
+    for (let i = 0; i < numFields; ++i) {
+        for (let j = 0; j < numFields; ++j) {
+            let index = i * numFields + j;
+            let field = state.field[index];
+            fieldValues[index * 4] = renderWarping ?
+                Math.floor(Math.min(Math.max(-128, (field.acceleration.x * 50)), 128) + 128)
+                : 128;
+            fieldValues[index * 4 + 1] = renderWarping ?
+                Math.floor(Math.min(Math.max(-128, (field.acceleration.y * 50)), 128) + 128)
+                : 128;
+            fieldValues[index * 4 + 2] = 0;
+            fieldValues[index * 4 + 3] = 255;
+            //console.log(field.acceleration.x);
+            if (fieldValues[index * 4] > max) {
+                max = fieldValues[index * 4];
+            }
+            if (fieldValues[index * 4] < min) {
+                min = fieldValues[index * 4];
+            }
+            if (fieldValues[index * 4] > 160 || fieldValues[index * 4] < 100) {
+                //console.log(fieldValues[i * 4]);
+            }
+        }
+    }
+    //console.log(max);
+    //console.log(min);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, numFields, numFields, gl.RGBA, gl.UNSIGNED_BYTE, fieldValues);
+
+    const fieldValuesLocation = gl.getUniformLocation(program, "fieldValues");
+    gl.uniform1i(fieldValuesLocation, 0);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
@@ -536,14 +637,13 @@ function makeInitParticles() {
 function makeField() {
     // Make 50 x 50 field entities and return them as a list
     let fieldLength = 4000;
-    let numFields = 60;
     let entities = [];
     for (let i = 0; i < numFields; ++i) {
         for (let j = 0; j < numFields; ++j) {
             entities.push(makeEntity({
                 entityType: "field",
-                x: i * fieldLength / numFields - fieldLength / 2,
-                y: j * fieldLength / numFields - fieldLength / 2,
+                x: j * fieldLength / numFields - fieldLength / 2,
+                y: i * fieldLength / numFields - fieldLength / 2,
                 mass: 0,
                 static: true,
                 color: "#ff0000"
@@ -603,6 +703,7 @@ function renderArrow(x, y, dir) {
 }
 
 function renderField(entities) {
+    if (renderWarping) return;
     // For each entity, render them as an arrow at their location pointing in the direction of their acceleration
     for (let entity of entities) {
         renderArrow(entity.x, entity.y, entity.acceleration);
@@ -653,8 +754,8 @@ function render(state) {
     context.globalAlpha = 1;
 
     // Clear canvas black
-    context.fillStyle = "#000000";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    //context.fillStyle = "#000000";
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     /*
     // Set awesome canvas background
@@ -692,12 +793,9 @@ function render(state) {
     }
 
     // Draw planets
-    context.save();
-    context.globalAlpha = 1;
     for (let planet of state.planets) {
         drawCircle({x: planet.x, y: planet.y}, planet.radius, planet.color);
     }
-    context.restore();
 
     // draw collectables as circle but with larger empty circle around it
     context.save();
@@ -774,7 +872,7 @@ function drawCircle(worldPos, radius, fillStyle, isGradient)
     if (isGradient) {
         let grd = context.createRadialGradient(coords.x, coords.y, 0, coords.x, coords.y, radius / state.camera.scale);
         grd.addColorStop(0, fillStyle);
-        grd.addColorStop(1, "#000000");
+        grd.addColorStop(1, "rgba(255, 255, 255, 0)");
         context.fillStyle = grd;
     } else {
         context.fillStyle = fillStyle;
@@ -887,9 +985,11 @@ function physicsUpdate (entity, entities, gravitySources)
             distance = 0.00001;
         }
         let angle = Math.atan2(otherEntity.y - entity.y, otherEntity.x - entity.x);
+
+        // TODO factor in your own mass? Is that doable?
         let gravitationForceFromOtherEntity = (otherEntity.mass / (distance * distance));
-        entity.acceleration.x += gravitationForceFromOtherEntity * Math.cos(angle);
-        entity.acceleration.y += gravitationForceFromOtherEntity * Math.sin(angle);
+        entity.acceleration.x += (gravitationForceFromOtherEntity) * Math.cos(angle);
+        entity.acceleration.y += (gravitationForceFromOtherEntity) * Math.sin(angle);
     }
 
     if (entity.static) {
@@ -1257,6 +1357,10 @@ function initEvents() {
             } else {
                 explodeEntity(state.planets[state.planets.length - 1]);
             }
+        }
+
+        if (event.key == 'o') {
+            renderWarping = !renderWarping;
         }
 
         if (event.key == '.') {

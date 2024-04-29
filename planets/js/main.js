@@ -918,7 +918,7 @@ const map_shell = {
 // TODO map that has a moving death planet
 
 const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell];
-let currentLevel = 6;
+let currentLevel = 7;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }

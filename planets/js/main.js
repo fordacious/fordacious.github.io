@@ -36,6 +36,11 @@ Find someway to leverage the awe of zooming out and seeing the fractal
     Should make a different game about exploring fractal
 Death zones (horizontal, virtical, diagonal)
     This limits space and movement. Since this game is about movement and flow, adding more constraints on movement is interesting.
+Title / text should be in-engine particles or similar
+Nuno found dodging and weaving more fun than getting the collectables. (Mse too somewhat). Lean into this
+Alternate controls
+    Accelerate towards mouse (can be a simple onclick)
+    Rotate view tank controls
 
 Map where you have to control things homing in on you / orbiting you to take them somewhere or hit something else
     Maybe there is a destructable object blocking where you need to go? Or another enemy?
@@ -1150,7 +1155,10 @@ function initState(json) {
             dPressed: false,
             ePressed: false,
             rPressed: false,
-            spacePressed: false
+            spacePressed: false,
+            mouseX: 0,
+            mouseY: 0,
+            mouseIsDown: false
         },
         score: 0,
     };
@@ -1608,6 +1616,7 @@ function collectablesUpdate(entity, timeMs, timeDelta) {
 
 function playerUpdate(entity, timeMs, timeDelta)
 {
+    /*
     state.particles.push(makeEntity({
         entityType: "particle", // TODO probably dont need to differentiate
         x: entity.x + Math.random() * entity.radius / 2,
@@ -1619,6 +1628,7 @@ function playerUpdate(entity, timeMs, timeDelta)
         lifetime: 100 + Math.random() * 100,
         update: particleUpdate,
     }));
+    */
 
      // TODO put these constants somewhere
     const maxSpeed = 10;
@@ -1635,6 +1645,13 @@ function playerUpdate(entity, timeMs, timeDelta)
     }
     if (state.input.dPressed) {
         movement.x += accel;
+    }
+
+    // If mouse is down, override the movement vector and accelerate player towards the mouse position
+    if (state.input.mouseIsDown) {
+        let vectorToMouse = subVec({x: state.input.mouseX, y: state.input.mouseY}, entity);
+        let normalizedVectorToMouse = normalize(vectorToMouse);
+        movement = scaleVec(normalizedVectorToMouse, accel);
     }
 
     let isInputting = movement.x != 0 && movement.y != 0; 
@@ -1711,6 +1728,24 @@ function playerUpdate(entity, timeMs, timeDelta)
         }
     }
 
+    // Output flame particles in the direction of your movement
+    if (movement.x != 0 || movement.y != 0) {
+        for (let i = 0; i < 5; ++i) {
+            state.particles.push(makeEntity({
+                entityType: "particle",
+                x: entity.x + entity.velocity.x + movement.x,
+                y: entity.y + entity.velocity.y + movement.y,
+                radius: 2,
+                mass: 1,
+                velocity: {x: entity.velocity.x + -movement.x * 10 + Math.random() * 1 - 0.5, y: entity.velocity.y + -movement.y * 10 + Math.random() * 1 - 0.5},
+                color: entity.color, //"#ffaa00", // TODO move to render state later,
+                lifetime: 20 + Math.random() * 20,
+                update: particleUpdate,
+                removeOnSpeedThreshold: false
+            }));
+        }
+    }
+
     // velocity vector with movement applied
     let newVelocity = addVec(entity.velocity, movement);
     //if (mag(newVelocity) < maxSpeed) {
@@ -1725,9 +1760,13 @@ function particleUpdate (entity) {
         removeEntity(entity);
     }
 
+    if (entity.removeOnSpeedThreshold === false) {
+        return;
+    }
+
     // TODO just handles destroying without colliding for now
     // When it goes into the planet, it gets flung out fast
-    if(mag(entity.velocity) > 20) {
+    if( mag(entity.velocity) > 20) {
         removeEntity(entity);
     }
 }
@@ -1918,7 +1957,12 @@ function initEvents() {
 
     // Mouse down
     document.addEventListener('mousedown', function (event) {
-        // TODO
+        state.input.mouseIsDown = true;
+    });
+
+    // Mouse up
+    document.addEventListener('mouseup', function (event) {
+        state.input.mouseIsDown = false;
     });
 
     // Key event detecting w a s and d

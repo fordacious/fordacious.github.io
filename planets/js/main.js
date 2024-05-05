@@ -42,8 +42,27 @@ Alternate controls
     Accelerate towards mouse (can be a simple onclick)
     Rotate view tank controls
 
+Simple sounds to create a dynamic soundscape to complement the flowing visuals and gameplay
+    Try to have no assets (voyager?). Would be an interesting challenge
+
 Map where you have to control things homing in on you / orbiting you to take them somewhere or hit something else
     Maybe there is a destructable object blocking where you need to go? Or another enemy?
+
+Opening. Text title, fade it, player orbiting planet, gain control, music kicks in (Voyager), more planets and collectables appear, this is the tutorial, get a sense of controls and how to move, once collected all things around planet it explodes, once collected all collectables warp to next level opens up.  
+
+Level end - black hole appears - hyperspace effect with background shader
+
+Better player visbility, less particle obscuring / framerate drops (esp with music), better color design
+
+Thing that swaps gravity for the player (player becomes red?)
+
+Black and white version... opposites... attraction etc...
+
+Game is about circles overlapping and interacting in interesting ways, harmony, flows etc...
+
+Level where you dont control player, you control gravity of object to get it towards a goal / collectabless
+
+Make sound design entirely sine ways and cyclical things. Remove voyagers. Start intro with beat timed to player orbit and tone based on current gravity, speed and position
 
 Then XR architecture + Hand interaction game. (Playable on desktop and mobile too). That or PD / DE style fps? Use webXR (aframe, 3js) or existing engine (vrchat?)
     Explore fractal?
@@ -627,7 +646,7 @@ const map_inverse_mass_test = {
 const map_large = {
     seed: 0.2,
     name: "map_large",
-    player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:-10, y: 0}, color: "#00ffff"},
+    player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:-7, y: 0}, color: "#00ffff"},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
     planets: [{
         entityType: "planet",
@@ -645,7 +664,7 @@ const map_large = {
         entityType: "planet",
         x: 0,
         y: -1500,
-        orbit: 0,
+        //orbit: 0, // TODO bug with this?
         radius: 100,
         mass: 5000,
         velocity: {x: -12.5, y: 0},
@@ -653,18 +672,30 @@ const map_large = {
     },
     {
         entityType: "planet",
-        x: 300,
+        x: 350,
         y: -1500,
         radius: 50,
         mass: 1000,
         orbit: 1,
         attach: 1,
-        velocity: {x: -0, y: -4.5},
+        velocity: {x: -0, y: 3.5},
         color: "#aacc88",
-    }]
+    },
+    // TODO get moon working
+    // {
+    //     entityType: "planet",
+    //     x: 500,
+    //     y: -1500,
+    //     radius: 20,
+    //     mass: 500,
+    //     orbit: 2,
+    //     attach: 1,
+    //     velocity: {x: -2.5, y: 1},
+    //     color: "#aacc88",
+    // }
+    ]
 };
 
-// TODO implement homing missile launcher attached or orbiting third bodys
 const map_homing = {
     seed: 0.7,
     name: "map_homing",
@@ -915,15 +946,94 @@ function makePlanetRing() {
 const map_shell = {
     seed: 0.2,
     name: "map_shell",
-    player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:-8.5, y: 0}, color: "#00ffff"},
+    player: {entityType: "player", x: 0, y: -2000, radius: 10, mass: 1, velocity: {x:-8.5, y: 0}, color: "#00ffff", hasControl: false},
     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
-    planets: makePlanetRing() // TODO remove
+    planets: makePlanetRing() // TODO remove. Should be static level definition
 };
 
-// TODO map that has a moving death planet
+const map_sound_and_border_test = {
+    seed: -0.5,
+    name: "map_sound_and_border_test",
+    player: {entityType: "player", x: 0, y: -400, radius: 10, mass: 1, velocity: {x:-3, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: 0,
+        y: 0,
+        radius: 100,
+        mass: 5000,
+        velocity: {x: 0, y: 0},
+        color: "#ffaa00",
+    }],
+    collectables: [{
+        entityType: "collectable",
+        x: 0,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: 50,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },
+    {
+        entityType: "collectable",
+        x: 100,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },{
+        entityType: "collectable",
+        x: 150,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },{
+        entityType: "collectable",
+        x: 200,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    },{
+        entityType: "collectable",
+        x: 250,
+        y: 200,
+        radius: 20,
+        mass: 1,
+        orbit: -1,
+        velocity: {x: 0, y: 0},
+        color: "#ffff00",
+    }],
+    // TODO implement and render border
+    misc: [{
+        entityType: "border",
+        x: 0,
+        y: 0,
+        radius: 20000
+    }] // TODO entities that control the game state / sequence things
+    // TODO Make intro
+};
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell];
-let currentLevel = 7;
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test];
+let currentLevel = 9;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }
@@ -937,6 +1047,8 @@ function loadLevelFromJSON(json) {
     mapobj.enemies = mapobj.enemies || [];
 
     mapobj.player.update = playerUpdate;
+    mapobj.player.currentMovementVec = {x: 0, y:0}; // TODO where to init these? Shouldn't put in level data
+    mapobj.player.targetMovementVec = {x: 0, y:0}; 
     mapobj.player.exists = true;
 
     for (let planet of mapobj.planets) {
@@ -1211,7 +1323,7 @@ function render(state) {
         context.save();
         // Set additive hue blending
         context.globalCompositeOperation = "lighter";
-        context.globalAlpha = particle.lifetime / 100;
+        context.globalAlpha = (particle.maxAlpha || 1) * particle.lifetime / 100;
         
         drawCircle({x: particle.x, y: particle.y}, particle.radius * 2, particle.color);
 
@@ -1250,6 +1362,86 @@ function render(state) {
         drawCircle({x: collectable.x, y: collectable.y}, collectable.radius * 1.2, collectable.color, true);
     }
     context.restore();
+}
+
+// Audio
+let audioContext = null;
+let filter = null;
+let channelMerger = null;
+let maxAudioChannels = 6;
+let currentAudioChannel = 0;
+
+// set up web audio
+function initAudio() {
+    // create web audio api context
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Set up low pass filter
+    filter = audioContext.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 440;
+    filter.Q.value = 1;
+    filter.gain.value = 0;
+    filter.connect(audioContext.destination);
+
+    // Set up channel merger
+    channelMerger = audioContext.createChannelMerger(maxAudioChannels);
+    channelMerger.connect(filter);
+}
+
+function randomNote() {
+    // a set of notes that harmonize with 440hz
+    let notes = [440, 220, 880, 660, 330, 1760, 1320];
+    return notes[Math.floor(Math.random() * notes.length)];
+}
+
+function nextAudioChannel() {
+    currentAudioChannel++
+    if (currentAudioChannel >= maxAudioChannels) {
+        currentAudioChannel = 0;
+    }
+    return currentAudioChannel;
+}
+
+function playTone (f, t) {
+    //if (audioContext) {
+        //for (let i = 0 ; i < 15; i ++) {
+            let totalTime = t + Math.random() * 1000 - 500;
+            let fadeStartTime = t/10 + Math.random() * 100 - 50
+
+            let oscillator = audioContext.createOscillator();
+            let gain = audioContext.createGain();
+
+            oscillator.connect(gain);
+            gain.connect(filter);
+            //gain.connect(channelMerger, 0, nextAudioChannel());
+
+            // Ramp up values to avoid annoying click sound
+            gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+
+            oscillator.type = "sine";
+            //let m = 4;
+            //oscillator.frequency.setValueAtTime(440 + (((Math.random() * 2 - 1) * m) * 440), audioContext.currentTime);
+
+            oscillator.frequency.setValueAtTime(f, audioContext.currentTime);
+
+            oscillator.start(0);
+
+            // TODO may eventually want to schedule these by checking timestamps. Whichever is more performant
+            console.log("start " + audioContext.currentTime);
+            setTimeout(function() {
+                console.log("fade " + audioContext.currentTime);
+                gain.gain.setValueAtTime(gain.gain.value, audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.0001, audioContext.currentTime + ((totalTime - fadeStartTime) / 1000 / 4));
+
+                setTimeout(function() {
+                    console.log("stop " + audioContext.currentTime);
+                    oscillator.stop(0);
+                }, totalTime - fadeStartTime);
+            }, fadeStartTime);
+        //}
+    //}
 }
 
 function rotateVectorAngle(vec, angle) {
@@ -1411,6 +1603,7 @@ function physicsUpdate (entity, entities, gravitySources, attachmentList, field)
 {
     entity.acceleration = {x:0, y:0};
 
+    let readStaticGrav = true;
     // assumes planets are first in the list of entities
     if (entity.orbit != undefined) {
         if (entity.orbit == -1) {
@@ -1419,6 +1612,7 @@ function physicsUpdate (entity, entities, gravitySources, attachmentList, field)
         } else {
             // TODO this will be an issue when planets are destroyed (orbit will be wrong)
             gravitySources = [entities[entity.orbit]];
+            readStaticGrav = false;
         }
     }
 
@@ -1448,11 +1642,13 @@ function physicsUpdate (entity, entities, gravitySources, attachmentList, field)
         // Each frame, for each planet, remove its gravity from the dynamic field at its location
         // Then move the planet and add its gravity back to the dynamic field at its new location
 
-    // Get gravity from each entity       
-    let fieldValue = getGravityFieldValue(entity, field);
-    if (fieldValue) {
-        entity.acceleration.x += fieldValue.x;
-        entity.acceleration.y += fieldValue.y;
+    if (readStaticGrav) {
+        // Get gravity from each entity
+        let fieldValue = getGravityFieldValue(entity, field);
+        if (fieldValue) {
+            entity.acceleration.x += fieldValue.x;
+            entity.acceleration.y += fieldValue.y;
+        }
     }
     for (let otherEntity of gravitySources) {
         if (otherEntity === entity || otherEntity.orbit === -1) {
@@ -1511,6 +1707,9 @@ function enemyUpdate(entity, timeMs, timeDelta) {
             launchVector = normalize(vectorToPlayer);
         }
 
+        // play a crunchy sound around low A
+        playTone(220, 50);
+
         // Create bullet
         // TODO line of sight
         state.bullets.push(makeEntity({
@@ -1548,10 +1747,16 @@ function bulletUpdate(entity, timeMs, timeDelta) {
     if (state.player) {
         let vectorToPlayer = subVec(state.player, entity);
         let normalizedVectorToPlayer = normalize(vectorToPlayer);
-        entity.velocity.x += normalizedVectorToPlayer.x * entity.shotAccel;
-        entity.velocity.y += normalizedVectorToPlayer.y * entity.shotAccel;
+        let movement = {x: normalizedVectorToPlayer.x * entity.shotAccel, y: normalizedVectorToPlayer.y * entity.shotAccel};
+
+        entity.velocity.x += movement.x;
+        entity.velocity.y += movement.y;
+
+        // TODO this doesn't look very good :c
+        outputFlameParticles(entity, movement);
     }
 
+    
     // Create some particles
     state.particles.push(makeEntity({
         entityType: "particle",
@@ -1563,7 +1768,8 @@ function bulletUpdate(entity, timeMs, timeDelta) {
         color: entity.color,
         lifetime: 10 + Math.random() * 20,
         update: particleUpdate,
-    })); 
+    }));
+    
 
     // Player collision
     if (state.player && circleCollision(entity, entity.radius, state.player, state.player.radius)) {
@@ -1574,6 +1780,7 @@ function bulletUpdate(entity, timeMs, timeDelta) {
 
     // Planet collisions
     // TODO pass planets in
+    // TODO merge with player. Could also have them bounce off planets? Would have to destroy them another way. Time?
     for (let planet of state.planets) {
         if (circleCollision(entity, entity.radius, planet, planet.radius)) {
             explodeEntity(entity);
@@ -1614,45 +1821,50 @@ function collectablesUpdate(entity, timeMs, timeDelta) {
     }));
 }
 
+function outputFlameParticles(entity, movement) {
+    for (let i = 0; i < 5; ++i) {
+        state.particles.push(makeEntity({
+            entityType: "particle",
+            x: entity.x + entity.velocity.x + movement.x,
+            y: entity.y + entity.velocity.y + movement.y,
+            radius: 2,
+            mass: 1,
+            velocity: {x: entity.velocity.x + -movement.x * 10 + Math.random() * 1 - 0.5, y: entity.velocity.y + -movement.y * 10 + Math.random() * 1 - 0.5},
+            color: entity.color, //"#ffaa00", // TODO move to render state later,
+            lifetime: 20 + Math.random() * 20,
+            update: particleUpdate,
+            removeOnSpeedThreshold: false
+        }));
+    }
+}
+
 function playerUpdate(entity, timeMs, timeDelta)
 {
-    /*
-    state.particles.push(makeEntity({
-        entityType: "particle", // TODO probably dont need to differentiate
-        x: entity.x + Math.random() * entity.radius / 2,
-        y: entity.y + Math.random() * entity.radius / 2,
-        radius: 1,
-        mass: 1,
-        velocity: {x: -entity.velocity.x + (Math.random() * 0.1) - 0.05, y: -entity.velocity.y + (Math.random() * 0.1) - 0.05},
-        color: entity.color, // TODO move to render state later,
-        lifetime: 100 + Math.random() * 100,
-        update: particleUpdate,
-    }));
-    */
-
-     // TODO put these constants somewhere
+    // TODO put these constants somewhere
     const maxSpeed = 10;
     const accel = 0.1;
     let movement = {x: 0, y: 0};
-    if (state.input.wPressed) {
-        movement.y -= accel;
-    }
-    if (state.input.aPressed) {
-        movement.x -= accel;
-    }
-    if (state.input.sPressed) {
-        movement.y += accel;
-    }
-    if (state.input.dPressed) {
-        movement.x += accel;
-    }
+    // TODO if (entity.hasControl !== false) {
+        if (state.input.wPressed) {
+            movement.y -= accel;
+        }
+        if (state.input.aPressed) {
+            movement.x -= accel;
+        }
+        if (state.input.sPressed) {
+            movement.y += accel;
+        }
+        if (state.input.dPressed) {
+            movement.x += accel;
+        }
 
-    // If mouse is down, override the movement vector and accelerate player towards the mouse position
-    if (state.input.mouseIsDown) {
-        let vectorToMouse = subVec({x: state.input.mouseX, y: state.input.mouseY}, entity);
-        let normalizedVectorToMouse = normalize(vectorToMouse);
-        movement = scaleVec(normalizedVectorToMouse, accel);
-    }
+        // If mouse is down, override the movement vector and accelerate player towards the mouse position
+        if (state.input.mouseIsDown) {
+            let vectorToMouse = subVec({x: state.input.mouseX, y: state.input.mouseY}, entity);
+            let normalizedVectorToMouse = normalize(vectorToMouse);
+            movement = scaleVec(normalizedVectorToMouse, accel);
+        }
+    // TODO }
 
     let isInputting = movement.x != 0 && movement.y != 0; 
 
@@ -1703,8 +1915,10 @@ function playerUpdate(entity, timeMs, timeDelta)
                         update: particleUpdate,
                     }));
                 }
-            }
 
+                // play a tone based on the magnitude of the impact and the planet size
+                playTone(220 + 100 * 10, mag(amount) * 100);
+            }
 
             if (planet.killOnContact) {
                 explodeEntity(entity);
@@ -1714,12 +1928,15 @@ function playerUpdate(entity, timeMs, timeDelta)
     }
 
     // Check collision with collectables. If we hit them, explode them
+    // TODO should be in collectable update fun?
     for (let collectable of state.collectables) {
         if (circleCollision(entity, entity.radius, collectable, collectable.radius)) {
             collectable.velocity.x = entity.velocity.x / 2;
             collectable.velocity.y = entity.velocity.y / 2;
             explodeEntity(collectable);
             state.score += 1;
+
+            playTone(randomNote(), 5000);
 
             if (state.collectables.length == 1) {
                 // Kill player on last collectable
@@ -1728,22 +1945,45 @@ function playerUpdate(entity, timeMs, timeDelta)
         }
     }
 
+    // lerp state.currentMovementVec to state.targetMovementVec
+    state.targetMovementVec = movement;
+    state.player.currentMovementVec = {
+        x: lerp(state.player.currentMovementVec.x, movement.x, 0.1),
+        y: lerp(state.player.currentMovementVec.y, movement.y, 0.1)
+    };
+
+    /*
+    state.particles.push(makeEntity({
+        entityType: "particle", // TODO probably dont need to differentiate
+        x: entity.x + Math.random() * entity.radius / 2,
+        y: entity.y + Math.random() * entity.radius / 2,
+        radius: 1,
+        mass: 1,
+        velocity: {x: -entity.velocity.x + (Math.random() * 0.1) - 0.05, y: -entity.velocity.y + (Math.random() * 0.1) - 0.05},
+        color: entity.color, // TODO move to render state later,
+        maxAlpha: 1,
+        lifetime: 100 + Math.random() * 100,
+        update: particleUpdate,,
+        removeOnSpeedThreshold: false
+    }));
+    */
+
+    state.particles.push(makeEntity({
+        entityType: "particle", // TODO probably dont need to differentiate
+        x: entity.x + entity.velocity.x + state.player.currentMovementVec.x + Math.random() * entity.radius / 2,
+        y: entity.y + entity.velocity.y + state.player.currentMovementVec.y + Math.random() * entity.radius / 2,
+        radius: 1,
+        mass: 1,
+        velocity: {x: entity.velocity.x - state.player.currentMovementVec.x * 10 + (Math.random() * 0.1) - 0.05, y: entity.velocity.y - state.player.currentMovementVec.y * 10 + (Math.random() * 0.1) - 0.05},
+        color: entity.color, // TODO move to render state later,
+        maxAlpha: 1,
+        lifetime: 100 + Math.random() * 100,
+        update: particleUpdate
+    }));
+
     // Output flame particles in the direction of your movement
     if (movement.x != 0 || movement.y != 0) {
-        for (let i = 0; i < 5; ++i) {
-            state.particles.push(makeEntity({
-                entityType: "particle",
-                x: entity.x + entity.velocity.x + movement.x,
-                y: entity.y + entity.velocity.y + movement.y,
-                radius: 2,
-                mass: 1,
-                velocity: {x: entity.velocity.x + -movement.x * 10 + Math.random() * 1 - 0.5, y: entity.velocity.y + -movement.y * 10 + Math.random() * 1 - 0.5},
-                color: entity.color, //"#ffaa00", // TODO move to render state later,
-                lifetime: 20 + Math.random() * 20,
-                update: particleUpdate,
-                removeOnSpeedThreshold: false
-            }));
-        }
+        outputFlameParticles(entity, movement);
     }
 
     // velocity vector with movement applied
@@ -1777,13 +2017,48 @@ function explodeEntity(entity) {
     if (!entity) {
         return;
     }
+
+    // TODO remove
+    if (entity === state.player) {
+        // A
+        //playTone(220, 10000);
+        // C#
+        //playTone(277.18, 10000);
+        // E
+        playTone(329.63, 1000);
+        setTimeout(function() {
+            // C#
+            playTone(277.18, 1000);
+            setTimeout(function() {
+                // A
+                playTone(220, 4000);
+                playTone(110, 8000);
+                setTimeout(function() {
+                    // D
+                    //playTone(293.66, 10000);
+                    // G
+                    //playTone(392, 10000);
+                }, 250);
+            }, 250);
+        }, 250);
+    } else if (entity.entityType === "planet") {
+        let sustain = entity.radius / 250;
+        playTone(225, 250 * sustain);
+        playTone(224, 500 * sustain);
+        playTone(223, 1000 * sustain);
+        playTone(222, 2000 * sustain);
+        playTone(221, 4000 * sustain);
+        playTone(220, 8000 * sustain);
+        playTone(165, 16000 * sustain);
+    }
+
     let x = entity.x;
     let y = entity.y;
     let radius = entity.radius;
     let color = entity.color;
 
     let numParticles = entity.radius * entity.radius;
-    if (numParticles > 500) {
+    if (numParticles > 5000) {
         numParticles = 5000;
     }
 
@@ -1922,6 +2197,8 @@ function randomInt(loInclusive, hiExclusive)
 
 var timeSinceLastUpdate = 0;
 var previousTimeMs = 0;
+let frameTimestamps = [];
+let fpsCount = 60;
 function gameLoop(timeElapsed)
 {
     window.requestAnimationFrame(gameLoop);
@@ -1937,6 +2214,28 @@ function gameLoop(timeElapsed)
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
         update(timeElapsed, frameTime);
+
+        frameTimestamps.push(timeElapsed);
+        if (frameTimestamps.length > 10) {
+            frameTimestamps.shift();
+
+            // take average as fps count
+            let sum = 0;
+            for (let i = 1; i < frameTimestamps.length; ++i) {
+                sum += frameTimestamps[i] - frameTimestamps[i - 1];
+            }
+            fpsCount = 1000 / (sum / frameTimestamps.length);
+        }
+
+        if (fpsCount < 60) {
+            // Remove some of the particles
+            let numParticles = state.particles.length;
+            let numToRemove = Math.floor(numParticles * (0.01 * (60 / fpsCount)));
+            for (let i = 0; i < numToRemove/2; ++i) {
+                state.particles[i].exists = false;
+                state.particles[numParticles - 1 - i].exists = false;
+            }
+        }
     }
 
     state.timestamp = timeElapsed;
@@ -2069,6 +2368,7 @@ function start()
 
     initEvents();
     initShaders();
+    initAudio();
     startGame();
 
     window.requestAnimationFrame(gameLoop);

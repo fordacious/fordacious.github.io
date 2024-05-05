@@ -1033,7 +1033,7 @@ const map_sound_and_border_test = {
 };
 
 const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test];
-let currentLevel = 9;
+let currentLevel = 7;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }

@@ -64,6 +64,8 @@ Level where you dont control player, you control gravity of object to get it tow
 
 Make sound design entirely sine ways and cyclical things. Remove voyagers. Start intro with beat timed to player orbit and tone based on current gravity, speed and position
 
+Now that we have a barrier, it is meaningful when we remove it :)
+
 Then XR architecture + Hand interaction game. (Playable on desktop and mobile too). That or PD / DE style fps? Use webXR (aframe, 3js) or existing engine (vrchat?)
     Explore fractal?
 */
@@ -902,6 +904,12 @@ const map_homing_2 = {
         velocity: {x: 0, y: 0},
         shot: "homing",
         color: "#ddffee",
+    }],
+    misc: [{
+        entityType: "border", // TODO implement as planets using shell theorem?
+        x: 0,
+        y: 0,
+        radius: 2500
     }]
 };
 
@@ -1023,11 +1031,12 @@ const map_sound_and_border_test = {
         color: "#ffff00",
     }],
     // TODO implement and render border
+    // TODO make specific property?
     misc: [{
-        entityType: "border",
+        entityType: "border", // TODO implement as planets using shell theorem?
         x: 0,
         y: 0,
-        radius: 20000
+        radius: 2500
     }] // TODO entities that control the game state / sequence things
     // TODO Make intro
 };
@@ -1259,6 +1268,8 @@ function initState(json) {
         bullets: levelData.bullets || [], // TODO can probably factor this out. Just need render function
         particles: makeInitParticles(),
         field: makeField(),
+        misc: levelData.misc || [],
+        // TODO could compute this statically
         gravityField: makeGravityField(levelData.planets || []), // TODO update into a secondary map then swap them?
         input: {
             wPressed: false,
@@ -1309,12 +1320,6 @@ function render(state) {
 
     renderField(state.field);
 
-    // Draw player circle
-    if (state.player) {
-        drawCircle({x: state.player.x, y: state.player.y}, state.player.radius, state.player.color);
-    }
-
-
     // Draw particles
     for (let particle of state.particles) {
         let color = particle.color;
@@ -1362,6 +1367,20 @@ function render(state) {
         drawCircle({x: collectable.x, y: collectable.y}, collectable.radius * 1.2, collectable.color, true);
     }
     context.restore();
+
+    // render misc
+    for (var i = 0; i < state.misc.length; i++) {
+        let entity = state.misc[i];
+        if (entity.entityType === "border") {
+            // Render as a thin hollow circle
+            drawHollowCircle({x: entity.x, y: entity.y}, entity.radius, "#ffffff");
+        }
+    }
+
+    // Draw player circle last so its on top at all times
+    if (state.player) {
+        drawCircle({x: state.player.x, y: state.player.y}, state.player.radius, state.player.color);
+    }
 }
 
 // Audio
@@ -1515,6 +1534,15 @@ function drawCircle(worldPos, radius, fillStyle, isGradient)
         context.fillStyle = fillStyle;
     }
     context.fill();
+}
+
+function drawHollowCircle(worldPos, radius, strokeStyle)
+{
+    let coords = worldToCamera(worldPos.x, worldPos.y);
+    context.beginPath();
+    context.arc(coords.x, coords.y, radius / state.camera.scale, 0, 2 * Math.PI);
+    context.strokeStyle = strokeStyle;
+    context.stroke();
 }
 
 function drawRectangle(worldPos, width, height, fillStyle) {
@@ -1927,6 +1955,58 @@ function playerUpdate(entity, timeMs, timeDelta)
         }
     }
 
+    // If there is a border in misc, and we hit it, bounce off
+    // TODO factor this
+    for (let border of state.misc) {
+        if (border.entityType === "border") {
+            if (!circleCollision(entity, entity.radius, border, border.radius)) {
+                // First move the player such that is colliding (back inside border)
+                let normal = normalize(subVec(entity, border));
+                let distance = dist(entity, border);
+                let overlap = entity.radius + border.radius - distance;
+                entity.x += normal.x * overlap;
+                entity.y += normal.y * overlap;
+
+                // Bounce off
+                let velocityDifference = entity.velocity;
+                let dot = dotProduct(velocityDifference, normal);
+                let bounceFriction = 0.8;
+                let bounceFactor = 1; // TODO was 2
+                let amount = scaleVec(normal, 2 * dot * bounceFriction * (isInputting ? bounceFactor : 1));
+                entity.velocity = subVec(entity.velocity, amount);
+                let surfaceFriction = 0.95;
+                entity.velocity.x *= surfaceFriction;
+                entity.velocity.y *= surfaceFriction;
+
+                // Make a particle burst
+                if (mag(amount) > 5) {
+                    for (let i = 0; i < 100; ++i) {
+                        state.particles.push(makeEntity({
+                            entityType: "particle",
+                            x: entity.x,
+                            y: entity.y,
+                            radius: 1,
+                            mass: 1,
+                            // Velocity should be amount * random offset
+                            //velocity: {x: -amount.x / 5 + Math.random() * 4 - 2, y: -amount.y / 5 + Math.random() * 4 - 2},
+                            velocity: {x: Math.random() * 10 - 5, y: Math.random() * 10 - 5},
+                            color: "#ffffff", // TODO move to render state later,
+                            lifetime: 100 + Math.random() * 400,
+                            update: particleUpdate,
+                        }));
+                    }
+
+                    // play a tone based on the magnitude of the impact and the planet size
+                    // Modulate the frequency based on the location of the entity
+                    let normalizedEntityVectorFromCenter = normalize(entity);
+                    let angle = Math.atan2(normalizedEntityVectorFromCenter.y, normalizedEntityVectorFromCenter.x);
+                    let frequency = 220 + (angle + 3.14 / 2) * 10;
+                    playTone(frequency, mag(amount) * 100);
+                }
+            }
+        }
+    }
+
     // Check collision with collectables. If we hit them, explode them
     // TODO should be in collectable update fun?
     for (let collectable of state.collectables) {
@@ -2207,6 +2287,7 @@ function gameLoop(timeElapsed)
     timeSinceLastUpdate += timeDelta;
     previousTimeMs = timeElapsed;
 
+    // TODO add this back in without breaking particles
     //if (timeSinceLastUpdate > frameTime * 3) {
     //    timeSinceLastUpdate = frameTime;
     //}

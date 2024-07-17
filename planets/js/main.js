@@ -48,7 +48,8 @@ Simple sounds to create a dynamic soundscape to complement the flowing visuals a
 Map where you have to control things homing in on you / orbiting you to take them somewhere or hit something else
     Maybe there is a destructable object blocking where you need to go? Or another enemy?
 
-Opening. Text title, fade it, player orbiting planet, gain control, music kicks in (Voyager), more planets and collectables appear, this is the tutorial, get a sense of controls and how to move, once collected all things around planet it explodes, once collected all collectables warp to next level opens up.  
+Opening. Text title, fade it, player orbiting planet, gain control, music kicks in (Voyager), more planets and collectables appear, this is the tutorial,
+get a sense of controls and how to move, once collected all things around planet it explodes, once collected all collectables warp to next level opens up.  
 
 Level end - black hole appears - hyperspace effect with background shader
 
@@ -1041,14 +1042,82 @@ const map_sound_and_border_test = {
     // TODO Make intro
 };
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test];
-let currentLevel = 7;
+const map_new_test = {
+    seed: -0.5,
+    name: "map_new_test",
+    player: {entityType: "player", x: 0, y: -400, radius: 10, mass: 1, velocity: {x:-3, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [
+        {
+            entityType: "planet",
+            x: -500,
+            y: 0,
+            radius: 200,
+            mass: 7000,
+            velocity: {x: 0, y: 4},
+            color: "#ff0000",
+        },
+        {
+            entityType: "planet",
+            x: 500,
+            y: 0,
+            radius: 200,
+            mass: 7000,
+            velocity: {x: 0, y: -4},
+            color: "#0000ff",
+        },
+        {
+            entityType: "planet",
+            x: 0,
+            y: 500,
+            radius: 200,
+            mass: 7000,
+            velocity: {x: 4, y: 0},
+            color: "#00ff00",
+        }
+    ],
+    collectables: [
+        {
+            entityType: "collectable",
+            x: -300,
+            y: 200,
+            radius: 20,
+            mass: 1,
+            orbit: -1,
+            velocity: {x: 0, y: 0},
+            color: "#ffff00",
+        },
+        {
+            entityType: "collectable",
+            x: 300,
+            y: 200,
+            radius: 20,
+            mass: 1,
+            orbit: -1,
+            velocity: {x: 0, y: 0},
+            color: "#ffff00",
+        },
+        {
+            entityType: "collectable",
+            x: 0,
+            y: -300,
+            radius: 20,
+            mass: 1,
+            orbit: -1,
+            velocity: {x: 0, y: 0},
+            color: "#ffff00",
+        }
+    ],
+    misc: [] // TODO entities that control the game state / sequence things
+};
+
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test];
+let currentLevel = 10;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }
 
 function loadLevelFromJSON(json) {
-
     let mapobj = JSON.parse(json);
 
     mapobj.planets = mapobj.planets || [];

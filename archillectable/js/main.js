@@ -20,6 +20,8 @@ import { Capsule } from 'three/addons/math/Capsule.js';
 
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
+import {VRButton} from 'three/addons/webxr/VRButton.js';
+
 window.onload = start;
 
 let canvas = null;
@@ -385,6 +387,31 @@ function gameLoop(timeElapsed) {
     scene.fog.near = 1;
     scene.fog.far = 200;
 
+    // vr controllers
+    const session = renderer.xr.getSession();
+    if (session) {
+        state.aPressed = false;
+        state.dPressed = false;
+        state.wPressed = false;
+        state.sPressed = false;
+        for (let i = 0; i < session.inputSources.length; i++) {
+            let source = session.inputSources[i];
+            if (source.gamepad.axes.size >= 1) {
+                // Set state input based on the thumbstick state
+                if (source.gamepad.axes[0] < -0.5) {
+                    state.aPressed = true;
+                } else if (source.gamepad.axes[0] > 0.5) {
+                    state.dPressed = true;
+                }
+                if (source.gamepad.axes[1] < -0.5) {
+                    state.wPressed = true;
+                } else if (source.gamepad.axes[1] > 0.5) {
+                    state.sPressed = true;
+                }
+            }
+        }
+    }
+
     if (timeSinceLastUpdate > frameTime * 3) {
         timeSinceLastUpdate = frameTime;
     }
@@ -510,6 +537,7 @@ function initThreejs() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.VSMShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    document.body.appendChild(VRButton.createButton(renderer));
     container.appendChild(renderer.domElement);
 
     let mouseTime = 0;

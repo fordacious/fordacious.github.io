@@ -40,5 +40,25 @@
         }
     </script>
     <script type="module" src="js/main.js"></script>
+    <!-- Button which enters XR in threejs when pressed -->
+     <button id="enter-xr">Enter VR</button>
+     <script>
+        const button = document.getElementById('enter-xr');
+        button.addEventListener('click', () => {
+            if (!navigator.xr) {
+                alert('WebXR is not supported by your browser.');
+                return;
+            }
+            const sessionInit = { requiredFeatures: [] };
+            navigator.xr.requestSession('immersive-vr', sessionInit)
+                .then(session => {
+                    console.log('WebXR session started successfully.');
+                })
+                .catch(err => {
+                    alert(`Failed to start WebXR session: ${err}`);
+                    console.error(err);
+                });
+        });
+    </script>
 </body>
 </html>

@@ -9,30 +9,30 @@
 
 // DREEEEEEEEEEEEEEEEAMS. The beauty of dreams.
 
+// ~~~ Vibes vibes vibes ~~~
+
+// TODO for now turn into abstract ball bouncing game where you clone you'reself
+// Ball comes out
+// You bounce ball with paddles via clones into goal
+// How to make difficult / interesting?
+// Can make meaningful
+// Env should be abstract initially. Quick to model in blender. Could even just describe in code
+// Could make it mixed reality on surfaces? Would be a good spatial entities test. Maybe later, and do VR for now.
+// Score on number of hops and speed to completion (encourage whacking the shit out of the ball but also being accurate)
+
 import * as THREE from 'three';
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
 import { Octree } from 'three/addons/math/Octree.js';
 import { OctreeHelper } from 'three/addons/helpers/OctreeHelper.js';
-
 import { Capsule } from 'three/addons/math/Capsule.js';
-
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-
 import {VRButton} from 'three/addons/webxr/VRButton.js';
 
 window.onload = start;
 
 let canvas = null;
-let context = null;
 let state = null;
-
-// Threejs stuff
-let mouseX = 0, mouseY = 0;
-
-let windowHalfX = window.innerWidth / 2;
-let windowHalfY = window.innerHeight / 2;
 
 const frameTime = 1000 / 60;
 

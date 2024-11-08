@@ -69,7 +69,21 @@ Now that we have a barrier, it is meaningful when we remove it :)
 
 Then XR architecture + Hand interaction game. (Playable on desktop and mobile too). That or PD / DE style fps? Use webXR (aframe, 3js) or existing engine (vrchat?)
     Explore fractal?
+
+Give planets trails?
+
+Distance field gravity rendering?
+
+https://en.wikipedia.org/wiki/Three-body_problem#/media/File:5_4_800_36_downscaled.gif
+http://three-body.ipb.ac.rs/
+https://observablehq.com/@rreusser/periodic-planar-three-body-orbits
+https://www.youtube.com/watch?v=9U6J_D0LphA
+
+Is it possible to implement a lorenz attractor? Do we need more than gravity? Differentiate to get accelration based on position and place static planets there?
+
 */
+
+const USE_TANK_CONTROLS = false;
 
 let canvas = null;
 let context = null;
@@ -396,9 +410,22 @@ function cameraToWorld(x, y) {
 }
 
 // Convert world coordinates to camera coordinates with scale
-function worldToCamera(x, y) {
-    return {x: (x - state.camera.x) / state.camera.scale + state.camera.width / 2,
-            y: (y - state.camera.y) / state.camera.scale + state.camera.height / 2};
+// TODO angle doesn't work
+function worldToCamera(x, y, angle = 0) {
+    if (angle == 0) {
+        return {x: (x - state.camera.x) / state.camera.scale + state.camera.width / 2,
+                y: (y - state.camera.y) / state.camera.scale + state.camera.height / 2};
+    }
+
+    let camera = {x: state.camera.x, y: state.camera.y};
+    let cosAngle = Math.cos(-angle);
+    let sinAngle = Math.sin(-angle);
+    let tempX = x - camera.x;
+    let tempY = y - camera.y;
+    camera.x = tempX * cosAngle - tempY * sinAngle + state.camera.width / 2;
+    camera.y = tempX * sinAngle + tempY * cosAngle + state.camera.height / 2;
+
+    return camera;
 }
 
 function makeEntity(props) {
@@ -1327,6 +1354,7 @@ function initState(json) {
     let levelData = loadLevelFromJSON(json);
     console.log(levelData);
     state = {
+        timestamp: 0,
         gameOver: false,
         seed: levelData.seed || 0,
         camera: levelData.camera,
@@ -1963,6 +1991,11 @@ function playerUpdate(entity, timeMs, timeDelta)
         }
     // TODO }
 
+    if (USE_TANK_CONTROLS) {
+        // Rotate movement vector based on mouse position relative to player
+        // TODO
+    }
+
     let isInputting = movement.x != 0 && movement.y != 0; 
 
     // For each planet, if its colliding, bounce off
@@ -2249,6 +2282,16 @@ function update (timeMs, timeDelta)
         state.camera.y += (targetY - state.camera.y) * state.camera.easeFactor;
     }
 
+    if (USE_TANK_CONTROLS) {
+        // Rotate the camera based on the mouse position relative to the player
+        if (state.player && state.mouseX !== null && state.mouseY !== null) {
+            //ddddddddlet dx = state.mouseX - (state.player.x + 16);
+            //let dy = state.mouseY - (state.player.y + 16);
+            //let angle = Math.atan2(dy, dx) * RAD_TO_DEG;
+
+        }           
+    }
+
     // Add all the stuff to entities list
     var nonparticles = (state.player ? [state.player] : []).concat(state.planets);
     var entities = [].concat(state.planets) // TODO right now we're making the assumption that planets are always first. Should fix this at some point with an entity ID system insted of indices
@@ -2357,9 +2400,9 @@ function gameLoop(timeElapsed)
     previousTimeMs = timeElapsed;
 
     // TODO add this back in without breaking particles
-    //if (timeSinceLastUpdate > frameTime * 3) {
-    //    timeSinceLastUpdate = frameTime;
-    //}
+    if (timeSinceLastUpdate > frameTime * 3) {
+        timeSinceLastUpdate = frameTime;
+    }
 
     while (timeSinceLastUpdate >= frameTime) {
         timeSinceLastUpdate -= frameTime;
@@ -2388,7 +2431,7 @@ function gameLoop(timeElapsed)
         }
     }
 
-    state.timestamp = timeElapsed;
+    state.timestamp += timeDelta;
     renderShaders(state);
     render(state);
 }

@@ -1138,8 +1138,65 @@ const map_new_test = {
     misc: [] // TODO entities that control the game state / sequence things
 };
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test];
-let currentLevel = 10;
+let d = 500;
+let m = 5000;
+let v = 2;
+let vx = v * 0.9;
+let vy = v * -1.5;
+const map_lucidity_logo = {
+    seed: -0.5,
+    name: "map_lucidity_logo",
+    player: {entityType: "player", x: 0, y: 0, radius: 10, mass: 1, velocity: {x:vx, y: vy}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [
+        {
+            entityType: "planet",
+            x: 0,
+            y: d,
+            radius: 50,
+            mass: m,
+            velocity: {x: 0, y: 0},
+            color: "#00ff00",
+            orbit: -1,
+        },
+        {
+            entityType: "planet",
+            x: 0,
+            y: -d,
+            radius: 50,
+            mass: m,
+            velocity: {x: 0, y: 0},
+            color: "#00ff00",
+            orbit: -1,
+        },
+        {
+            entityType: "planet",
+            x: d,
+            y: 0,
+            radius: 50,
+            mass: m,
+            velocity: {x: 0, y: 0},
+            color: "#00ff00",
+            orbit: -1,
+        },
+        {
+            entityType: "planet",
+            x: -d,
+            y: 0,
+            radius: 50,
+            mass: m,
+            velocity: {x: 0, y: 0},
+            color: "#00ff00",
+            orbit: -1,
+        }
+    ],
+    collectables: [
+    ],
+    misc: [] // TODO entities that control the game state / sequence things
+};
+
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo];
+let currentLevel = 11;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }

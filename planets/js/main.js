@@ -1138,65 +1138,147 @@ const map_new_test = {
     misc: [] // TODO entities that control the game state / sequence things
 };
 
-let d = 500;
+// let d = 500;
+// let m = 5000;
+// let v = 2;
+// let vx = v * 0.9;
+// let vy = v * -1.5;
+// const map_lucidity_logo = {
+//     seed: -0.5,
+//     name: "map_lucidity_logo",
+//     player: {entityType: "player", x: 0, y: 0, radius: 10, mass: 1, velocity: {x:vx, y: vy}, color: "#00ffff"},
+//     camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+//     planets: [
+//         {
+//             entityType: "planet",
+//             x: 0,
+//             y: d,
+//             radius: 50,
+//             mass: m,
+//             velocity: {x: 0, y: 0},
+//             color: "#00ff00",
+//             orbit: -1,
+//         },
+//         {
+//             entityType: "planet",
+//             x: 0,
+//             y: -d,
+//             radius: 50,
+//             mass: m,
+//             velocity: {x: 0, y: 0},
+//             color: "#00ff00",
+//             orbit: -1,
+//         },
+//         {
+//             entityType: "planet",
+//             x: d,
+//             y: 0,
+//             radius: 50,
+//             mass: m,
+//             velocity: {x: 0, y: 0},
+//             color: "#00ff00",
+//             orbit: -1,
+//         },
+//         {
+//             entityType: "planet",
+//             x: -d,
+//             y: 0,
+//             radius: 50,
+//             mass: m,
+//             velocity: {x: 0, y: 0},
+//             color: "#00ff00",
+//             orbit: -1,
+//         }
+//     ],
+//     collectables: [
+//     ],
+//     misc: [] // TODO entities that control the game state / sequence things
+// };
+
+const map_lucidity_logo = {};
+
 let m = 5000;
-let v = 2;
-let vx = v * 0.9;
-let vy = v * -1.5;
-const map_lucidity_logo = {
-    seed: -0.5,
-    name: "map_lucidity_logo",
-    player: {entityType: "player", x: 0, y: 0, radius: 10, mass: 1, velocity: {x:vx, y: vy}, color: "#00ffff"},
-    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
-    planets: [
-        {
-            entityType: "planet",
-            x: 0,
-            y: d,
-            radius: 50,
-            mass: m,
-            velocity: {x: 0, y: 0},
-            color: "#00ff00",
-            orbit: -1,
-        },
-        {
-            entityType: "planet",
-            x: 0,
-            y: -d,
-            radius: 50,
-            mass: m,
-            velocity: {x: 0, y: 0},
-            color: "#00ff00",
-            orbit: -1,
-        },
-        {
-            entityType: "planet",
-            x: d,
-            y: 0,
-            radius: 50,
-            mass: m,
-            velocity: {x: 0, y: 0},
-            color: "#00ff00",
-            orbit: -1,
-        },
-        {
-            entityType: "planet",
-            x: -d,
-            y: 0,
-            radius: 50,
-            mass: m,
-            velocity: {x: 0, y: 0},
-            color: "#00ff00",
-            orbit: -1,
-        }
-    ],
-    collectables: [
-    ],
-    misc: [] // TODO entities that control the game state / sequence things
+let d = 250;
+let v = 2.25;
+const map_lucidity_rotation = {
+    seed: 0.5,
+    name: "map_lucidity_rotation",
+    //player: {entityType: "player", x: 0, y: -100, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: 0,
+        y: 0,
+        radius: 0,
+        mass: 0,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        emitParticles: true,
+        orbit: 0,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: d,
+        radius: 50,
+        mass: m,
+        velocity: {x: v, y: 0},
+        color: "#eeeeee",
+        orbit: 2,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -d,
+        radius: 50,
+        mass: m,
+        velocity: {x: -v, y: 0},
+        color: "#eeeeee",
+        orbit: 1,
+    }]
 };
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo];
-let currentLevel = 11;
+const map_lucidity_static = {
+    seed: 0.5,
+    name: "map_lucidity_static",
+    //player: {entityType: "player", x: 0, y: -100, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: -50,
+        y: 0,
+        radius: 0,
+        mass: 0,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        emitParticles: true,
+        particleVelocityBias: { x: 3.5, y: -2.5 },
+        orbit: 0,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: d,
+        radius: 10,
+        mass: m,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        orbit: 1,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -d,
+        radius: 10,
+        mass: m,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        orbit: 2,
+    }]
+};
+
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo, map_lucidity_rotation, map_lucidity_static];
+let currentLevel = 13;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }
@@ -1208,10 +1290,12 @@ function loadLevelFromJSON(json) {
     mapobj.collectables = mapobj.collectables || [];
     mapobj.enemies = mapobj.enemies || [];
 
-    mapobj.player.update = playerUpdate;
-    mapobj.player.currentMovementVec = {x: 0, y:0}; // TODO where to init these? Shouldn't put in level data
-    mapobj.player.targetMovementVec = {x: 0, y:0}; 
-    mapobj.player.exists = true;
+    if (mapobj.player) {
+        mapobj.player.update = playerUpdate;
+        mapobj.player.currentMovementVec = {x: 0, y:0}; // TODO where to init these? Shouldn't put in level data
+        mapobj.player.targetMovementVec = {x: 0, y:0}; 
+        mapobj.player.exists = true;
+        }
 
     for (let planet of mapobj.planets) {
         if (planet.color === "RANDOM") {
@@ -1869,6 +1953,26 @@ function removeEntity(e)
 }
 
 function planetUpdate(entity, timeMs, timeDelta) {
+    // TODO should probably be generic entity or component on entity
+    if (entity.emitParticles) {
+        let v = 0.1;
+        let sign = Math.random() > 0.5 ? 1 : -1;
+        state.particles.push(makeEntity({
+            entityType: "particle", // TODO probably dont need to differentiate
+            x: entity.x + entity.velocity.x +  + Math.random() * entity.radius / 2,
+            y: entity.y + entity.velocity.y +  + Math.random() * entity.radius / 2,
+            radius: 1,
+            mass: 1,
+            velocity: {
+                x: entity.velocity.x + ((Math.random() * v) - (v * 0.5) + entity.particleVelocityBias.x),
+                y: entity.velocity.y + ((Math.random() * v) - (v * 0.5) + entity.particleVelocityBias.y)
+            },
+            color: entity.color, // TODO move to render state later,
+            maxAlpha: 1,
+            lifetime: 300 + Math.random() * 10,
+            update: particleUpdate
+        }));
+    }
 }
 
 function enemyUpdate(entity, timeMs, timeDelta) {
@@ -2367,7 +2471,7 @@ function update (timeMs, timeDelta)
             maxDist = dist;
         }
     }
-    state.camera.targetScale = state.player ? Math.max(2, maxDist / 400) : 5;
+    state.camera.targetScale = state.player ? Math.max(2, maxDist / 400) : (state.camera.maxScale || 5);
 
     // TODO Attaching behavior
         // If an entity is attached, it should move with that entity

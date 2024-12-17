@@ -1242,7 +1242,7 @@ const map_lucidity_static = {
     seed: 0.5,
     name: "map_lucidity_static",
     //player: {entityType: "player", x: 0, y: -100, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
-    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 2, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 1.5, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
     planets: [{
         entityType: "planet",
         x: -50,
@@ -1262,7 +1262,7 @@ const map_lucidity_static = {
         radius: 10,
         mass: m,
         velocity: {x: 0, y: 0},
-        color: "#eeeeee",
+        color: "#444444",
         orbit: 1,
     },
     {
@@ -1272,13 +1272,131 @@ const map_lucidity_static = {
         radius: 10,
         mass: m,
         velocity: {x: 0, y: 0},
-        color: "#eeeeee",
+        color: "#ffffff",
         orbit: 2,
+    },
+    {
+        entityType: "planet",
+        x: 105,
+        y: 0,
+        radius: 0,
+        mass: 0,
+        velocity: {x: 0, y: 0},
+        color: "#ffffff",
+        emitParticles: true,
+        particleVelocityBias: { x: -3, y: 2.35 },
+        orbit: 3,
     }]
 };
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo, map_lucidity_rotation, map_lucidity_static];
-let currentLevel = 13;
+const map_lucidity_static_2 = {
+    seed: 0.5,
+    name: "map_lucidity_static_2",
+    //player: {entityType: "player", x: 0, y: -100, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 1.5, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: -105,
+        y: 0,
+        radius: 0,
+        mass: 0,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        emitParticles: true,
+        particleVelocityBias: { x: 3, y: -2.5 },
+        orbit: 0,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: d,
+        radius: 10,
+        mass: 6000,
+        velocity: {x: 0, y: 0},
+        color: "#444444",
+        orbit: 1,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -d,
+        radius: 10,
+        mass: 5000,
+        velocity: {x: 0, y: 0},
+        color: "#ffffff",
+        orbit: 2,
+    },
+    // {
+    //     entityType: "planet",
+    //     x: 105,
+    //     y: 0,
+    //     radius: 0,
+    //     mass: 0,
+    //     velocity: {x: 0, y: 0},
+    //     color: "#ffffff",
+    //     emitParticles: true,
+    //     particleVelocityBias: { x: -3, y: 2.35 },
+    //     orbit: 3,
+    // },
+    ]
+};
+
+// TODO lower case cursive l loop
+const map_lucidity_static_3 = {
+    seed: 0.5,
+    name: "map_lucidity_static_3",
+    //player: {entityType: "player", x: 0, y: -100, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, maxScale: 1.5, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    planets: [{
+        entityType: "planet",
+        x: -105,
+        y: 0,
+        radius: 0,
+        mass: 0,
+        velocity: {x: 0, y: 0},
+        color: "#eeeeee",
+        emitParticles: true,
+        particleVelocityBias: { x: 5, y: -3.125 },
+        orbit: 0,
+    },
+    {
+        entityType: "planet",
+        x: 0,
+        y: -d,
+        radius: 10,
+        mass: 10000,
+        velocity: {x: 0, y: 0},
+        color: "#ffffff",
+        orbit: 1,
+    },
+    {
+        entityType: "planet",
+        x: -450,
+        y: -d,
+        radius: 10,
+        mass: -3000,
+        velocity: {x: 0, y: 0},
+        color: "#444444",
+        orbit: 2,
+    },
+    // {
+    //     entityType: "planet",
+    //     x: 105,
+    //     y: 0,
+    //     radius: 0,
+    //     mass: 0,
+    //     velocity: {x: 0, y: 0},
+    //     color: "#ffffff",
+    //     emitParticles: true,
+    //     particleVelocityBias: { x: -3, y: 2.35 },
+    //     orbit: 3,
+    // },
+    ]
+};
+
+
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo, map_lucidity_rotation, map_lucidity_static, map_lucidity_static_2, map_lucidity_static_3];
+let currentLevel = 15;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }

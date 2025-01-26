@@ -27,12 +27,15 @@
 // Could make this a multiplayer turn based cooperative effort.
 
 // TODO
+    // Fix collisions (can fall through things with enough velocity)
+    // Fix mouse control (less important for XR play)
     // Implement start button
     // Implement ability to record
     // Implement VR movement
     // Implement map loading
     // Fix up graphics
         // e.g. https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e
+    // Implement levels
     // Fit and finish
 
 import * as THREE from 'three';
@@ -98,6 +101,7 @@ function makeBall (pos, radius) {
     let entity = makeEntity({
         entityType: "ball",
         update: ballUpdate,
+        mass: 1,
         radius: radius,
         collider: new THREE.Sphere( pos, SPHERE_RADIUS ),
         mesh: sphere,
@@ -111,15 +115,48 @@ function makeBall (pos, radius) {
     return entity;
 }
 
+// make paddle
+function makePaddle(hand) {
+    const boxGeometry = new THREE.BoxGeometry( 0.4, 0.4, 0.05 );
+    const boxMaterial = new THREE.MeshLambertMaterial( { color: 0x8b4513 } );
+    let mesh = new THREE.Mesh( boxGeometry, boxMaterial );
+
+    mesh.position.x = 1;
+    mesh.position.y = 1;
+    mesh.position.z = 10;
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add( mesh );
+
+    let collider = new THREE.Box3();
+    boxGeometry.computeBoundingBox();
+
+    return makeEntity({
+        entityType: "paddle",
+        hand: hand,
+        //update: paddleUpdate // needed?
+        collider: collider,
+        mesh: mesh
+    })
+}
+
+// TODO how to reference left and right hand?
+const LEFT_HAND = "left";
+const RIGHT_HAND = "right";
+
 function initState() {
     state = {
         gameOver: false,
         player: makeEntity({
             entityType: "player",
             grounded: false,
+            noclip: false,
             update: playerUpdate,
             collider: new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35)
         }),
+        leftPaddle: makePaddle(LEFT_HAND),
+        rightPaddle: makePaddle(RIGHT_HAND),
         input: {
             wPressed: false,
             sPressed: false,
@@ -127,13 +164,14 @@ function initState() {
             dPressed: false,
             ePressed: false,
             rPressed: false,
+            cPressed: false,
             spacePressed: false
         },
         round: 0,
         recordings: [],
         currentRecording: [],
         timeToSpawn: 5000,
-        roundTimeLimit: 15000,
+        roundTimeLimit: 20000,
         ball: null,
         start: null,
         end: null,
@@ -143,13 +181,11 @@ function initState() {
 
 function startNextRound() {
     console.log("next round started");
-    // TODO remove current ball
     // TODO save recording
     state.round += 1;
     state.timeToSpawn = 5000; // TODO defaults for these
-    state.roundTimeLimit = 15000;
+    state.roundTimeLimit = 20000;
 
-    // TODO remove old ball
     scene.remove(state.ball.mesh);
     state.ball = null;
 }
@@ -165,6 +201,12 @@ function render(state) {
 }
 
 function physicsUpdate(entity, entities, timeDelta) {
+    if (entity.entityType === "paddle") {
+        // TODO derive the velocity from the players controller movement
+        entity.collider.copy( entity.mesh.geometry.boundingBox ).applyMatrix4( entity.mesh.matrixWorld );
+        entityCollisions(entity);
+        return;
+    }
     if (entity == state.player) {
         let damping = Math.exp(-4 * timeDelta) - 1;
         if (!entity.grounded) {
@@ -178,7 +220,11 @@ function physicsUpdate(entity, entities, timeDelta) {
         const deltaPosition = entity.velocity.clone().multiplyScalar(timeDelta);
         entity.collider.translate(deltaPosition);
 
-        entityCollisions(entity);
+        if (!entity.noclip) {
+            entityCollisions(entity);
+        } else {
+            entity.grounded = true;
+        }
 
         camera.position.copy(entity.collider.end);
     } else {
@@ -212,9 +258,45 @@ function removeEntity(e) {
 }
 
 function entityCollisions(entity) {
+    if (entity.entityType == "paddle") {
+        if (state.ball) {
+            let ball = state.ball.collider;
+            let paddle = entity.collider;
+
+            // TODO to do this properly, we'll need to use ray intersection with the velocity of the paddle (i.e. project the paddle box along its velocity vector)
+
+            // AABB / Sphere collision check
+            let ballPos = ball.center;
+            let paddleCenter = new THREE.Vector3();
+            let paddlePos = paddle.getCenter(paddleCenter);
+            let ballRadius = ball.radius;
+            let distance = ballPos.distanceTo(paddlePos);
+
+            let paddleHalfSize = new THREE.Vector3().subVectors(paddle.max, paddle.min).multiplyScalar(0.5);
+            
+            // Collision detection using AABB / Sphere method
+            if (distance < ballRadius + paddleHalfSize.x && Math.abs(ballPos.y - paddlePos.y) < paddleHalfSize.y) {
+                // Response
+                let normal = new THREE.Vector3().subVectors(ballPos, paddlePos).normalize();
+                let dotVelocity = normal.dot(state.ball.velocity);
+                let newVelocity = dotVelocity > 0 ? state.ball.velocity.clone().multiplyScalar(1) : state.ball.velocity.clone().addScaledVector(normal, -2 * dotVelocity);
+                state.ball.velocity.copy(newVelocity);
+                state.ball.position.addScaledVector(normal, ballRadius - distance + 0.1);
+                
+                // Move ball to surface of paddle
+                //state.ball.position.addScaledVector(normal, ballRadius);
+            }
+        }
+
+        // Paddle on buttons
+        // TODO
+
+        // TODO could have world collisions for paddle. How do we do buttons?
+        return;
+    }
     const result = entity.entityType == "player"
                    ? worldOctree.capsuleIntersect(entity.collider)
-                   : worldOctree.sphereIntersect( entity.collider );
+                   : worldOctree.sphereIntersect(entity.collider);
     entity.grounded = false;
     if (result) {
         entity.grounded = result.normal.y > 0;
@@ -262,6 +344,9 @@ function playerUpdate(entity, timeMs, timeDelta) {
     if (state.input.dPressed) {
         entity.velocity.add(getSideVector(entity).multiplyScalar(speedDelta));
     }
+    if (state.input.cPressed && entity.noclip) {
+        entity.velocity.y = -15;
+    }
     if (entity.grounded) {
         if (state.input.spacePressed) {
             entity.velocity.y = 15;
@@ -299,6 +384,9 @@ function update (timeMs, timeDelta) {
     if (state.ball) {
         entities.push(state.ball);
     }
+
+    entities.push(state.leftPaddle);
+    entities.push(state.rightPaddle);
 
     // update
     for (let i = 0; i < entities.length; ++i) {
@@ -450,9 +538,17 @@ function initEvents() {
         if (event.key == 'r') {
             state.input.rPressed = true;
         }
+        // t
+        if (event.key == 't') {
+            state.player.noclip = !state.player.noclip;
+        }
         // spacebar
         if (event.keyCode == 32) {
             state.input.spacePressed = true;
+        }
+        // c
+        if (event.key == 'c') {
+            state.input.cPressed = true;
         }
     });
 
@@ -482,6 +578,10 @@ function initEvents() {
         if (event.keyCode == 32) {
             state.input.spacePressed = false;
         }
+        // c
+        if (event.key == 'c') {
+            state.input.cPressed = false;
+        }
     });
 }
 
@@ -509,7 +609,7 @@ function initThreejs() {
     scene.add( directionalLight );
 
     // TODO proper sun and sky ala https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e#L46-L46
-    // Add a sphere mesh and material to represent the sun
+    // Add a sphere mesh and material to represent the sunwa
     const sunGeometry = new THREE.SphereGeometry( 1, 32, 32 );
     const sunMaterial = new THREE.MeshBasicMaterial( { color: 0xffffee } );
     sunSphere = new THREE.Mesh( sunGeometry, sunMaterial );

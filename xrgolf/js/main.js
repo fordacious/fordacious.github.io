@@ -20,8 +20,20 @@
 // Could make it mixed reality on surfaces? Would be a good spatial entities test. Maybe later, and do VR for now.
 // Score on number of hops and speed to completion (encourage whacking the shit out of the ball but also being accurate)
 
+
+// Surround stage with reflective water. Pink sunset clouds (shader?). Black beams
+
 // Should be able to translate and rotate your clones after they're created.
 // Could make this a multiplayer turn based cooperative effort.
+
+// TODO
+    // Implement start button
+    // Implement ability to record
+    // Implement VR movement
+    // Implement map loading
+    // Fix up graphics
+        // e.g. https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e
+    // Fit and finish
 
 import * as THREE from 'three';
 
@@ -268,6 +280,7 @@ function update (timeMs, timeDelta) {
 
     // Should probably base this on a player intiated action.
     // Can also then ensure that the player is in a specific place (where they have to hit the button)
+    // Starting and stopping a recording should also be a separate action?
     if (state.roundTimeLimit < 0) {
         startNextRound();
     }
@@ -368,6 +381,8 @@ function gameLoop(timeElapsed) {
         state.sPressed = false;
         for (let i = 0; i < session.inputSources.length; i++) {
             let source = session.inputSources[i];
+            // TODO not working?
+            // TODO want teleport mechanic as well
             if (source.gamepad.axes.size >= 1) {
                 // Set state input based on the thumbstick state
                 if (source.gamepad.axes[0] < -0.5) {
@@ -493,6 +508,7 @@ function initThreejs() {
     directionalLight.shadow.bias = - 0.00006;
     scene.add( directionalLight );
 
+    // TODO proper sun and sky ala https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e#L46-L46
     // Add a sphere mesh and material to represent the sun
     const sunGeometry = new THREE.SphereGeometry( 1, 32, 32 );
     const sunMaterial = new THREE.MeshBasicMaterial( { color: 0xffffee } );
@@ -527,6 +543,7 @@ function initThreejs() {
         //gltf.scene.remove(end);
 
         // Collider is at 0 initially
+        // TODO this isn't working for VR?
         state.player.collider.translate(state.spawn.position);
 
         worldOctree.fromGraphNode( gltf.scene );
@@ -539,6 +556,8 @@ function initThreejs() {
                 if ( child.material.map ) {
                     child.material.map.anisotropy = 4;
                 }
+            } else if (child.isLight) {
+                child.castShadow = true
             }
         });
 

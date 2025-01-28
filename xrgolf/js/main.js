@@ -26,6 +26,9 @@
 // Should be able to translate and rotate your clones after they're created.
 // Could make this a multiplayer turn based cooperative effort.
 
+// TODO if paddle mechanics dont work too well, try other things like throwing and grabbing and environmental mechanics 
+
+
 // TODO
     // Fix collisions (can fall through things with enough velocity)
     // Fix mouse control (less important for XR play)
@@ -46,6 +49,7 @@ import { OctreeHelper } from 'three/addons/helpers/OctreeHelper.js';
 import { Capsule } from 'three/addons/math/Capsule.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import {VRButton} from 'three/addons/webxr/VRButton.js';
+import { OBB } from 'three/addons/math/OBB.js';
 
 window.onload = start;
 
@@ -78,6 +82,7 @@ function makeEntity(props) {
         position: new THREE.Vector3(),
         direction: new THREE.Vector3(),
         velocity: new THREE.Vector3(),
+        angularVelocity: new THREE.Vector3(),
         exists: true,
         update: (() => {}),
         renderState: null,
@@ -117,28 +122,39 @@ function makeBall (pos, radius) {
 
 // make paddle
 function makePaddle(hand) {
-    const boxGeometry = new THREE.BoxGeometry( 0.4, 0.4, 0.05 );
+    const size = new THREE.Vector3(0.4,0.4,0.05);
+    const boxGeometry = new THREE.BoxGeometry(0.4,0.4,0.05);
     const boxMaterial = new THREE.MeshLambertMaterial( { color: 0x8b4513 } );
     let mesh = new THREE.Mesh( boxGeometry, boxMaterial );
 
-    mesh.position.x = 1;
+    mesh.position.x = hand == RIGHT_HAND ? 1 : -1;
     mesh.position.y = 1;
     mesh.position.z = 10;
+
+    // Rotate 45 degrees
+    mesh.rotation.x = -Math.PI / 4;
+    mesh.rotation.y = -Math.PI / 4;
+    mesh.rotation.z = Math.PI / 2;
 
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add( mesh );
 
-    let collider = new THREE.Box3();
-    boxGeometry.computeBoundingBox();
+    let obb = new OBB();
+    obb.halfSize.copy(size).multiplyScalar( 0.5 );
 
-    return makeEntity({
+    let ent = makeEntity({
         entityType: "paddle",
         hand: hand,
-        //update: paddleUpdate // needed?
-        collider: collider,
+        update: paddleUpdate,
+        collider: obb,
         mesh: mesh
-    })
+    });
+
+    ent.velocity.y = 15;
+    ent.velocity.z = 5;
+
+    return ent;
 }
 
 // TODO how to reference left and right hand?
@@ -203,8 +219,8 @@ function render(state) {
 function physicsUpdate(entity, entities, timeDelta) {
     if (entity.entityType === "paddle") {
         // TODO derive the velocity from the players controller movement
-        entity.collider.copy( entity.mesh.geometry.boundingBox ).applyMatrix4( entity.mesh.matrixWorld );
-        entityCollisions(entity);
+        //entity.collider.copy( entity.mesh.geometry.boundingBox ).applyMatrix4( entity.mesh.matrixWorld );
+        entityCollisions(entity, timeDelta);
         return;
     }
     if (entity == state.player) {
@@ -221,7 +237,7 @@ function physicsUpdate(entity, entities, timeDelta) {
         entity.collider.translate(deltaPosition);
 
         if (!entity.noclip) {
-            entityCollisions(entity);
+            entityCollisions(entity, timeDelta);
         } else {
             entity.grounded = true;
         }
@@ -249,7 +265,7 @@ function physicsUpdate(entity, entities, timeDelta) {
         const damping = Math.exp( - 1.0 * timeDelta ) - 1;
         sphere.velocity.addScaledVector( sphere.velocity, damping );
 
-        //entityCollisions(entity);
+        //entityCollisions(entity, timeDelta);
     }
 }
 
@@ -257,34 +273,41 @@ function removeEntity(e) {
     e.exists = false; // won't be updated in update()
 }
 
-function entityCollisions(entity) {
+function entityCollisions(entity, timeDelta) {
     if (entity.entityType == "paddle") {
         if (state.ball) {
-            let ball = state.ball.collider;
-            let paddle = entity.collider;
-
-            // TODO to do this properly, we'll need to use ray intersection with the velocity of the paddle (i.e. project the paddle box along its velocity vector)
-
-            // AABB / Sphere collision check
-            let ballPos = ball.center;
-            let paddleCenter = new THREE.Vector3();
-            let paddlePos = paddle.getCenter(paddleCenter);
-            let ballRadius = ball.radius;
-            let distance = ballPos.distanceTo(paddlePos);
-
-            let paddleHalfSize = new THREE.Vector3().subVectors(paddle.max, paddle.min).multiplyScalar(0.5);
+            let ballCollider = state.ball.collider;
             
-            // Collision detection using AABB / Sphere method
-            if (distance < ballRadius + paddleHalfSize.x && Math.abs(ballPos.y - paddlePos.y) < paddleHalfSize.y) {
-                // Response
-                let normal = new THREE.Vector3().subVectors(ballPos, paddlePos).normalize();
-                let dotVelocity = normal.dot(state.ball.velocity);
-                let newVelocity = dotVelocity > 0 ? state.ball.velocity.clone().multiplyScalar(1) : state.ball.velocity.clone().addScaledVector(normal, -2 * dotVelocity);
-                state.ball.velocity.copy(newVelocity);
-                state.ball.position.addScaledVector(normal, ballRadius - distance + 0.1);
-                
-                // Move ball to surface of paddle
-                //state.ball.position.addScaledVector(normal, ballRadius);
+            let paddleOBB = entity.collider.clone();
+            paddleOBB.applyMatrix4( entity.mesh.matrix );
+
+            let paddleVelocity = entity.velocity.clone();
+            let paddleAngularVelocity = entity.angularVelocity.clone();
+            let ballVelocity = state.ball.velocity.clone();
+
+            // Create THREE.Ray from inverse of paddle velocity to ball position
+            // Then check paddlePlane intersection with ray.intersectPlane
+            // Add paddle velocity (inverse) and ball velocity
+            let combinedVelocity = paddleVelocity.clone().negate().add(ballVelocity);
+            let rayDirection = combinedVelocity.normalize();
+            let rayOrigin = state.ball.mesh.position;
+            let ray = new THREE.Ray(rayOrigin, rayDirection);
+            let target = new THREE.Vector3();
+            if (paddleOBB.intersectsSphere(ballCollider) && paddleOBB.intersectRay(ray, target)) {
+                // For the time being we assume that the normal of the paddle is positive z
+                // TODO do this properly at some point
+                let rayDirection = ballVelocity.clone();
+                let paddleNormal = new THREE.Vector3(0, 0, 1);
+                // Rotate normal by paddle rotation
+                paddleNormal.applyQuaternion(entity.mesh.quaternion);
+
+                // Reflect ball based on angle of ball collision to paddle surface and transfer paddle velocity to ball
+                let normal = paddleNormal.normalize();
+                let reflectVector = normal.clone().multiplyScalar(-1 * ballVelocity.dot(normal));
+                ballVelocity = new THREE.Vector3();
+                ballVelocity.add(reflectVector);
+                ballVelocity.add(paddleVelocity);
+                state.ball.velocity.copy(ballVelocity);
             }
         }
 
@@ -327,6 +350,9 @@ function getSideVector(entity) {
 function ballUpdate (entity, timeMs, timeDelta) {
     // TODO collide with end?
     entity.mesh.position.copy( entity.collider.center );
+}
+
+function paddleUpdate(entity, timeMs, timeDelta) {
 }
 
 function playerUpdate(entity, timeMs, timeDelta) {

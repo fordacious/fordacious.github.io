@@ -240,7 +240,6 @@ function physicsUpdate(entity, entities, timeDelta) {
             entity.velocity.y -= GRAVITY * timeDelta;
             // small air resistance
             damping *= 0.1;
-            console.log(entity.velocity.y);
             if (entity.velocity.y < -50) {
                 entity.velocity.y = -50; // TODO probably better way to do it but fine for now
             }

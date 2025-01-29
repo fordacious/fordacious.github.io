@@ -532,15 +532,17 @@ function gameLoop(timeElapsed) {
             // Set paddle to pose and velocity of VR controller
             // TODO will probably need hand and controller offset
             let pose = renderer.xr.getFrame().getPose(source.gripSpace, referenceSpace);
-            paddle.mesh.position.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
-            paddle.mesh.setRotationFromQuaternion(new THREE.Quaternion(pose.transform.orientation.x, pose.transform.orientation.y, pose.transform.orientation.z, pose.transform.orientation.w));
-            if (pose.linearVelocity) {
-                paddle.velocity.x = pose.linearVelocity.x;
-                paddle.velocity.y = pose.linearVelocity.y;
-                paddle.velocity.z = pose.linearVelocity.z;
-            }
-            if (pose.angularVelocity) {
-                // TODO factor this in
+            if (pose) {
+                paddle.mesh.position.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
+                paddle.mesh.setRotationFromQuaternion(new THREE.Quaternion(pose.transform.orientation.x, pose.transform.orientation.y, pose.transform.orientation.z, pose.transform.orientation.w));
+                if (pose.linearVelocity) {
+                    paddle.velocity.x = pose.linearVelocity.x;
+                    paddle.velocity.y = pose.linearVelocity.y;
+                    paddle.velocity.z = pose.linearVelocity.z;
+                }
+                if (pose.angularVelocity) {
+                    // TODO factor this in
+                }
             }
 
             // TODO not working? Probably moving the collider but since the camera is locked to the head, nothing happens

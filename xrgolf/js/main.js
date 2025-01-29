@@ -34,7 +34,7 @@
     // Fix mouse control (less important for XR play)
     // Implement start button
     // Implement ability to record
-    // Implement VR movement
+    // Implement VR movement (teleportation? locomotion?)
     // Implement map loading
     // Fix up graphics
         // e.g. https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e
@@ -148,7 +148,8 @@ function makePaddle(hand) {
         hand: hand,
         update: paddleUpdate,
         collider: obb,
-        mesh: mesh
+        mesh: mesh,
+        previousMatrix: mesh.matrix
     });
 
     ent.velocity.y = 15;
@@ -161,6 +162,18 @@ function makePaddle(hand) {
 const LEFT_HAND = "left";
 const RIGHT_HAND = "right";
 
+function makePlayerCollider() {
+    let start = new THREE.Vector3(0, 0.35, 0);
+    let end = new THREE.Vector3(0, 1, 0);
+    let radius = 0.35;
+    let capsule = new Capsule(start.clone(), end.clone(), radius);
+    capsule.reset = function () {
+        capsule.set(start.clone(), end.clone(), radius);
+    };
+
+    return capsule;
+}
+
 function initState() {
     state = {
         gameOver: false,
@@ -169,8 +182,9 @@ function initState() {
             grounded: false,
             noclip: false,
             update: playerUpdate,
-            collider: new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35)
+            collider: makePlayerCollider()
         }),
+        // TODO 2 paddles or 1?
         leftPaddle: makePaddle(LEFT_HAND),
         rightPaddle: makePaddle(RIGHT_HAND),
         input: {
@@ -219,7 +233,6 @@ function render(state) {
 function physicsUpdate(entity, entities, timeDelta) {
     if (entity.entityType === "paddle") {
         // TODO derive the velocity from the players controller movement
-        //entity.collider.copy( entity.mesh.geometry.boundingBox ).applyMatrix4( entity.mesh.matrixWorld );
         entityCollisions(entity, timeDelta);
         return;
     }
@@ -248,18 +261,13 @@ function physicsUpdate(entity, entities, timeDelta) {
 
         sphere.collider.center.addScaledVector( sphere.velocity, timeDelta );
 
-        // TODO clean up this mess
         const result = worldOctree.sphereIntersect( sphere.collider );
-
-        if ( result ) {
-
+        if (result) {
             sphere.velocity.addScaledVector( result.normal, - result.normal.dot( sphere.velocity ) * 1.5 );
             sphere.collider.center.add( result.normal.multiplyScalar( result.depth ) );
-
+            // TODO velocity cutoff?
         } else {
-
             sphere.velocity.y -= GRAVITY * timeDelta;
-
         }
 
         const damping = Math.exp( - 1.0 * timeDelta ) - 1;
@@ -293,9 +301,11 @@ function entityCollisions(entity, timeDelta) {
             let rayOrigin = state.ball.mesh.position;
             let ray = new THREE.Ray(rayOrigin, rayDirection);
             let target = new THREE.Vector3();
+            // TODO this might not be enough. For proper collision detection, would need to sweep the ball and the paddle
             if (paddleOBB.intersectsSphere(ballCollider) && paddleOBB.intersectRay(ray, target)) {
                 // For the time being we assume that the normal of the paddle is positive z
                 // TODO do this properly at some point
+                // The normal should be the face that the ray hit
                 let rayDirection = ballVelocity.clone();
                 let paddleNormal = new THREE.Vector3(0, 0, 1);
                 // Rotate normal by paddle rotation
@@ -353,6 +363,21 @@ function ballUpdate (entity, timeMs, timeDelta) {
 }
 
 function paddleUpdate(entity, timeMs, timeDelta) {
+    // Derive paddle velocity from poses
+    // paddle.previousMatrix, paddle.mesh.matrix;
+    /*
+    entity.velocity = new THREE.Vector3();
+
+    let poseDiffMatrix = new THREE.Matrix4().copy(entity.mesh.matrix);
+    const poseDiffPos = new THREE.Vector3().setFromMatrixPosition(poseDiffMatrix)
+                                 .negate()
+                                 .add(new THREE.Vector3().setFromMatrixPosition(entity.previousMatrix));
+
+    const poseDiffVel = poseDiffPos.divideScalar(timeDelta);
+    entity.velocity = poseDiffVel;
+
+    entity.previousMatrix = entity.mesh.matrix;
+    */
 }
 
 function playerUpdate(entity, timeMs, timeDelta) {
@@ -372,6 +397,10 @@ function playerUpdate(entity, timeMs, timeDelta) {
     }
     if (state.input.cPressed && entity.noclip) {
         entity.velocity.y = -15;
+    }
+    if (state.input.rPressed) {
+        entity.collider.reset();
+        entity.velocity = new THREE.Vector3();
     }
     if (entity.grounded) {
         if (state.input.spacePressed) {
@@ -488,6 +517,7 @@ function gameLoop(timeElapsed) {
 
     // vr controllers
     const session = renderer.xr.getSession();
+    let referenceSpace = renderer.xr.getReferenceSpace();
     if (session) {
         state.aPressed = false;
         state.dPressed = false;
@@ -495,6 +525,22 @@ function gameLoop(timeElapsed) {
         state.sPressed = false;
         for (let i = 0; i < session.inputSources.length; i++) {
             let source = session.inputSources[i];
+            let paddle = source.handedness === LEFT_HAND ? state.leftPaddle : state.rightPaddle;
+
+            // Set paddle to pose and velocity of VR controller
+            // TODO will probably need hand and controller offset
+            let pose = renderer.xr.getFrame().getPose(source.gripSpace, referenceSpace);
+            paddle.mesh.position.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
+            paddle.mesh.setRotationFromQuaternion(new THREE.Quaternion(pose.transform.orientation.x, pose.transform.orientation.y, pose.transform.orientation.z, pose.transform.orientation.w));
+            if (pose.linearVelocity) {
+                paddle.velocity.x = pose.linearVelocity.x;
+                paddle.velocity.y = pose.linearVelocity.y;
+                paddle.velocity.z = pose.linearVelocity.z;
+            }
+            if (pose.angularVelocity) {
+                // TODO factor this in
+            }
+
             // TODO not working?
             // TODO want teleport mechanic as well
             if (source.gamepad.axes.size >= 1) {
@@ -658,14 +704,13 @@ function initThreejs() {
         scene.add( gltf.scene );
 
         // TODO needs to be more generic
-        state.start = gltf.scene.getObjectByName( 'START' );
-        state.spawn = gltf.scene.getObjectByName( 'SPAWN' );
-        state.end = gltf.scene.getObjectByName( 'END' );
-        state.startButton = gltf.scene.getObjectByName( 'BUTTON' );
+        state.start = gltf.scene.getObjectByName('START');
+        state.spawn = gltf.scene.getObjectByName('SPAWN');
+        state.end = gltf.scene.getObjectByName('END');
+        state.startButton = gltf.scene.getObjectByName('BUTTON');
 
         gltf.scene.remove(state.spawn);
         gltf.scene.remove(state.start);
-        //gltf.scene.remove(start);
         //gltf.scene.remove(end);
 
         // Collider is at 0 initially

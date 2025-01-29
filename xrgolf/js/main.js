@@ -717,6 +717,10 @@ function initThreejs() {
         gltf.scene.remove(state.start);
         //gltf.scene.remove(end);
 
+        // TODO remove this. Seems to be causing problems on webxr
+        const disableLights = true;
+        let lights = [];
+
         // Collider is at 0 initially
         // TODO need to rethink this for VR since the collider MUST be where the camera is.
         // Makes sense for axis movement and teleportation
@@ -734,9 +738,15 @@ function initThreejs() {
                 }
             } else if (child.isLight) {
                 child.castShadow = true
-                //gltf.scene.remove(child);
+                if (disableLights) {
+                    lights.push(child);
+                }
             }
         });
+
+        for (let light in lights) {
+            gltf.scene.remove(light);
+        }
 
         const helper = new OctreeHelper( worldOctree );
         helper.visible = false;

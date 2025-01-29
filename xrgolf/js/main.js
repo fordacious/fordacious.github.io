@@ -765,3 +765,8 @@ function start() {
     initEvents();
     initThreejs();
 }
+
+window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+    alert("Error occured: " + errorMsg);//or any message
+    return false;
+}

@@ -734,7 +734,7 @@ function initThreejs() {
                 }
             } else if (child.isLight) {
                 child.castShadow = true
-                gltf.scene.remove(child);
+                //gltf.scene.remove(child);
             }
         });
 

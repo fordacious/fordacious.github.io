@@ -42,6 +42,8 @@
     // Fit and finish
     // Prep for next game
 
+// TODO use this as a foundation for making the GLTF scene composer app model test
+
 import * as THREE from 'three';
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';

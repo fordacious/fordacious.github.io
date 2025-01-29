@@ -744,7 +744,7 @@ function initThreejs() {
             }
         });
 
-        for (let light in lights) {
+        for (let light of lights) {
             gltf.scene.remove(light);
         }
 

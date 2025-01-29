@@ -518,7 +518,6 @@ function gameLoop(timeElapsed) {
     scene.fog.far = 200;
 
     // vr controllers
-    /*
     const session = renderer.xr.getSession();
     let referenceSpace = renderer.xr.getReferenceSpace();
     if (session) {
@@ -563,7 +562,6 @@ function gameLoop(timeElapsed) {
             }
         }
     }
-    */
 
     if (timeSinceLastUpdate > frameTime * 3) {
         timeSinceLastUpdate = frameTime;
@@ -736,6 +734,7 @@ function initThreejs() {
                 }
             } else if (child.isLight) {
                 child.castShadow = true
+                gltf.scene.remove(child);
             }
         });
 

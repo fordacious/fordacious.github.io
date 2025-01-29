@@ -40,6 +40,7 @@
         // e.g. https://sbedit.net/8da1fa474184adede50e8d0cba075cda0739dd2e
     // Implement levels
     // Fit and finish
+    // Prep for next game
 
 import * as THREE from 'three';
 
@@ -53,24 +54,19 @@ import { OBB } from 'three/addons/math/OBB.js';
 
 window.onload = start;
 
-let canvas = null;
 let state = null;
 
 const frameTime = 1000 / 60;
 
-const canvasDesignWidth = 1280;
-
-const clock = new THREE.Clock();
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const cameraGroup = new THREE.Group();
 const fillLight1 = new THREE.HemisphereLight( 0x8dc1de, 0x00668d, 1.5 );
 const directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
 const container = document.getElementById('gamediv');
 const renderer = new THREE.WebGLRenderer( { antialias: true } );
 const GRAVITY = 30;
-const NUM_SPHERES = 100;
 const SPHERE_RADIUS = 0.2;
-const STEPS_PER_FRAME = 5;
 
 let sunSphere = null;
 const worldOctree = new Octree();
@@ -242,6 +238,10 @@ function physicsUpdate(entity, entities, timeDelta) {
             entity.velocity.y -= GRAVITY * timeDelta;
             // small air resistance
             damping *= 0.1;
+            console.log(entity.velocity.y);
+            if (entity.velocity.y < -50) {
+                entity.velocity.y = -50; // TODO probably better way to do it but fine for now
+            }
         }
 
         entity.velocity.addScaledVector(entity.velocity, damping);
@@ -255,7 +255,8 @@ function physicsUpdate(entity, entities, timeDelta) {
             entity.grounded = true;
         }
 
-        camera.position.copy(entity.collider.end);
+        // TODO add debug cube to test if this is working
+        cameraGroup.position.copy(entity.collider.end);
     } else {
         let sphere = entity;
 
@@ -421,7 +422,7 @@ function update (timeMs, timeDelta) {
     // Should probably base this on a player intiated action.
     // Can also then ensure that the player is in a specific place (where they have to hit the button)
     // Starting and stopping a recording should also be a separate action?
-    if (state.roundTimeLimit < 0) {
+    if (ballDead()) {
         startNextRound();
     }
 
@@ -541,9 +542,11 @@ function gameLoop(timeElapsed) {
                 // TODO factor this in
             }
 
-            // TODO not working?
+            // TODO not working? Probably moving the collider but since the camera is locked to the head, nothing happens
+            // TODO figure out if we can control the camera offset from head via threejs
             // TODO want teleport mechanic as well
-            if (source.gamepad.axes.size >= 1) {
+            // https://discourse.threejs.org/t/webxr-camera-is-not-at-position-of-perspective-camera/44934/2
+            if (source.gamepad.axes.length >= 1) {
                 // Set state input based on the thumbstick state
                 if (source.gamepad.axes[0] < -0.5) {
                     state.aPressed = true;
@@ -574,9 +577,7 @@ function gameLoop(timeElapsed) {
 function initEvents() {
     // Mouse move
     document.addEventListener('mousemove', function (event) {
-        // // Store in state.input
-        // state.input.mouseX = event.clientX;
-        // state.input.mouseY = event.clientY;
+        // Store in state.input
         if (document.pointerLockElement === document.body) {
             camera.rotation.y -= event.movementX / 500;
             camera.rotation.x -= event.movementY / 500;
@@ -663,6 +664,9 @@ function initThreejs() {
 
     camera.rotation.order = 'YXZ';
 
+    cameraGroup.add(camera);
+    scene.add(cameraGroup);
+
     fillLight1.position.set( 2, 1, 1 );
     scene.add( fillLight1 );
 
@@ -703,7 +707,6 @@ function initThreejs() {
     loader.load('testlevel2.glb', (gltf) => {
         scene.add( gltf.scene );
 
-        // TODO needs to be more generic
         state.start = gltf.scene.getObjectByName('START');
         state.spawn = gltf.scene.getObjectByName('SPAWN');
         state.end = gltf.scene.getObjectByName('END');
@@ -714,7 +717,8 @@ function initThreejs() {
         //gltf.scene.remove(end);
 
         // Collider is at 0 initially
-        // TODO this isn't working for VR?
+        // TODO need to rethink this for VR since the collider MUST be where the camera is.
+        // Makes sense for axis movement and teleportation
         state.player.collider.translate(state.spawn.position);
 
         worldOctree.fromGraphNode( gltf.scene );

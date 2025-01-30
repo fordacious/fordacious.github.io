@@ -256,8 +256,9 @@ function physicsUpdate(entity, entities, timeDelta) {
             entity.grounded = true;
         }
 
-        // TODO add debug cube to test if this is working
-        //cameraGroup.position.copy(entity.collider.end);
+        if (!renderer.xr.isPresenting) {
+            cameraGroup.position.copy(entity.collider.end);
+        }
     } else {
         let sphere = entity;
 
@@ -666,6 +667,9 @@ function initThreejs() {
     scene.fog = new THREE.Fog( 0x88ccee, 0, 50 );
 
     camera.rotation.order = 'YXZ';
+
+    cameraGroup.position.z = 12;
+    cameraGroup.rotation.y = Math.PI;
 
     cameraGroup.add(camera);
     scene.add(cameraGroup);

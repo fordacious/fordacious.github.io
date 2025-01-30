@@ -257,7 +257,7 @@ function physicsUpdate(entity, entities, timeDelta) {
         }
 
         // TODO add debug cube to test if this is working
-        cameraGroup.position.copy(entity.collider.end);
+        //cameraGroup.position.copy(entity.collider.end);
     } else {
         let sphere = entity;
 

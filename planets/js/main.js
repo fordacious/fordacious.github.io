@@ -773,7 +773,7 @@ const map_homing_2 = {
     seed: 0.7,
     name: "map_homing_2",
     player: {entityType: "player", x: 0, y: -1300, radius: 10, mass: 1, velocity: {x:0, y: 0}, color: "#00ffff"},
-    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 5.25, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "fixed"},
     planets: [{
         entityType: "planet",
         x: 0,
@@ -991,7 +991,7 @@ const map_sound_and_border_test = {
     seed: -0.5,
     name: "map_sound_and_border_test",
     player: {entityType: "player", x: 0, y: -400, radius: 10, mass: 1, velocity: {x:-3, y: 0}, color: "#00ffff"},
-    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 4, targetScale: 1, easeFactor: 0.1, zoomEaseFactor: cameraZoomEaseFactor, easeMode: "quadtratic"},
+    camera: {x: 1, y: 1, width: "CANVAS_WIDTH", height: "CANVAS_HEIGHT", scale: 5.25, easeMode: "fixed"},
     planets: [{
         entityType: "planet",
         x: 0,
@@ -1395,8 +1395,8 @@ const map_lucidity_static_3 = {
 };
 
 
-const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test, map_new_test, map_lucidity_logo, map_lucidity_rotation, map_lucidity_static, map_lucidity_static_2, map_lucidity_static_3];
-let currentLevel = 15;
+const levels = [map_singleton, map_dao, map_threebody, map_level, map_inverse_mass_test, map_large, map_homing, map_homing_2, map_shell, map_sound_and_border_test];
+let currentLevel = 9;
 function startGame () {
     initState(JSON.stringify(levels[currentLevel]))
 }

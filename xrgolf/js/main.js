@@ -28,9 +28,9 @@
 
 // TODO if paddle mechanics dont work too well, try other things like throwing and grabbing and environmental mechanics 
 
-
-// TODO
+// TODO to finish paddlin proto:
     // Fix collisions (can fall through things with enough velocity)
+        // Currently fall speed is capped
     // Fix mouse control (less important for XR play)
     // Implement start button
     // Implement ability to record
@@ -156,6 +156,22 @@ function makePaddle(hand) {
     return ent;
 }
 
+function makeTeleportationIndicator() {
+    let material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    let geometry = new THREE.SphereGeometry(0.2, 32, 32);
+    let sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
+    let entity = makeEntity({
+        entityType: "teleportationIndicator",
+        update: teleportationIndicatorUpdate,
+        collider: new THREE.Sphere(new THREE.Vector3(), 32),
+        mesh: sphere,
+        previousMatrix: sphere.matrix
+    });
+    return entity;
+}
+
 // TODO how to reference left and right hand?
 const LEFT_HAND = "left";
 const RIGHT_HAND = "right";
@@ -165,8 +181,8 @@ function makePlayerCollider() {
     let end = new THREE.Vector3(0, 1, 0);
     let radius = 0.35;
     let capsule = new Capsule(start.clone(), end.clone(), radius);
-    capsule.reset = function () {
-        capsule.set(start.clone(), end.clone(), radius);
+    capsule.reset = function (position = new THREE.Vector3()) {
+        capsule.set(start.clone().add(position), end.clone().add(position), radius);
     };
 
     return capsule;
@@ -185,6 +201,7 @@ function initState() {
         // TODO 2 paddles or 1?
         leftPaddle: makePaddle(LEFT_HAND),
         rightPaddle: makePaddle(RIGHT_HAND),
+        teleportationIndicator: makeTeleportationIndicator(),
         input: {
             wPressed: false,
             sPressed: false,
@@ -193,6 +210,8 @@ function initState() {
             ePressed: false,
             rPressed: false,
             cPressed: false,
+            qPressed: false,
+            qPressedPrevious: false,
             spacePressed: false
         },
         round: 0,
@@ -261,6 +280,10 @@ function physicsUpdate(entity, entities, timeDelta) {
         }
     } else {
         let sphere = entity;
+
+        if (!sphere.collider) {
+            return;
+        }
 
         sphere.collider.center.addScaledVector( sphere.velocity, timeDelta );
 
@@ -383,6 +406,52 @@ function paddleUpdate(entity, timeMs, timeDelta) {
     */
 }
 
+// TODO why does this end up in the middle of nowhere?
+function calculateTeleportationTrajectory(start, forwardVector, collider) {
+    let position = start.clone();
+    let velocity = forwardVector.clone().multiplyScalar(0);
+    // gravity
+    let accel = new THREE.Vector3(0, -GRAVITY, 0);
+    // 100 iterations
+    for (let i = 0; i < 100; i++) {
+        // apply physics
+        let previousPosition = position.clone();
+        velocity.add(accel.clone().multiplyScalar(0.016));
+        position.add(velocity.clone().multiplyScalar(0.016));
+        // Check collisions
+        const result = worldOctree.sphereIntersect(collider);
+        if (result) {
+            if (result.normal.y <= 0) {
+                return start;
+            } else {
+                return previousPosition;
+            }
+        }
+    }
+    return undefined;
+}
+
+function teleportationIndicatorUpdate(entity, timeMs, timeDelta) {
+    entity.mesh.position.copy( entity.collider.center );
+    // TODO
+    entity.mesh.visible = state.input.qPressed;
+    if (entity.mesh.visible) {
+        let forwardCameraVector = new THREE.Vector3();
+        camera.getWorldDirection(forwardCameraVector);
+        let pos = calculateTeleportationTrajectory(state.player.collider.end, forwardCameraVector, entity.collider);
+        if (pos != undefined) {
+            entity.mesh.position.copy(pos);
+        }
+    }
+    if (state.input.qPressedPrevious && state.input.qPressed == false) {
+        // TODO implement a transition of some kind
+        state.player.collider.reset(entity.mesh.position.clone());
+        state.player.velocity = new THREE.Vector3();
+        // TODO this should happen elsewhere
+        state.input.qPressedPrevious = state.input.qPressed;
+    }
+}
+
 function playerUpdate(entity, timeMs, timeDelta) {
     // gives a bit of air control
     const speedDelta = timeDelta * (entity.grounded ? 25 : 8);
@@ -410,6 +479,11 @@ function playerUpdate(entity, timeMs, timeDelta) {
             entity.velocity.y = 15;
         }
     }
+
+    // TODO if q pressed, create teleport entity that moves the player on removal (unpress)
+    // TODO if e pressed, and in front of button, press button in
+        // TODO Implement button pressing state
+        // TODO this could be based on hitting it with the paddle only
 }
 
 function spawnBall () {
@@ -445,6 +519,8 @@ function update (timeMs, timeDelta) {
 
     entities.push(state.leftPaddle);
     entities.push(state.rightPaddle);
+
+    entities.push(state.teleportationIndicator);
 
     // update
     for (let i = 0; i < entities.length; ++i) {
@@ -550,18 +626,23 @@ function gameLoop(timeElapsed) {
             // TODO figure out if we can control the camera offset from head via threejs
             // TODO want teleport mechanic as well
             // https://discourse.threejs.org/t/webxr-camera-is-not-at-position-of-perspective-camera/44934/2
-            if (source.gamepad.axes.length >= 1) {
+            let gp = source.gamepad;
+            if (gp.axes.length >= 1) {
                 // Set state input based on the thumbstick state
-                if (source.gamepad.axes[0] < -0.5) {
+                if (gp.axes[0] < -0.5) {
                     state.aPressed = true;
-                } else if (source.gamepad.axes[0] > 0.5) {
+                } else if (gp.axes[0] > 0.5) {
                     state.dPressed = true;
                 }
-                if (source.gamepad.axes[1] < -0.5) {
+                if (gp.axes[1] < -0.5) {
                     state.wPressed = true;
-                } else if (source.gamepad.axes[1] > 0.5) {
+                } else if (gp.axes[1] > 0.5) {
                     state.sPressed = true;
                 }
+            }
+            if (gp.buttons) {
+                state.qPressed = gp.buttons[0].pressed;
+                state.ePressed = gp.buttons.length > 1 && gp.buttons[1].pressed;
             }
         }
     }
@@ -615,6 +696,11 @@ function initEvents() {
         if (event.key == 'r') {
             state.input.rPressed = true;
         }
+        // q
+        if (event.key == 'q') {
+            state.input.qPressedPrevious = state.input.qPressed;
+            state.input.qPressed = true;
+        }
         // t
         if (event.key == 't') {
             state.player.noclip = !state.player.noclip;
@@ -651,6 +737,11 @@ function initEvents() {
         if (event.key == 'r') {
             state.input.rPressed = false;
         }
+        // q
+        if (event.key == 'q') {
+            state.input.qPressedPrevious = state.input.qPressed;
+            state.input.qPressed = false;
+        }
         // spacebar
         if (event.keyCode == 32) {
             state.input.spacePressed = false;
@@ -667,6 +758,8 @@ function initThreejs() {
     scene.fog = new THREE.Fog( 0x88ccee, 0, 50 );
 
     camera.rotation.order = 'YXZ';
+
+    // TODO need the paddles in the camera group for it to work correctly
 
     cameraGroup.position.z = 12;
     cameraGroup.rotation.y = Math.PI;
@@ -783,6 +876,6 @@ function start() {
 }
 
 window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
-    alert("Error occured: " + errorMsg);//or any message
+    alert("Error occured: " + lineNumber + ", " + errorMsg);//or any message
     return false;
 }
